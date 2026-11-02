@@ -1,0 +1,6 @@
+{
+  "name": "BNC Global - CIA Certification Training",
+  "description": "Professional Certified Internal Auditor (CIA®) preparation platform with live classes, AI tools training, IIA fee calculators, interactive exam simulator, and direct package enrollment.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

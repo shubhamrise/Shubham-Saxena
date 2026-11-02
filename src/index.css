@@ -1,0 +1,156 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-display: 'Outfit', 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    color: #1e293b;
+    background-color: #ffffff;
+    overflow-x: hidden;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    letter-spacing: -0.025em;
+    text-wrap: balance;
+  }
+}
+
+/* World-class executive card styling with dark navy/sky blue, pure white, and ELEVATE logo gold accents (#b58b42) */
+.luxury-card {
+  background: #ffffff;
+  border: 1px solid rgba(186, 230, 253, 0.9);
+  border-radius: 1.5rem;
+  box-shadow: 0 4px 20px -2px rgba(3, 105, 161, 0.07), 0 2px 6px -1px rgba(181, 139, 66, 0.06);
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.luxury-card:hover {
+  border-color: rgba(181, 139, 66, 0.45);
+  box-shadow: 0 20px 40px -12px rgba(3, 105, 161, 0.18), 0 4px 16px -2px rgba(181, 139, 66, 0.22);
+  transform: translateY(-2px);
+}
+
+.elevate-gold-text {
+  color: #b58b42;
+}
+
+.elevate-gold-bg {
+  background-color: #b58b42;
+}
+
+.elevate-gold-border {
+  border-color: #b58b42;
+}
+
+.elevate-gold-glow {
+  box-shadow: 0 0 25px -2px rgba(181, 139, 66, 0.35);
+}
+
+.sky-elevate-gradient {
+  background: linear-gradient(135deg, #0369a1 0%, #075985 45%, #b58b42 100%);
+}
+
+.elevate-gradient-text {
+  background: linear-gradient(135deg, #075985 0%, #0369a1 35%, #b58b42 85%, #d4a853 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Ultra-premium shimmer sweep reflection on primary buttons */
+.btn-reflection {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.btn-reflection::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -80%;
+  width: 50%;
+  height: 200%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.08) 20%,
+    rgba(255, 255, 255, 0.45) 50%,
+    rgba(255, 255, 255, 0.08) 80%,
+    transparent 100%
+  );
+  transform: rotate(25deg);
+  pointer-events: none;
+  animation: shimmerSweep 4.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes shimmerSweep {
+  0% { left: -80%; }
+  28% { left: 160%; }
+  100% { left: 160%; }
+}
+
+/* Specular reflection effect on cards */
+.card-reflection {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.card-reflection::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.45),
+    transparent
+  );
+  transform: skewX(-25deg);
+  transition: all 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+  z-index: 10;
+}
+
+.card-reflection:hover::before {
+  left: 170%;
+}
+
+/* Subtle gold and metallic highlights */
+.gold-sheen {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 50%, #f59e0b 100%);
+}
+
+/* Custom sleek scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
