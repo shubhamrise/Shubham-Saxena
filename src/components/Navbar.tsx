@@ -122,14 +122,14 @@ export const Navbar: React.FC<NavbarProps> = ({
       {/* Main Light Mode Sticky Header - Solid Crisp White with zero blur or fading */}
       <header className="sticky top-0 z-40 bg-white border-b border-sky-100 shadow-xs transition-all duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-20 gap-4">
+          <div className="flex items-center justify-between h-20 sm:h-22 md:h-24 gap-4">
             {/* Zone 1: Brand Logo ONLY */}
             <div className="flex items-center shrink-0">
               <a href="#" className="inline-block group py-1" title="BNC ELEVATE - CIA Portal">
                 <img
                   src="/assets/aistudio/image_ea32138a.png"
                   alt="BNC ELEVATE"
-                  className="h-10 sm:h-12 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
+                  className="h-12 sm:h-14 md:h-16 lg:h-18 w-auto max-h-[72px] object-contain transition-transform duration-300 group-hover:scale-105 drop-shadow-xs"
                   onError={(e) => {
                     e.currentTarget.src = '/bnc-elevate-logo.png';
                   }}

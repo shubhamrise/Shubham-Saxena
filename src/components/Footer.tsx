@@ -42,11 +42,11 @@ export const Footer: React.FC<FooterProps> = ({ onOpenCheckout, onOpenInquiry })
           {/* Col 1: Brand Info */}
           <div className="space-y-4 md:col-span-1">
             <div className="flex items-center gap-3">
-              <div className="p-1 rounded-xl bg-white/95 inline-block">
+              <div className="p-2 rounded-2xl bg-white shadow-md inline-block">
                 <img
                   src="/assets/aistudio/image_ea32138a.png"
                   alt="BNC ELEVATE"
-                  className="h-9 w-auto object-contain"
+                  className="h-14 sm:h-16 w-auto object-contain"
                   onError={(e) => {
                     e.currentTarget.src = '/bnc-elevate-logo.png';
                   }}
