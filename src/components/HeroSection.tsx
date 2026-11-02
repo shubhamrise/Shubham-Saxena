@@ -56,7 +56,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         enquiryEmail,
         enquiryQualification,
         enquiryProgram,
-        targetEmail: 'elevate@bncglobal.in',
+        targetEmail: 'info@bncglobal.in',
         submittedAt: new Date().toISOString(),
       });
       localStorage.setItem('bnc_hero_enquiries', JSON.stringify(existing));
@@ -65,7 +65,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
     }
 
     try {
-      await fetch('https://formsubmit.co/ajax/elevate@bncglobal.in', {
+      await fetch('https://formsubmit.co/ajax/info@bncglobal.in', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -225,7 +225,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             </div>
           </div>
 
-          {/* Right Column (5 cols): Direct Enquiry Form Routing to elevate@bncglobal.in */}
+          {/* Right Column (5 cols): Direct Enquiry Form Routing to info@bncglobal.in */}
           <div className="lg:col-span-5">
             <div className="relative bg-white rounded-3xl border border-sky-100 shadow-xl shadow-sky-950/5 p-6 sm:p-7 overflow-hidden hover:border-[#b58b42]/30 transition-colors">
               <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-sky-700 via-sky-800 to-[#b58b42]"></div>
@@ -252,7 +252,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                     <h4 className="text-lg font-bold text-slate-900">Enquiry Dispatched!</h4>
                     <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">
                       Thank you, <strong className="text-slate-900">{enquiryName}</strong>. Your enquiry details have been delivered to{' '}
-                      <span className="font-bold text-sky-950">elevate@bncglobal.in</span>.
+                      <span className="font-bold text-sky-950">info@bncglobal.in</span>.
                     </p>
                     <p className="text-xs text-slate-500 mt-2">
                       Our Lead Academic Counselor will contact you via WhatsApp / Phone at{' '}
@@ -262,12 +262,12 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
                   <div className="pt-2 flex flex-col gap-2">
                     <a
-                      href="https://wa.me/919810575613?text=Hi%20BNC%20ELEVATE%2C%20I%20have%20submitted%20an%20enquiry%20for%20CIA%20coaching."
+                      href="https://wa.me/916396018626?text=Hi%20BNC%20ELEVATE%2C%20I%20have%20submitted%20an%20enquiry%20for%20CIA%20coaching."
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md transition-all"
                     >
-                      <span>Direct WhatsApp +91 98105 75613</span>
+                      <span>Direct WhatsApp +91 63960 18626</span>
                     </a>
                     <button
                       type="button"
@@ -309,7 +309,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                           required
                           value={enquiryPhone}
                           onChange={(e) => setEnquiryPhone(e.target.value)}
-                          placeholder="+91 98105 75613"
+                          placeholder="+91 63960 18626"
                           className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-sky-50/40 border border-sky-100 text-slate-900 placeholder-slate-400 text-xs sm:text-sm focus:outline-none focus:border-sky-700 focus:bg-white focus:ring-2 focus:ring-sky-200 transition-all"
                         />
                       </div>

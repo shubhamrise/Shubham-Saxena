@@ -3,6 +3,44 @@ import { Currency, EnrollmentOrder } from '../types';
 import { PACKAGES } from '../data/ciaData';
 import { X, Check, ShieldCheck, ArrowRight, Sparkles, Building, User, Mail, Phone, MapPin, GraduationCap, CheckCircle2, Clock } from 'lucide-react';
 
+// Generates strictly sequential order IDs starting from 2026000, 2026001, 2026002...
+const generateSequentialOrderId = (): string => {
+  const INITIAL_SEQ = 2026000;
+  const SEQ_KEY = 'bnc_order_sequence_counter';
+
+  try {
+    let nextSeq = INITIAL_SEQ;
+    const stored = localStorage.getItem(SEQ_KEY);
+
+    if (stored) {
+      const parsed = parseInt(stored, 10);
+      if (!isNaN(parsed) && parsed >= INITIAL_SEQ) {
+        nextSeq = parsed;
+      }
+    } else {
+      // Check existing orders in storage if present
+      const existing = JSON.parse(localStorage.getItem('bnc_enrollment_requests') || '[]');
+      if (Array.isArray(existing)) {
+        for (const item of existing) {
+          if (item && item.orderId) {
+            const num = parseInt(String(item.orderId).trim(), 10);
+            if (!isNaN(num) && num >= nextSeq) {
+              nextSeq = num + 1;
+            }
+          }
+        }
+      }
+    }
+
+    // Advance counter for the subsequent order
+    localStorage.setItem(SEQ_KEY, String(nextSeq + 1));
+    return String(nextSeq);
+  } catch (err) {
+    console.warn('Order sequence generation error:', err);
+    return String(INITIAL_SEQ);
+  }
+};
+
 interface CheckoutModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -77,7 +115,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
     setIsSubmitting(true);
 
-    const orderId = `BNC-REQ-${Math.floor(100000 + Math.random() * 900000)}`;
+    const orderId = generateSequentialOrderId();
     const formattedDate = new Date().toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
@@ -114,9 +152,9 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       console.warn('Storage save error', e);
     }
 
-    // Send HTTP POST to FormSubmit API delivering directly to elevate@bncglobal.in
+    // Send HTTP POST to FormSubmit API delivering directly to info@bncglobal.in
     try {
-      await fetch('https://formsubmit.co/ajax/elevate@bncglobal.in', {
+      await fetch('https://formsubmit.co/ajax/info@bncglobal.in', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -512,13 +550,13 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
               <div>
                 <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-800 border border-emerald-200">
-                  REQUEST RECEIVED & TRANSMITTED TO ELEVATE@BNCGLOBAL.IN
+                  REQUEST RECEIVED & TRANSMITTED TO INFO@BNCGLOBAL.IN
                 </span>
                 <h3 className="text-2xl font-black text-slate-900 mt-2">
                   Thank You, {completedOrder.studentName}!
                 </h3>
                 <p className="text-xs sm:text-sm text-slate-600 mt-1 max-w-lg mx-auto leading-relaxed">
-                  Your enrollment request for the <strong>{completedOrder.packageName}</strong> has been transmitted to the BNC ELEVATE Admissions Desk at <strong>elevate@bncglobal.in</strong>.
+                  Your enrollment request for the <strong>{completedOrder.packageName}</strong> has been transmitted to the BNC ELEVATE Admissions Desk at <strong>info@bncglobal.in</strong>.
                 </p>
               </div>
 
@@ -532,7 +570,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                   <span className="text-slate-500">Destination Desk:</span>
                   <span className="font-bold text-sky-900 flex items-center gap-1 font-mono">
                     <Mail className="w-3.5 h-3.5 text-[#b58b42]" />
-                    elevate@bncglobal.in
+                    info@bncglobal.in
                   </span>
                 </div>
                 <div className="flex justify-between">
@@ -557,14 +595,14 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                 </div>
                 <div className="flex justify-between pt-2 border-t border-slate-200 text-emerald-700 font-bold">
                   <span>Status:</span>
-                  <span>Dispatched to elevate@bncglobal.in</span>
+                  <span>Dispatched to info@bncglobal.in</span>
                 </div>
               </div>
 
               {/* Next Steps */}
               <div className="max-w-md mx-auto p-4 rounded-xl bg-sky-50/70 border border-sky-100 text-left text-xs space-y-1.5 text-slate-700">
                 <div className="font-bold text-slate-900 mb-1">What Happens Next:</div>
-                <div>1. Your enrollment dossier has been routed to <strong>elevate@bncglobal.in</strong>.</div>
+                <div>1. Your enrollment dossier has been routed to <strong>info@bncglobal.in</strong>.</div>
                 <div>2. Our senior admissions coordinator will contact you via WhatsApp ({completedOrder.studentPhone}) within 2 hours.</div>
                 <div>3. Official enrollment documentation & fee invoice will be delivered to <strong>{completedOrder.studentEmail}</strong>.</div>
               </div>

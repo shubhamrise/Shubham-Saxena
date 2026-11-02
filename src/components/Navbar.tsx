@@ -63,7 +63,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   const handleEmailRedirect = (e: React.MouseEvent) => {
     e.preventDefault();
-    const email = 'elevate@bncglobal.in';
+    const email = 'info@bncglobal.in';
     const subject = encodeURIComponent('CIA Executive Accelerator Inquiry - BNC ELEVATE');
     const body = encodeURIComponent('Hello BNC ELEVATE Admissions Team,\n\nI would like more information on the CIA Executive Accelerator program.\n\nName:\nPhone:\nQualification:\n');
     
@@ -102,18 +102,18 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
           <div className="hidden md:flex items-center gap-3.5 text-slate-100 font-medium">
             <a
-              href="mailto:elevate@bncglobal.in?subject=CIA%20Executive%20Accelerator%20Inquiry%20-%20BNC%20ELEVATE"
+              href="mailto:info@bncglobal.in?subject=CIA%20Executive%20Accelerator%20Inquiry%20-%20BNC%20ELEVATE"
               onClick={handleEmailRedirect}
               className="flex items-center gap-1.5 hover:text-[#f3bc53] transition-colors cursor-pointer"
-              title="Compose email to elevate@bncglobal.in"
+              title="Compose email to info@bncglobal.in"
             >
               <Mail className="w-3.5 h-3.5 text-[#f3bc53]" />
-              <span className="font-semibold tracking-wide">elevate@bncglobal.in</span>
+              <span className="font-semibold tracking-wide">info@bncglobal.in</span>
             </a>
             <span className="text-slate-600">|</span>
-            <a href="tel:+919810575613" className="flex items-center gap-1.5 hover:text-[#f3bc53] transition-colors">
+            <a href="tel:+916396018626" className="flex items-center gap-1.5 hover:text-[#f3bc53] transition-colors">
               <Phone className="w-3.5 h-3.5 text-[#f3bc53]" />
-              <span className="font-semibold tracking-wide">+91 98105 75613</span>
+              <span className="font-semibold tracking-wide">+91 63960 18626</span>
             </a>
           </div>
         </div>
@@ -283,16 +283,16 @@ export const Navbar: React.FC<NavbarProps> = ({
 
               <div className="pt-2 border-t border-slate-100 flex flex-col gap-1.5 text-xs text-slate-600 px-1">
                 <a
-                  href="mailto:elevate@bncglobal.in?subject=CIA%20Executive%20Accelerator%20Inquiry%20-%20BNC%20ELEVATE"
+                  href="mailto:info@bncglobal.in?subject=CIA%20Executive%20Accelerator%20Inquiry%20-%20BNC%20ELEVATE"
                   onClick={handleEmailRedirect}
                   className="flex items-center gap-2 py-1 text-slate-700 hover:text-[#b58b42] cursor-pointer"
                 >
                   <Mail className="w-3.5 h-3.5 text-[#b58b42]" />
-                  <span className="font-semibold">elevate@bncglobal.in</span>
+                  <span className="font-semibold">info@bncglobal.in</span>
                 </a>
-                <a href="tel:+919810575613" className="flex items-center gap-2 py-1 text-slate-700 hover:text-[#b58b42]">
+                <a href="tel:+916396018626" className="flex items-center gap-2 py-1 text-slate-700 hover:text-[#b58b42]">
                   <Phone className="w-3.5 h-3.5 text-[#b58b42]" />
-                  <span className="font-semibold">+91 98105 75613</span>
+                  <span className="font-semibold">+91 63960 18626</span>
                 </a>
               </div>
             </div>

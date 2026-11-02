@@ -37,7 +37,7 @@ export const InquiryModal: React.FC<InquiryModalProps> = ({
         collegeOrFirm,
         qualification,
         packageInterest,
-        targetEmail: 'elevate@bncglobal.in',
+        targetEmail: 'info@bncglobal.in',
         submittedAt: new Date().toISOString(),
       });
       localStorage.setItem('bnc_inquiries', JSON.stringify(existing));
@@ -46,7 +46,7 @@ export const InquiryModal: React.FC<InquiryModalProps> = ({
     }
 
     try {
-      await fetch('https://formsubmit.co/ajax/elevate@bncglobal.in', {
+      await fetch('https://formsubmit.co/ajax/info@bncglobal.in', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -104,7 +104,7 @@ export const InquiryModal: React.FC<InquiryModalProps> = ({
               </div>
               <h4 className="text-xl font-black text-slate-900">Thank You, {name}!</h4>
               <p className="text-xs text-slate-600 max-w-sm mx-auto leading-relaxed">
-                Your consultation request has been routed directly to <span className="font-bold text-[#b58b42] underline">elevate@bncglobal.in</span>. Our Lead Academic Counselor will reach out to you via WhatsApp / Phone at <span className="font-bold text-sky-700">{phone}</span> shortly.
+                Your consultation request has been routed directly to <span className="font-bold text-[#b58b42] underline">info@bncglobal.in</span>. Our Lead Academic Counselor will reach out to you via WhatsApp / Phone at <span className="font-bold text-sky-700">{phone}</span> shortly.
               </p>
               <button
                 onClick={onClose}
@@ -144,7 +144,7 @@ export const InquiryModal: React.FC<InquiryModalProps> = ({
                       required
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
-                      placeholder="+91 98105 75613"
+                      placeholder="+91 63960 18626"
                       className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-slate-50/80 border border-slate-200 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 focus:bg-white transition-all"
                     />
                   </div>
@@ -244,7 +244,7 @@ export const InquiryModal: React.FC<InquiryModalProps> = ({
               </div>
 
               <p className="text-[11px] text-slate-400 text-center">
-                We respect your privacy. No spam. You will only be contacted by BNC Global academic team at <span className="font-medium text-[#b58b42]">elevate@bncglobal.in</span>.
+                We respect your privacy. No spam. You will only be contacted by BNC Global academic team at <span className="font-medium text-[#b58b42]">info@bncglobal.in</span>.
               </p>
             </form>
           )}

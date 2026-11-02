@@ -4,12 +4,13 @@ import { Mail, Phone, ExternalLink } from 'lucide-react';
 interface FooterProps {
   onOpenCheckout: (packageId?: string) => void;
   onOpenInquiry: () => void;
+  onOpenLeadsVault?: () => void;
 }
 
-export const Footer: React.FC<FooterProps> = ({ onOpenCheckout, onOpenInquiry }) => {
+export const Footer: React.FC<FooterProps> = ({ onOpenCheckout, onOpenInquiry, onOpenLeadsVault }) => {
   const handleEmailRedirect = (e: React.MouseEvent) => {
     e.preventDefault();
-    const email = 'elevate@bncglobal.in';
+    const email = 'info@bncglobal.in';
     const subject = encodeURIComponent('CIA Executive Accelerator Inquiry - BNC ELEVATE');
     const body = encodeURIComponent('Hello BNC ELEVATE Admissions Team,\n\nI would like more information on the CIA Executive Accelerator program.\n\nName:\nPhone:\nQualification:\n');
     
@@ -60,18 +61,18 @@ export const Footer: React.FC<FooterProps> = ({ onOpenCheckout, onOpenInquiry })
               <div className="flex items-center gap-2">
                 <Mail className="w-3.5 h-3.5 text-[#b58b42]" />
                 <a
-                  href="mailto:elevate@bncglobal.in?subject=CIA%20Executive%20Accelerator%20Inquiry%20-%20BNC%20ELEVATE"
+                  href="mailto:info@bncglobal.in?subject=CIA%20Executive%20Accelerator%20Inquiry%20-%20BNC%20ELEVATE"
                   onClick={handleEmailRedirect}
                   className="hover:text-[#b58b42] transition-colors cursor-pointer"
-                  title="Compose email to elevate@bncglobal.in"
+                  title="Compose email to info@bncglobal.in"
                 >
-                  elevate@bncglobal.in
+                  info@bncglobal.in
                 </a>
               </div>
               <div className="flex items-center gap-2">
                 <Phone className="w-3.5 h-3.5 text-[#b58b42]" />
-                <a href="tel:+919810575613" className="hover:text-[#b58b42] transition-colors">
-                  +91 98105 75613
+                <a href="tel:+916396018626" className="hover:text-[#b58b42] transition-colors">
+                  +91 63960 18626
                 </a>
               </div>
             </div>

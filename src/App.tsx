@@ -32,7 +32,7 @@ export default function App() {
   };
 
   const handleEnrollSuccess = (order: EnrollmentOrder) => {
-    setActiveNotification(`Seat reserved for ${order.studentName}! Order #${order.orderId}`);
+    setActiveNotification(`Seat reserved for ${order.studentName}! Order ID: ${order.orderId}`);
   };
 
   return (
