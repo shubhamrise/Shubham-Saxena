@@ -5,7 +5,7 @@ export const DeliverablesSection: React.FC = () => {
   const deliverables = [
     {
       icon: Video,
-      title: '150+ Hours Live Coaching',
+      title: '100+ Hours Live Coaching',
       desc: 'Weekend live interactive sessions covering all 3 parts of the new Global Internal Audit Standards, led by veteran practicing auditors.',
       tag: 'Interactive'
     },

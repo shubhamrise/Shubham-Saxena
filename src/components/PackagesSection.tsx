@@ -113,7 +113,7 @@ export const PackagesSection: React.FC<PackagesSectionProps> = ({
                     <span className="text-xs font-medium text-slate-500">{pkg.deliverables.mode}</span>
                   </div>
 
-                  <p className="text-xs text-slate-600 leading-relaxed mb-6 min-h-[36px]">
+                  <p className="text-xs text-slate-600 leading-relaxed mb-6 min-h-[52px]">
                     {pkg.tagline}
                   </p>
 
@@ -225,8 +225,8 @@ export const PackagesSection: React.FC<PackagesSectionProps> = ({
                 <tr className="bg-sky-50/70 text-slate-700 border-b border-sky-100">
                   <th className="p-4 font-bold">Feature / Inclusion</th>
                   <th className="p-4 font-bold">Basic (₹40,000)</th>
-                  <th className="p-4 font-bold text-sky-800">Premium Live (₹60,000)</th>
-                  <th className="p-4 font-bold text-[#b58b42]">Premium Plus (₹75,000)</th>
+                  <th className="p-4 font-bold text-sky-800">Premium Live (₹72,000)</th>
+                  <th className="p-4 font-bold text-[#b58b42]">Premium Plus (₹1,00,000)</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-slate-600">
@@ -270,7 +270,7 @@ export const PackagesSection: React.FC<PackagesSectionProps> = ({
                   <td className="p-4 font-medium text-slate-900">Hands-on AI Audit Tools Training Lab</td>
                   <td className="p-4 text-slate-400">—</td>
                   <td className="p-4 text-slate-400">—</td>
-                  <td className="p-4 text-indigo-700 font-bold">30 Hrs AI Lab Included</td>
+                  <td className="p-4 text-indigo-700 font-bold">20 Hrs AI Lab Included</td>
                 </tr>
                 <tr>
                   <td className="p-4 font-medium text-slate-900">Placement & Resume Review Assistance</td>

@@ -81,7 +81,7 @@ export const AiAdvisorChatbot: React.FC<AiAdvisorChatbotProps> = ({
         aiReply = "Official IIA India Exam Fees for 2026-27 (with 18% GST):\n\n• CIA Application Fee: US$ 84.96\n• Part 1 Exam: US$ 219.48\n• Part 2 Exam: US$ 198.24\n• Part 3 Exam: US$ 198.24\n• Full Program Total: US$ 700.92 (approx. ₹60,600).\n\nIIA India student members can start with the IAP route for just US$ 247.80 total!";
         action = { label: "Open IIA Fee Calculator", targetId: "fees" };
       } else if (lower.includes('premium') || lower.includes('package') || lower.includes('price') || lower.includes('emi') || lower.includes('ai tool')) {
-        aiReply = "We offer 3 tailored tuition tiers:\n\n1. Basic (₹40,000 / $490): 18-month LMS, recorded classes, 5,000+ test bank, mock exams.\n2. Premium Live (₹60,000 / $735) [Most Popular]: Live interactive weekend classes (Fri/Sat), hardcopy books couriered home, doubt solving.\n3. Premium Plus (₹75,000 / $915): Live classes + 30-hour AI Audit Tools Lab for automated workpapers & data analytics.\n\nAll packages have 2-part zero-cost EMI options!";
+        aiReply = "We offer 3 tailored tuition tiers:\n\n1. Basic (₹40,000 / $490): 18-month LMS, recorded classes, 5,000+ test bank, mock exams.\n2. Premium Live (₹72,000 / $885) [Most Popular]: Live interactive weekend classes (Fri/Sat), hardcopy books couriered home, doubt solving.\n3. Premium Plus (₹1,00,000 / $1,225): Live classes + 20-hour AI Audit Tools Lab for automated workpapers & data analytics.\n\nAll packages have 2-part zero-cost EMI options!";
         action = { label: "Compare Package Features", targetId: "packages" };
       } else if (lower.includes('iap') || lower.includes('practitioner') || lower.includes('part 1') || lower.includes('student')) {
         aiReply = "The Internal Audit Practitioner (IAP) is a permanent international designation awarded by the IIA upon clearing Part 1 alone. No university degree is required! Your Part 1 pass remains valid credit toward the full CIA for 4 years, and the IIA waives your CIA application fee.";
@@ -90,12 +90,12 @@ export const AiAdvisorChatbot: React.FC<AiAdvisorChatbotProps> = ({
         aiReply = "There is NO negative marking on any part of the CIA exam! You should answer every single question. You need a scaled score of 600 points (out of 750) to pass. Part 1 has 125 questions (150 mins); Parts 2 and 3 each have 100 questions (120 mins).";
         action = { label: "Read Syllabus Breakdown", targetId: "exam" };
       } else if (lower.includes('tutor') || lower.includes('faculty') || lower.includes('instructor') || lower.includes('teacher') || lower.includes('gurvinder') || lower.includes('who teaches')) {
-        aiReply = "Your master tutor and lead instructor is CA Gurvinder Pal Singh, Co-Founder & Managing Director of BNC Global.\n\n• 21+ years of experience in Big 4 (KPMG), Aon, and global risk consulting\n• Special Invitee to the ICAI Sustainability Reporting Standards Board (SRSB)\n• Chartered Accountant (ICAI) & B.Com (Hons.) from Delhi University\n• Personally conducts the 150+ hours of live weekend coaching and doubt clearing!";
+        aiReply = "Your master tutor and lead instructor is CA Gurvinder Pal Singh, Co-Founder & Managing Director of BNC Global.\n\n• 21+ years of experience in Big 4 (KPMG), Aon, and global risk consulting\n• Special Invitee to the ICAI Sustainability Reporting Standards Board (SRSB)\n• Chartered Accountant (ICAI) & B.Com (Hons.) from Delhi University\n• Personally conducts the 100+ hours of live weekend coaching and doubt clearing!";
         action = { label: "Meet Tutor: CA Gurvinder Pal Singh", targetId: "tutor" };
       } else if (lower.includes('reimburse') || lower.includes('employer') || lower.includes('company')) {
         aiReply = "Yes! Major accounting firms (Deloitte, PwC, EY, KPMG, BDO, Grant Thornton) and multinational banks actively reimburse CIA training and exam registration fees upon passing. BNC Global provides tax invoices with GST for your employer claims.";
       } else {
-        aiReply = `I understand you're inquiring about "${query}". At BNC Global, we provide complete 150+ hours live training, physical test banks, and placement assistance for the CIA®. Would you like to check out our upcoming cohort dates or speak with a senior counselor?`;
+        aiReply = `I understand you're inquiring about "${query}". At BNC Global, we provide complete 100+ hours live training, physical test banks, and placement assistance for the CIA®. Would you like to check out our upcoming cohort dates or speak with a senior counselor?`;
         action = { label: "View Live Cohorts", targetId: "packages" };
       }
 

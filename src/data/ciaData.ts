@@ -20,7 +20,7 @@ export const PACKAGES: PackagePlan[] = [
       'Post-CIA placement network assistance'
     ],
     deliverables: {
-      hours: '120+ Hrs Recorded',
+      hours: '100+ Hrs Recorded',
       mode: 'Self-Study + LMS',
       lmsAccess: '18 Months',
       booksIncluded: true,
@@ -35,12 +35,12 @@ export const PACKAGES: PackagePlan[] = [
     tagline: 'Our flagship instructor-led cohort with weekend live classes & doubt clearing',
     badge: 'MOST POPULAR',
     isPopular: true,
-    priceINR: 60000,
-    priceUSD: 735,
-    installmentINR: 31500,
+    priceINR: 72000,
+    priceUSD: 885,
+    installmentINR: 37800,
     features: [
       'Everything included in the Basic Package, PLUS:',
-      '150+ Hours Live instructor-led sessions every Friday & Saturday',
+      '100+ Hours Live instructor-led sessions every Friday & Saturday',
       'Interactive doubt-clearing workshops with senior CIA & CA faculty',
       'Live exam strategy sessions, time management & MCQ walkthroughs',
       'Post-class HD recording uploaded immediately to your student portal',
@@ -50,7 +50,7 @@ export const PACKAGES: PackagePlan[] = [
       'Resume review & mock interview sessions for Big 4 & MNC audit roles'
     ],
     deliverables: {
-      hours: '150+ Hrs Live + Recordings',
+      hours: '100+ Hrs Live + Recordings',
       mode: 'Live Weekend Classes',
       lmsAccess: '18 Months',
       booksIncluded: true,
@@ -62,11 +62,11 @@ export const PACKAGES: PackagePlan[] = [
   {
     id: 'premium-plus',
     name: 'Premium Plus with AI Audit',
-    tagline: 'Executive program combining live CIA prep with real-world AI audit toolkits',
+    tagline: 'Elite executive masterclass combining live CIA® mentorship by senior consulting faculty with enterprise AI audit intelligence toolkits',
     badge: 'FLAGSHIP INNOVATION',
-    priceINR: 75000,
-    priceUSD: 915,
-    installmentINR: 39500,
+    priceINR: 100000,
+    priceUSD: 1225,
+    installmentINR: 52500,
     features: [
       'Everything in the Premium Live Package, PLUS:',
       'Hands-on AI Tools Training tailored for Internal Audit & Risk Management',
@@ -78,7 +78,7 @@ export const PACKAGES: PackagePlan[] = [
       'Lifetime alumni masterclass invites & CPE guidance'
     ],
     deliverables: {
-      hours: '180+ Hrs (150 Live + 30 AI Lab)',
+      hours: '120+ Hrs (100 Live + 20 AI Lab)',
       mode: 'Live Classes + AI Lab',
       lmsAccess: '24 Months Extended',
       booksIncluded: true,

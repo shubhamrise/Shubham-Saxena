@@ -93,7 +93,7 @@ export const InteractiveQuizModal: React.FC<InteractiveQuizModalProps> = ({
                 <p className="text-xs text-slate-600 mt-1 max-w-md mx-auto">
                   {score === 3
                     ? 'Exceptional grasp of internal audit concepts! You are well-positioned for the full CIA® certification.'
-                    : 'Good attempt! BNC Global’s 150+ hours of live mentoring will give you complete mastery over all IIA standards and exam traps.'}
+                    : 'Good attempt! BNC Global’s 100+ hours of live mentoring will give you complete mastery over all IIA standards and exam traps.'}
                 </p>
               </div>
 

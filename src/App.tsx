@@ -8,7 +8,6 @@ import { EligibilityCalculator } from './components/EligibilityCalculator';
 import { PackagesSection } from './components/PackagesSection';
 import { DeliverablesSection } from './components/DeliverablesSection';
 import { IiaFeeCalculator } from './components/IiaFeeCalculator';
-import { TestimonialsSection } from './components/TestimonialsSection';
 import { FaqSection } from './components/FaqSection';
 import { Footer } from './components/Footer';
 import { CheckoutModal } from './components/CheckoutModal';
@@ -111,10 +110,7 @@ export default function App() {
         {/* 8. Official IIA India Fees & Transparent Calculator */}
         <IiaFeeCalculator />
 
-        {/* 9. Verified Alumni Reviews */}
-        <TestimonialsSection />
-
-        {/* 10. Frequently Asked Questions */}
+        {/* 9. Frequently Asked Questions */}
         <FaqSection onOpenInquiry={() => setInquiryOpen(true)} />
 
         {/* Final Conversion Banner with Atmospheric Architectural Backdrop */}

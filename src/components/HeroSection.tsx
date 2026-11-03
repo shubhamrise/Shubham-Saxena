@@ -145,7 +145,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
           {/* Master Program Subtext */}
           <p className="text-sm sm:text-base text-slate-300 font-normal leading-relaxed max-w-3xl mx-auto">
-            Complete exam preparation featuring 150+ hours of live weekend coaching, proprietary BNC 5,000+ MCQ test banks, modern AI audit workflow training, and dedicated placement advisory.
+            Complete exam preparation featuring 100+ hours of live weekend coaching, proprietary BNC 5,000+ MCQ test banks, modern AI audit workflow training, and dedicated placement advisory.
           </p>
         </div>
 
@@ -181,18 +181,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               </button>
             </div>
 
-            {/* 4 Quantifiable Live Metrics Strip in 2x2 Grid */}
-            <div className="grid grid-cols-2 gap-3.5 text-left">
-              <div className="card-reflection p-4 rounded-2xl bg-slate-900/80 backdrop-blur-md border border-slate-700/80 shadow-lg hover:border-sky-400 transition-all">
-                <div className="text-2xl sm:text-3xl font-extrabold text-sky-400 tracking-tight mb-0.5 tabular-nums">94%</div>
-                <div className="text-[11px] font-bold text-white uppercase tracking-wider mb-1">First-Time Pass Rate</div>
-                <div className="text-[11px] text-slate-300 leading-relaxed">
-                  Compared to global average of 42%, our structured live mocks deliver verifiable pass results.
-                </div>
-              </div>
-
+            {/* 3 Quantifiable Live Metrics Strip in 3-Column Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 text-left">
               <div className="card-reflection p-4 rounded-2xl bg-slate-900/80 backdrop-blur-md border border-slate-700/80 shadow-lg hover:border-[#b58b42]/70 transition-all">
-                <div className="text-2xl sm:text-3xl font-extrabold text-[#f1bd5b] tracking-tight mb-0.5 tabular-nums">150+ Hrs</div>
+                <div className="text-2xl sm:text-3xl font-extrabold text-[#f1bd5b] tracking-tight mb-0.5 tabular-nums">100+ Hrs</div>
                 <div className="text-[11px] font-bold text-white uppercase tracking-wider mb-1">Live Interactive Classes</div>
                 <div className="text-[11px] text-slate-300 leading-relaxed">
                   Weekly live classes every Friday & Saturday, complete with instant HD portal recordings.
