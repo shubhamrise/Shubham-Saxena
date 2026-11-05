@@ -1,7 +1,11 @@
 import React from 'react';
-import { BookOpen, Video, FileCheck, Layers, HelpCircle, Laptop, Cpu, Award } from 'lucide-react';
+import { BookOpen, Video, FileCheck, Layers, HelpCircle, Laptop, Cpu, Award, ChevronRight } from 'lucide-react';
 
-export const DeliverablesSection: React.FC = () => {
+interface DeliverablesSectionProps {
+  onOpenLms?: () => void;
+}
+
+export const DeliverablesSection: React.FC<DeliverablesSectionProps> = ({ onOpenLms }) => {
   const deliverables = [
     {
       icon: Video,
@@ -99,6 +103,15 @@ export const DeliverablesSection: React.FC = () => {
                   </div>
                   <h3 className="text-base font-bold text-slate-900 mb-2">{item.title}</h3>
                   <p className="text-xs text-slate-600 leading-relaxed">{item.desc}</p>
+                  {item.title.includes('LMS') && onOpenLms && (
+                    <button
+                      onClick={onOpenLms}
+                      className="mt-3.5 inline-flex items-center gap-1.5 text-xs font-bold text-sky-800 hover:text-[#b58b42] transition-colors cursor-pointer group"
+                    >
+                      <span>Explore Student LMS Portal</span>
+                      <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                    </button>
+                  )}
                 </div>
               </div>
             );

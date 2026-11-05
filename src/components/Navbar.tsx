@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Currency } from '../types';
-import { Phone, Mail, ChevronRight, Menu, X, Sparkles, MessageSquare } from 'lucide-react';
+import { Phone, Mail, ChevronRight, Menu, X, Sparkles, MessageSquare, BookOpen, Download } from 'lucide-react';
 
 interface NavbarProps {
   currency: Currency;
@@ -8,6 +8,8 @@ interface NavbarProps {
   onOpenCheckout: (packageId?: string) => void;
   onOpenInquiry: () => void;
   onOpenChatbot: () => void;
+  onOpenLms?: () => void;
+  onOpenBrochure?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -16,6 +18,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenCheckout,
   onOpenInquiry,
   onOpenChatbot,
+  onOpenLms,
+  onOpenBrochure,
 }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [activeSection, setActiveSection] = useState('home');
@@ -187,6 +191,18 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </button>
               </div>
 
+              {/* Student LMS Direct Access */}
+              {onOpenLms && (
+                <button
+                  onClick={onOpenLms}
+                  className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-sky-900 bg-sky-50 hover:bg-sky-100/90 border border-sky-200/90 rounded-lg transition-all cursor-pointer whitespace-nowrap shadow-2xs"
+                  title="Launch Student LMS Portal"
+                >
+                  <BookOpen className="w-3.5 h-3.5 text-[#b58b42]" />
+                  <span>Student LMS</span>
+                </button>
+              )}
+
               {/* AI Counselor Quick Button */}
               <button
                 onClick={onOpenChatbot}
@@ -280,6 +296,20 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <Sparkles className="w-4 h-4 text-[#b58b42]" />
                 <span>Ask AI Advisor</span>
               </button>
+
+              {onOpenLms && (
+                <button
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    onOpenLms();
+                  }}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold text-sky-900 bg-sky-100/70 border border-sky-200 hover:bg-sky-200/70 cursor-pointer"
+                >
+                  <BookOpen className="w-4 h-4 text-[#b58b42]" />
+                  <span>Open Student LMS Portal</span>
+                </button>
+              )}
+
 
               <div className="pt-2 border-t border-slate-100 flex flex-col gap-1.5 text-xs text-slate-600 px-1">
                 <a

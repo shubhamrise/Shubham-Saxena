@@ -5,9 +5,11 @@ interface FooterProps {
   onOpenCheckout: (packageId?: string) => void;
   onOpenInquiry: () => void;
   onOpenLeadsVault?: () => void;
+  onOpenLms?: () => void;
+  onOpenBrochure?: (packageId?: string) => void;
 }
 
-export const Footer: React.FC<FooterProps> = ({ onOpenCheckout, onOpenInquiry, onOpenLeadsVault }) => {
+export const Footer: React.FC<FooterProps> = ({ onOpenCheckout, onOpenInquiry, onOpenLeadsVault, onOpenLms, onOpenBrochure }) => {
   const handleEmailRedirect = (e: React.MouseEvent) => {
     e.preventDefault();
     const email = 'info@bncglobal.in';
@@ -96,9 +98,20 @@ export const Footer: React.FC<FooterProps> = ({ onOpenCheckout, onOpenInquiry, o
               </li>
               <li>
                 <a href="#packages" className="hover:text-sky-300 transition-colors">
-                  Coaching Packages & Pricing
+                  Coaching Packages & Tiers
                 </a>
               </li>
+              {onOpenBrochure && (
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => onOpenBrochure('all')}
+                    className="hover:text-[#f1bd5b] transition-colors cursor-pointer text-left"
+                  >
+                    Download Course Brochure (PDF)
+                  </button>
+                </li>
+              )}
               <li>
                 <a href="#fees" className="hover:text-sky-300 transition-colors">
                   Official IIA Fee Chart
@@ -109,6 +122,16 @@ export const Footer: React.FC<FooterProps> = ({ onOpenCheckout, onOpenInquiry, o
                   FAQ & Candidate Rules
                 </a>
               </li>
+              {onOpenLms && (
+                <li>
+                  <button
+                    onClick={onOpenLms}
+                    className="text-[#f1bd5b] hover:text-amber-300 font-bold transition-colors cursor-pointer text-left"
+                  >
+                    ★ Student LMS Portal
+                  </button>
+                </li>
+              )}
             </ul>
           </div>
 

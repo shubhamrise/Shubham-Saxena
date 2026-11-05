@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Currency, EnrollmentOrder } from './types';
 import { Navbar } from './components/Navbar';
 import { HeroSection } from './components/HeroSection';
@@ -14,25 +14,93 @@ import { CheckoutModal } from './components/CheckoutModal';
 import { InquiryModal } from './components/InquiryModal';
 import { InteractiveQuizModal } from './components/InteractiveQuizModal';
 import { AiAdvisorChatbot } from './components/AiAdvisorChatbot';
+import { StudentLmsPortal } from './components/StudentLmsPortal';
+import { BrochureModal } from './components/BrochureModal';
 import { Sparkles, ArrowRight, ShieldCheck } from 'lucide-react';
 
 export default function App() {
   const [currency, setCurrency] = useState<Currency>('INR');
+  const [lmsOpen, setLmsOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [selectedPackageForCheckout, setSelectedPackageForCheckout] = useState('premium');
+  const [brochureOpen, setBrochureOpen] = useState(false);
+  const [selectedPackageForBrochure, setSelectedPackageForBrochure] = useState('all');
   const [inquiryOpen, setInquiryOpen] = useState(false);
   const [quizOpen, setQuizOpen] = useState(false);
   const [chatbotOpen, setChatbotOpen] = useState(false);
   const [activeNotification, setActiveNotification] = useState<string | null>(null);
 
+  // Guard timestamp to prevent ghost click-through from reopening modals
+  const lastClosedAtRef = useRef<number>(0);
+
   const handleOpenCheckout = (packageId: string = 'premium') => {
+    if (Date.now() - lastClosedAtRef.current < 450) return;
     setSelectedPackageForCheckout(packageId);
     setCheckoutOpen(true);
+  };
+
+  const handleCloseCheckout = () => {
+    lastClosedAtRef.current = Date.now();
+    setCheckoutOpen(false);
+  };
+
+  const handleOpenBrochure = (packageId: string = 'all') => {
+    if (Date.now() - lastClosedAtRef.current < 450) return;
+    setSelectedPackageForBrochure(packageId);
+    setBrochureOpen(true);
+  };
+
+  const handleCloseBrochure = () => {
+    lastClosedAtRef.current = Date.now();
+    setBrochureOpen(false);
+  };
+
+  const handleOpenInquiry = () => {
+    if (Date.now() - lastClosedAtRef.current < 450) return;
+    setInquiryOpen(true);
+  };
+
+  const handleCloseInquiry = () => {
+    lastClosedAtRef.current = Date.now();
+    setInquiryOpen(false);
+  };
+
+  const handleOpenQuiz = () => {
+    if (Date.now() - lastClosedAtRef.current < 450) return;
+    setQuizOpen(true);
+  };
+
+  const handleCloseQuiz = () => {
+    lastClosedAtRef.current = Date.now();
+    setQuizOpen(false);
+  };
+
+  const handleOpenChatbot = () => {
+    if (Date.now() - lastClosedAtRef.current < 450) return;
+    setChatbotOpen(true);
+  };
+
+  const handleCloseChatbot = () => {
+    lastClosedAtRef.current = Date.now();
+    setChatbotOpen(false);
   };
 
   const handleEnrollSuccess = (order: EnrollmentOrder) => {
     setActiveNotification(`Seat reserved for ${order.studentName}! Order ID: ${order.orderId}`);
   };
+
+  if (lmsOpen) {
+    return (
+      <StudentLmsPortal
+        onBackToWebsite={() => setLmsOpen(false)}
+        onOpenCheckout={(packageId) => {
+          setLmsOpen(false);
+          handleOpenCheckout(packageId || selectedPackageForCheckout);
+        }}
+        initialPackage={selectedPackageForCheckout}
+      />
+    );
+  }
 
   return (
     <div className="relative min-h-screen bg-[#071322] text-slate-100 flex flex-col font-sans selection:bg-[#b58b42] selection:text-white">
@@ -68,8 +136,10 @@ export default function App() {
         currency={currency}
         setCurrency={setCurrency}
         onOpenCheckout={handleOpenCheckout}
-        onOpenInquiry={() => setInquiryOpen(true)}
-        onOpenChatbot={() => setChatbotOpen(true)}
+        onOpenInquiry={handleOpenInquiry}
+        onOpenChatbot={handleOpenChatbot}
+        onOpenLms={() => setLmsOpen(true)}
+        onOpenBrochure={handleOpenBrochure}
       />
 
       {/* Main Content Sections */}
@@ -78,8 +148,9 @@ export default function App() {
         <HeroSection
           currency={currency}
           onOpenCheckout={handleOpenCheckout}
-          onOpenQuiz={() => setQuizOpen(true)}
-          onOpenInquiry={() => setInquiryOpen(true)}
+          onOpenQuiz={handleOpenQuiz}
+          onOpenInquiry={handleOpenInquiry}
+          onOpenLms={() => setLmsOpen(true)}
         />
 
         {/* 2. Executive Leadership & Mentorship: Meet the Founders */}
@@ -87,31 +158,32 @@ export default function App() {
 
         {/* 3. The 3-Part Exam Structure & Syllabus Blueprint */}
         <ExamBlueprintSection
-          onOpenQuiz={() => setQuizOpen(true)}
-          onOpenInquiry={() => setInquiryOpen(true)}
+          onOpenQuiz={handleOpenQuiz}
+          onOpenInquiry={handleOpenInquiry}
         />
 
         {/* 5. Interactive Eligibility & Pathway Guide */}
         <EligibilityCalculator
           onOpenCheckout={handleOpenCheckout}
-          onOpenInquiry={() => setInquiryOpen(true)}
+          onOpenInquiry={handleOpenInquiry}
         />
 
         {/* 6. Pricing, Packages & Direct Enrollment (Core Purchase Center) */}
         <PackagesSection
           currency={currency}
           onOpenCheckout={handleOpenCheckout}
-          onOpenInquiry={() => setInquiryOpen(true)}
+          onOpenInquiry={handleOpenInquiry}
+          onOpenBrochure={handleOpenBrochure}
         />
 
         {/* 7. What Course Fee Covers (The 8 Pillars) */}
-        <DeliverablesSection />
+        <DeliverablesSection onOpenLms={() => setLmsOpen(true)} />
 
         {/* 8. Official IIA India Fees & Transparent Calculator */}
         <IiaFeeCalculator />
 
         {/* 9. Frequently Asked Questions */}
-        <FaqSection onOpenInquiry={() => setInquiryOpen(true)} />
+        <FaqSection onOpenInquiry={handleOpenInquiry} />
 
         {/* Final Conversion Banner with Atmospheric Architectural Backdrop */}
         <section className="py-20 bg-gradient-to-r from-sky-900 via-sky-800 to-[#846329] text-white text-center px-4 relative overflow-hidden border-t border-sky-800/60">
@@ -147,7 +219,7 @@ export default function App() {
                 <ArrowRight className="w-4 h-4 text-[#b58b42]" />
               </button>
               <button
-                onClick={() => setInquiryOpen(true)}
+                onClick={handleOpenInquiry}
                 className="px-6 py-3.5 rounded-xl font-semibold text-sm text-white bg-white/15 hover:bg-white/25 border border-white/30 cursor-pointer transition-colors backdrop-blur-sm"
               >
                 Request 1-on-1 Academic Counseling
@@ -160,13 +232,15 @@ export default function App() {
       {/* Footer */}
       <Footer
         onOpenCheckout={handleOpenCheckout}
-        onOpenInquiry={() => setInquiryOpen(true)}
+        onOpenInquiry={handleOpenInquiry}
+        onOpenLms={() => setLmsOpen(true)}
+        onOpenBrochure={handleOpenBrochure}
       />
 
       {/* Floating AI Advisor Chatbot Trigger Button */}
       <div className="fixed bottom-6 right-6 z-40">
         <button
-          onClick={() => setChatbotOpen(true)}
+          onClick={handleOpenChatbot}
           className="btn-reflection group flex items-center gap-2.5 px-4 py-3 rounded-full bg-gradient-to-r from-sky-700 via-sky-800 to-[#b58b42] hover:from-sky-800 hover:to-[#9e7735] text-white shadow-2xl shadow-sky-800/30 hover:shadow-[#b58b42]/35 border border-white/30 hover:scale-105 transition-all duration-200 cursor-pointer"
           aria-label="Open AI Academic Advisor"
         >
@@ -184,7 +258,7 @@ export default function App() {
       {/* Interactive Modals */}
       <CheckoutModal
         isOpen={checkoutOpen}
-        onClose={() => setCheckoutOpen(false)}
+        onClose={handleCloseCheckout}
         selectedPackageId={selectedPackageForCheckout}
         currency={currency}
         onEnrollSuccess={handleEnrollSuccess}
@@ -192,21 +266,28 @@ export default function App() {
 
       <InquiryModal
         isOpen={inquiryOpen}
-        onClose={() => setInquiryOpen(false)}
+        onClose={handleCloseInquiry}
+      />
+
+      <BrochureModal
+        isOpen={brochureOpen}
+        onClose={handleCloseBrochure}
+        defaultPackage={selectedPackageForBrochure}
+        onOpenCheckout={handleOpenCheckout}
       />
 
       <InteractiveQuizModal
         isOpen={quizOpen}
-        onClose={() => setQuizOpen(false)}
+        onClose={handleCloseQuiz}
         onOpenCheckout={() => {
-          setQuizOpen(false);
+          handleCloseQuiz();
           handleOpenCheckout('premium');
         }}
       />
 
       <AiAdvisorChatbot
         isOpen={chatbotOpen}
-        onClose={() => setChatbotOpen(false)}
+        onClose={handleCloseChatbot}
         onOpenCheckout={handleOpenCheckout}
       />
     </div>

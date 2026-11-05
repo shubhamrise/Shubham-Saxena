@@ -1,0 +1,1200 @@
+import React, { useState } from 'react';
+import { ManagedLearner, LmsAdminUser, EnquiryLead } from '../types';
+import {
+  ShieldCheck,
+  ShieldAlert,
+  UserCheck,
+  UserX,
+  Search,
+  Plus,
+  Trash2,
+  Edit3,
+  RotateCcw,
+  CheckCircle2,
+  Clock,
+  ArrowLeft,
+  LogOut,
+  Sparkles,
+  BookOpen,
+  Filter,
+  X,
+  Check,
+  AlertTriangle,
+  Mail,
+  Phone,
+  FileSpreadsheet,
+  Download,
+  ExternalLink,
+  MessageSquare,
+  User
+} from 'lucide-react';
+
+interface LmsAdminConsoleProps {
+  adminUser: LmsAdminUser;
+  learners: ManagedLearner[];
+  onUpdateLearners: (updated: ManagedLearner[]) => void;
+  onLogoutAdmin: () => void;
+  onSwitchToStudentView: (learner?: ManagedLearner) => void;
+  onBackToWebsite: () => void;
+  onShowToast: (msg: string) => void;
+}
+
+export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
+  adminUser,
+  learners,
+  onUpdateLearners,
+  onLogoutAdmin,
+  onSwitchToStudentView,
+  onBackToWebsite,
+  onShowToast,
+}) => {
+  const [consoleTab, setConsoleTab] = useState<'learners' | 'leads'>('learners');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [leadSearchTerm, setLeadSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'revoked' | 'pending'>('all');
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [editingLearner, setEditingLearner] = useState<ManagedLearner | null>(null);
+
+  // Unified leads state populated from website inquiries
+  const [leads, setLeads] = useState<EnquiryLead[]>(() => {
+    try {
+      const stored = localStorage.getItem('bnc_all_leads');
+      if (stored) return JSON.parse(stored);
+      const hero = JSON.parse(localStorage.getItem('bnc_hero_enquiries') || '[]');
+      const brochure = JSON.parse(localStorage.getItem('bnc_brochure_downloads') || '[]');
+      const consult = JSON.parse(localStorage.getItem('bnc_inquiries') || '[]');
+      const merged: EnquiryLead[] = [];
+      hero.forEach((h: any, i: number) => {
+        merged.push({
+          id: `lead-h-${i}`,
+          name: h.enquiryName || 'Enquired Candidate',
+          email: h.enquiryEmail || 'candidate@example.com',
+          phone: h.enquiryPhone || '+91 63960 18626',
+          qualification: h.enquiryQualification || "Bachelor's Degree",
+          program: h.enquiryProgram || 'All Packages',
+          source: 'Hero Enquiry & Download Brochure',
+          status: 'New',
+          submittedAt: h.submittedAt ? new Date(h.submittedAt).toLocaleString() : 'Recent',
+          brochureDownloaded: true,
+          notes: 'Submitted via Hero consultation desk.'
+        });
+      });
+      brochure.forEach((b: any, i: number) => {
+        merged.push({
+          id: `lead-b-${i}`,
+          name: b.name || 'Brochure Candidate',
+          email: b.email || 'candidate@example.com',
+          phone: b.phone || '+91 63960 18626',
+          qualification: "Bachelor's Degree",
+          program: b.packageInterest || 'Complete Syllabus',
+          source: 'Brochure Modal Download',
+          status: 'New',
+          submittedAt: b.downloadedAt ? new Date(b.downloadedAt).toLocaleString() : 'Recent',
+          brochureDownloaded: true,
+          notes: 'Downloaded 10-page syllabus brochure.'
+        });
+      });
+      consult.forEach((c: any, i: number) => {
+        merged.push({
+          id: `lead-c-${i}`,
+          name: c.name || 'Counseling Candidate',
+          email: c.email || 'candidate@example.com',
+          phone: c.phone || '+91 63960 18626',
+          qualification: c.qualification || "Bachelor's Degree",
+          program: c.packageInterest || 'Consultation Request',
+          source: 'Faculty Consultation Desk',
+          status: 'New',
+          submittedAt: c.submittedAt ? new Date(c.submittedAt).toLocaleString() : 'Recent',
+          brochureDownloaded: false,
+          notes: 'Requested senior faculty callback.'
+        });
+      });
+      if (merged.length > 0) return merged;
+      return [
+        {
+          id: 'lead-sample-1',
+          name: 'Shubham Saxena',
+          email: 'shubhamsaxena787787@gmail.com',
+          phone: '+91 63960 18626',
+          qualification: 'Chartered Accountant (CA)',
+          program: 'Premium Live Interactive',
+          source: 'Hero Enquiry & Download Brochure',
+          status: 'New',
+          submittedAt: 'Just now',
+          brochureDownloaded: true,
+          notes: 'Interested in Nov cohort and GIAS 2025 updates.'
+        },
+        {
+          id: 'lead-sample-2',
+          name: 'Rohit Verma',
+          email: 'rohit.verma@example.com',
+          phone: '+91 98234 11223',
+          qualification: 'CMA / Cost Accountant',
+          program: 'Premium Plus with AI Audit',
+          source: 'Hero Enquiry & Download Brochure',
+          status: 'Enrolled',
+          submittedAt: 'Oct 24, 2026',
+          brochureDownloaded: true,
+          notes: 'Enrolled in Batch 2026-A. Full fee cleared.'
+        }
+      ];
+    } catch {
+      return [];
+    }
+  });
+
+  const handleDeleteLead = (id: string) => {
+    const updated = leads.filter((l) => l.id !== id);
+    setLeads(updated);
+    try {
+      localStorage.setItem('bnc_all_leads', JSON.stringify(updated));
+    } catch (e) {
+      console.warn(e);
+    }
+    onShowToast('Lead removed from inquiries log');
+  };
+
+  const handleExportLeadsCsv = () => {
+    try {
+      const headers = ['Name', 'Email', 'Phone', 'Qualification', 'Program', 'Source', 'Brochure Downloaded', 'Submitted At'];
+      const rows = leads.map((l) => [
+        `"${l.name}"`,
+        `"${l.email}"`,
+        `"${l.phone}"`,
+        `"${l.qualification || ''}"`,
+        `"${l.program || ''}"`,
+        `"${l.source}"`,
+        `"${l.brochureDownloaded ? 'Yes' : 'No'}"`,
+        `"${l.submittedAt}"`
+      ]);
+      const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement('a');
+      link.setAttribute('href', encodedUri);
+      link.setAttribute('download', `BNC_Global_Enquiries_Leads_${new Date().toISOString().slice(0, 10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      onShowToast('✓ Exported leads to CSV successfully!');
+    } catch (e) {
+      console.warn('CSV export error', e);
+    }
+  };
+
+  const handleConvertLeadToLearner = (lead: EnquiryLead) => {
+    setNewName(lead.name);
+    setNewEmail(lead.email);
+    setNewPhone(lead.phone || '+91 ');
+    setNewPackage(lead.program || 'Premium Live Interactive');
+    setNewNotes(`Converted from inquiry lead (${lead.source})`);
+    setIsAddModalOpen(true);
+  };
+
+  // New learner form fields
+  const [newName, setNewName] = useState('');
+  const [newEmail, setNewEmail] = useState('');
+  const [newPhone, setNewPhone] = useState('+91 ');
+  const [newOrderId, setNewOrderId] = useState(() => {
+    const highest = learners.reduce((max, l) => {
+      const num = parseInt(l.orderId, 10);
+      return !isNaN(num) && num > max ? num : max;
+    }, 2026000);
+    return String(highest + 1);
+  });
+  const [newPackage, setNewPackage] = useState('Premium Plus with AI Audit Lab');
+  const [newFeeStatus, setNewFeeStatus] = useState('Full Tuition Paid & Verified');
+  const [newStatus, setNewStatus] = useState<'active' | 'revoked' | 'pending'>('active');
+  const [newNotes, setNewNotes] = useState('');
+
+  // Filtering
+  const filteredLearners = learners.filter((l) => {
+    const matchesSearch =
+      l.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      l.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      l.orderId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      l.packageName.toLowerCase().includes(searchTerm.toLowerCase());
+
+    if (filterStatus === 'all') return matchesSearch;
+    return matchesSearch && l.status === filterStatus;
+  });
+
+  // Leads Filtering
+  const filteredLeads = leads.filter((l) => {
+    const term = leadSearchTerm.toLowerCase();
+    return (
+      l.name.toLowerCase().includes(term) ||
+      l.email.toLowerCase().includes(term) ||
+      l.phone.toLowerCase().includes(term) ||
+      (l.program || '').toLowerCase().includes(term) ||
+      (l.qualification || '').toLowerCase().includes(term) ||
+      l.source.toLowerCase().includes(term)
+    );
+  });
+
+  // KPI counts
+  const totalCount = learners.length;
+  const activeCount = learners.filter((l) => l.status === 'active').length;
+  const revokedCount = learners.filter((l) => l.status === 'revoked').length;
+  const pendingCount = learners.filter((l) => l.status === 'pending').length;
+
+  // Toggle access handler
+  const handleToggleAccess = (id: string) => {
+    const updated = learners.map((l) => {
+      if (l.id === id) {
+        const nextStatus: 'active' | 'revoked' = l.status === 'active' ? 'revoked' : 'active';
+        return {
+          ...l,
+          status: nextStatus,
+          feeStatus:
+            nextStatus === 'active'
+              ? 'Tuition Clearance Verified'
+              : 'Access Suspended by Academic Administration'
+        };
+      }
+      return l;
+    });
+    onUpdateLearners(updated);
+    const target = learners.find((l) => l.id === id);
+    if (target) {
+      if (target.status === 'active') {
+        onShowToast(`🔒 Access revoked for ${target.name} (#${target.orderId})`);
+      } else {
+        onShowToast(`✓ Access granted for ${target.name} (#${target.orderId})`);
+      }
+    }
+  };
+
+  // Add learner
+  const handleAddLearner = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newName.trim() || !newEmail.trim() || !newOrderId.trim()) {
+      alert('Please provide student name, email, and Order ID.');
+      return;
+    }
+
+    // Check duplicate orderId or email
+    if (learners.some((l) => l.orderId.trim() === newOrderId.trim())) {
+      alert(`Order Reference ID #${newOrderId} is already assigned. Please use a unique sequence number.`);
+      return;
+    }
+
+    const newLearner: ManagedLearner = {
+      id: `learner-${Date.now()}`,
+      name: newName.trim(),
+      email: newEmail.trim().toLowerCase(),
+      phone: newPhone.trim(),
+      orderId: newOrderId.trim(),
+      packageName: newPackage,
+      feeStatus: newFeeStatus,
+      status: newStatus,
+      enrollmentDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+      accessDuration: '18 Months Active Access',
+      notes: newNotes.trim() || 'Admin-authorized enrollment'
+    };
+
+    const updated = [newLearner, ...learners];
+    onUpdateLearners(updated);
+    setIsAddModalOpen(false);
+    onShowToast(`✓ Successfully enrolled ${newLearner.name} with ${newStatus.toUpperCase()} access!`);
+
+    // Reset fields
+    setNewName('');
+    setNewEmail('');
+    setNewPhone('+91 ');
+    setNewNotes('');
+  };
+
+  // Save edit learner
+  const handleSaveEdit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingLearner) return;
+
+    const updated = learners.map((l) => (l.id === editingLearner.id ? editingLearner : l));
+    onUpdateLearners(updated);
+    setEditingLearner(null);
+    onShowToast(`Updated student profile for ${editingLearner.name}`);
+  };
+
+  // Delete learner
+  const handleDeleteLearner = (id: string, name: string) => {
+    if (confirm(`Are you sure you want to remove learner "${name}" from the LMS database?`)) {
+      const updated = learners.filter((l) => l.id !== id);
+      onUpdateLearners(updated);
+      onShowToast(`Removed ${name} from learner roster.`);
+    }
+  };
+
+  // Sync latest checkout orders from localStorage
+  const handleSyncFromCheckout = () => {
+    try {
+      const stored = JSON.parse(localStorage.getItem('bnc_enrollment_requests') || '[]');
+      if (!Array.isArray(stored) || stored.length === 0) {
+        onShowToast('No external checkout enrollments found in session memory.');
+        return;
+      }
+
+      let addedCount = 0;
+      const updated = [...learners];
+
+      stored.forEach((ord: any) => {
+        const orderIdStr = String(ord.orderId || '').trim();
+        const emailStr = String(ord.studentEmail || '').trim().toLowerCase();
+
+        if (orderIdStr && !updated.some((l) => l.orderId === orderIdStr || l.email === emailStr)) {
+          updated.push({
+            id: `ord-${ord.orderId}-${Date.now()}`,
+            name: ord.studentName || 'Candidate',
+            email: emailStr,
+            phone: ord.studentPhone || '',
+            orderId: orderIdStr,
+            packageName: ord.packageName || 'Premium Live Interactive',
+            feeStatus: 'Admissions Desk Enrollment · Confirmed',
+            status: 'active',
+            enrollmentDate: ord.createdAt || 'Recent',
+            accessDuration: '18 Months Active Access',
+            notes: 'Synced from checkout enrollment'
+          });
+          addedCount++;
+        }
+      });
+
+      if (addedCount > 0) {
+        onUpdateLearners(updated);
+        onShowToast(`✓ Synced ${addedCount} new learner(s) from website admissions!`);
+      } else {
+        onShowToast('All website enrollments are already present in roster.');
+      }
+    } catch (e) {
+      console.warn('Sync failed', e);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-[#071322] text-slate-100 flex flex-col font-sans relative">
+      {/* Background Ambience */}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+        <img
+          src="/hero-bg.jpg"
+          alt="BNC Architectural Backdrop"
+          className="w-full h-full object-cover object-center opacity-30 filter contrast-125 brightness-75 saturate-110"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#071322]/95 via-[#0b1d33]/90 to-[#06101c]/95" />
+      </div>
+
+      {/* Top Admin Header Bar */}
+      <header className="relative z-10 bg-[#07172b]/95 backdrop-blur-md border-b border-sky-950 px-4 sm:px-6 lg:px-8 py-3.5 shadow-md">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={onBackToWebsite}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-sky-950/80 hover:bg-sky-900 border border-sky-800/60 text-xs font-semibold text-slate-200 transition-colors cursor-pointer"
+              title="Return to Public Website"
+            >
+              <ArrowLeft className="w-3.5 h-3.5 text-[#f1bd5b]" />
+              <span>Public Website</span>
+            </button>
+
+            <div className="h-6 w-px bg-sky-900 hidden sm:block" />
+
+            <div className="flex items-center gap-2">
+              <span className="p-1 rounded bg-[#b58b42]/20 border border-[#b58b42]/40 text-[#f1bd5b]">
+                <ShieldCheck className="w-4 h-4" />
+              </span>
+              <div>
+                <span className="text-sm font-black text-white">BNC ELEVATE</span>
+                <span className="mx-2 text-slate-500 font-light">|</span>
+                <span className="text-xs uppercase tracking-wider text-[#f1bd5b] font-bold">
+                  Academic Admin Console
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900/80 border border-slate-700/80 text-xs">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="text-slate-300 font-medium">Logged in:</span>
+              <span className="text-white font-bold">{adminUser.name}</span>
+            </div>
+
+            <button
+              onClick={() => onSwitchToStudentView()}
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-sky-800 to-sky-700 hover:from-sky-700 hover:to-sky-600 text-white text-xs font-bold shadow-md cursor-pointer transition-all border border-sky-600/40"
+              title="Preview LMS Curriculum as Student"
+            >
+              <BookOpen className="w-3.5 h-3.5 text-[#f1bd5b]" />
+              <span>Student LMS View</span>
+            </button>
+
+            <button
+              onClick={onLogoutAdmin}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800/90 hover:bg-rose-950 text-slate-300 hover:text-rose-200 text-xs font-semibold border border-slate-700 hover:border-rose-500/50 transition-all cursor-pointer"
+              title="Log out of Admin Console"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span>Log Out</span>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Admin Content */}
+      <main className="relative z-10 flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        
+        {/* Console Tab Switcher: Learners vs Leads */}
+        <div className="flex items-center gap-2 p-1.5 bg-slate-900/90 rounded-2xl border border-sky-800/80 w-fit shadow-xl">
+          <button
+            type="button"
+            onClick={() => setConsoleTab('learners')}
+            className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
+              consoleTab === 'learners'
+                ? 'bg-gradient-to-r from-sky-700 via-sky-800 to-[#b58b42] text-white shadow-lg'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <UserCheck className="w-4 h-4 text-[#f1bd5b]" />
+            <span>Learner Access Management ({learners.length})</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setConsoleTab('leads')}
+            className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
+              consoleTab === 'leads'
+                ? 'bg-gradient-to-r from-sky-700 via-sky-800 to-[#b58b42] text-white shadow-lg'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <Mail className="w-4 h-4 text-sky-400" />
+            <span>Enquiries & Brochure Leads ({leads.length})</span>
+          </button>
+        </div>
+
+        {consoleTab === 'learners' ? (
+          <>
+            {/* Banner */}
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-6 rounded-3xl bg-gradient-to-r from-[#0b1d33] via-[#091b30] to-[#122338] border border-sky-800/60 shadow-xl">
+              <div>
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#b58b42]/20 text-[#f1bd5b] border border-[#b58b42]/40 text-[10px] font-bold uppercase tracking-wider mb-2">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>Access Authorization & Fee Clearance Management</span>
+                </div>
+            <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+              Learner Access & Enrollment Controller
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-300 mt-1 max-w-2xl leading-relaxed">
+              Grant or revoke individual student access to video masterclasses, 5,000+ IIA test banks, and AI audit tools in real-time. Students with <strong className="text-rose-400">Revoked</strong> status cannot log in until administrative clearance.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2.5 shrink-0">
+            <button
+              onClick={handleSyncFromCheckout}
+              className="px-4 py-2.5 rounded-xl bg-slate-800/90 hover:bg-slate-700 text-slate-200 text-xs font-bold flex items-center gap-2 border border-slate-700 transition-all cursor-pointer shadow-sm"
+              title="Sync latest enrollment orders from checkout"
+            >
+              <FileSpreadsheet className="w-4 h-4 text-sky-400" />
+              <span>Sync Web Orders</span>
+            </button>
+
+            <button
+              onClick={() => setIsAddModalOpen(true)}
+              className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-sky-700 to-[#b58b42] hover:from-sky-800 hover:to-[#9e7735] text-white text-xs font-bold flex items-center gap-2 shadow-lg transition-all cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Grant New Learner Access</span>
+            </button>
+          </div>
+        </div>
+
+        {/* 4 KPI Cards */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="p-5 rounded-2xl bg-[#091729]/95 border border-sky-900/60 shadow-lg">
+            <div className="flex items-center justify-between text-slate-400 text-xs font-bold uppercase">
+              <span>Total Learners</span>
+              <BookOpen className="w-4 h-4 text-sky-400" />
+            </div>
+            <div className="text-2xl sm:text-3xl font-black text-white mt-2">{totalCount}</div>
+            <div className="text-[11px] text-slate-400 mt-1">Enrolled candidate accounts</div>
+          </div>
+
+          <div className="p-5 rounded-2xl bg-emerald-950/40 border border-emerald-500/40 shadow-lg">
+            <div className="flex items-center justify-between text-emerald-400 text-xs font-bold uppercase">
+              <span>Access Granted</span>
+              <UserCheck className="w-4 h-4 text-emerald-400" />
+            </div>
+            <div className="text-2xl sm:text-3xl font-black text-emerald-300 mt-2">{activeCount}</div>
+            <div className="text-[11px] text-emerald-300/80 mt-1">Active paid learners authorized</div>
+          </div>
+
+          <div className="p-5 rounded-2xl bg-rose-950/40 border border-rose-500/40 shadow-lg">
+            <div className="flex items-center justify-between text-rose-400 text-xs font-bold uppercase">
+              <span>Access Revoked</span>
+              <UserX className="w-4 h-4 text-rose-400" />
+            </div>
+            <div className="text-2xl sm:text-3xl font-black text-rose-300 mt-2">{revokedCount}</div>
+            <div className="text-[11px] text-rose-300/80 mt-1">Suspended / fee pending accounts</div>
+          </div>
+
+          <div className="p-5 rounded-2xl bg-amber-950/40 border border-amber-500/40 shadow-lg">
+            <div className="flex items-center justify-between text-[#f1bd5b] text-xs font-bold uppercase">
+              <span>Under Clearance</span>
+              <Clock className="w-4 h-4 text-[#f1bd5b]" />
+            </div>
+            <div className="text-2xl sm:text-3xl font-black text-[#f1bd5b] mt-2">{pendingCount}</div>
+            <div className="text-[11px] text-[#f1bd5b]/80 mt-1">Pending finance approval</div>
+          </div>
+        </div>
+
+        {/* Filter & Search Bar */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 rounded-2xl bg-[#091729]/90 border border-sky-900/60 shadow-md">
+          <div className="relative w-full sm:w-80">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search by student name, email, or order ID..."
+              className="w-full pl-10 pr-4 py-2 rounded-xl bg-slate-900/90 border border-slate-700/80 text-white placeholder-slate-500 text-xs focus:outline-none focus:border-[#f1bd5b] transition-all"
+            />
+          </div>
+
+          <div className="flex items-center gap-1.5 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
+            <span className="text-xs text-slate-400 font-semibold mr-1 flex items-center gap-1">
+              <Filter className="w-3.5 h-3.5" />
+              <span>Status:</span>
+            </span>
+            {(['all', 'active', 'revoked', 'pending'] as const).map((st) => (
+              <button
+                key={st}
+                onClick={() => setFilterStatus(st)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold capitalize transition-all cursor-pointer ${
+                  filterStatus === st
+                    ? 'bg-[#b58b42] text-white shadow-xs'
+                    : 'bg-slate-800/80 text-slate-300 hover:text-white hover:bg-slate-700'
+                }`}
+              >
+                {st}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Roster Table */}
+        <div className="bg-[#091729]/95 border border-sky-900/60 rounded-3xl overflow-hidden shadow-2xl">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-[#061220] border-b border-sky-950 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                  <th className="py-4 px-6">Learner Credentials</th>
+                  <th className="py-4 px-6">Assigned Order ID</th>
+                  <th className="py-4 px-6">Program / Package</th>
+                  <th className="py-4 px-6">Tuition Fee Clearance</th>
+                  <th className="py-4 px-6 text-center">LMS Access Status</th>
+                  <th className="py-4 px-6 text-right">Access Controls</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-sky-950/60 text-xs">
+                {filteredLearners.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="py-12 text-center text-slate-400">
+                      No learners match the current search or filter criteria.
+                    </td>
+                  </tr>
+                ) : (
+                  filteredLearners.map((learner) => {
+                    const isActive = learner.status === 'active';
+                    const isRevoked = learner.status === 'revoked';
+                    const isPending = learner.status === 'pending';
+
+                    return (
+                      <tr
+                        key={learner.id}
+                        className="hover:bg-slate-900/50 transition-colors group"
+                      >
+                        {/* Name & Email */}
+                        <td className="py-4 px-6">
+                          <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-sky-700 to-[#b58b42] flex items-center justify-center text-white font-extrabold text-xs shadow-md shrink-0">
+                              {learner.name
+                                .split(' ')
+                                .map((n) => n[0])
+                                .join('')
+                                .substring(0, 2)
+                                .toUpperCase()}
+                            </div>
+                            <div>
+                              <div className="font-bold text-white group-hover:text-[#f1bd5b] transition-colors">
+                                {learner.name}
+                              </div>
+                              <div className="text-[11px] text-slate-400">{learner.email}</div>
+                              {learner.phone && (
+                                <div className="text-[10px] text-slate-500">{learner.phone}</div>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* Order ID */}
+                        <td className="py-4 px-6">
+                          <span className="font-mono font-bold text-sky-300 bg-sky-950/60 px-2 py-1 rounded-md border border-sky-800/50">
+                            #{learner.orderId}
+                          </span>
+                          <div className="text-[10px] text-slate-400 mt-1">
+                            {learner.enrollmentDate}
+                          </div>
+                        </td>
+
+                        {/* Package */}
+                        <td className="py-4 px-6">
+                          <div className="font-semibold text-slate-200">{learner.packageName}</div>
+                          <div className="text-[10px] text-slate-400">{learner.accessDuration}</div>
+                        </td>
+
+                        {/* Fee Status */}
+                        <td className="py-4 px-6">
+                          <div
+                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold ${
+                              isActive
+                                ? 'bg-emerald-950/60 text-emerald-300 border border-emerald-500/30'
+                                : isPending
+                                ? 'bg-amber-950/60 text-amber-300 border border-amber-500/30'
+                                : 'bg-rose-950/60 text-rose-300 border border-rose-500/30'
+                            }`}
+                          >
+                            {isActive ? (
+                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                            ) : isPending ? (
+                              <Clock className="w-3.5 h-3.5 text-amber-400" />
+                            ) : (
+                              <AlertTriangle className="w-3.5 h-3.5 text-rose-400" />
+                            )}
+                            <span>{learner.feeStatus}</span>
+                          </div>
+                        </td>
+
+                        {/* Status Badge */}
+                        <td className="py-4 px-6 text-center">
+                          {isActive ? (
+                            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                              <span>Active Access</span>
+                            </span>
+                          ) : isRevoked ? (
+                            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40">
+                              <UserX className="w-3 h-3 text-rose-400" />
+                              <span>Access Revoked</span>
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-bold bg-amber-500/20 text-[#f1bd5b] border border-amber-500/40">
+                              <Clock className="w-3 h-3 text-[#f1bd5b]" />
+                              <span>Pending Clearance</span>
+                            </span>
+                          )}
+                        </td>
+
+                        {/* Actions */}
+                        <td className="py-4 px-6 text-right space-x-2 whitespace-nowrap">
+                          {/* Toggle Grant / Revoke */}
+                          <button
+                            type="button"
+                            onClick={() => handleToggleAccess(learner.id)}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                              isActive
+                                ? 'bg-rose-950/80 hover:bg-rose-900 text-rose-200 border border-rose-700/60 shadow-xs'
+                                : 'bg-emerald-950/80 hover:bg-emerald-900 text-emerald-200 border border-emerald-700/60 shadow-xs'
+                            }`}
+                            title={isActive ? 'Click to revoke LMS access' : 'Click to grant LMS access'}
+                          >
+                            {isActive ? 'Revoke Access' : 'Grant Access'}
+                          </button>
+
+                          {/* Login As Student (Preview) */}
+                          <button
+                            type="button"
+                            onClick={() => onSwitchToStudentView(learner)}
+                            className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors cursor-pointer"
+                            title="Preview LMS as this student"
+                          >
+                            <BookOpen className="w-4 h-4 text-sky-400" />
+                          </button>
+
+                          {/* Edit Details */}
+                          <button
+                            type="button"
+                            onClick={() => setEditingLearner(learner)}
+                            className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors cursor-pointer"
+                            title="Edit student package & notes"
+                          >
+                            <Edit3 className="w-4 h-4 text-[#f1bd5b]" />
+                          </button>
+
+                          {/* Delete */}
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteLearner(learner.id, learner.name)}
+                            className="p-1.5 rounded-lg bg-slate-800 hover:bg-rose-950 text-slate-400 hover:text-rose-400 transition-colors cursor-pointer"
+                            title="Remove from roster"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </>
+    ) : (
+      /* ================= ENQUIRIES & BROCHURE LEADS VIEW ================= */
+      <div className="space-y-6">
+        {/* Leads Overview Banner */}
+        <div className="p-6 rounded-3xl bg-gradient-to-r from-[#0b1d33] via-[#091b30] to-[#122338] border border-sky-800/60 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div>
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#b58b42]/20 text-[#f1bd5b] border border-[#b58b42]/40 text-[10px] font-bold uppercase tracking-wider mb-2">
+              <Mail className="w-3.5 h-3.5" />
+              <span>Incoming Leads Desk · Target: info@bncglobal.in</span>
+            </div>
+            <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+              Enquiries & Brochure Download Leads
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-300 mt-1 max-w-2xl leading-relaxed">
+              Real-time directory of candidates who submitted inquiries or downloaded the 10-page BNC Global CIA® Student Brochure.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2.5 shrink-0">
+            <button
+              type="button"
+              onClick={handleExportLeadsCsv}
+              className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-sky-700 to-[#b58b42] hover:from-sky-800 hover:to-[#9e7735] text-white text-xs font-bold flex items-center gap-2 shadow-md transition-all cursor-pointer"
+            >
+              <Download className="w-4 h-4" />
+              <span>Export CSV ({leads.length})</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Diagnostic info about info@bncglobal.in delivery */}
+        <div className="p-4 rounded-2xl bg-sky-950/40 border border-sky-800/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+          <div className="flex items-start gap-2.5">
+            <ShieldCheck className="w-4 h-4 text-[#f1bd5b] shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              <div className="text-white font-bold">Mail Delivery Status: info@bncglobal.in</div>
+              <div className="text-slate-300 text-[11px] leading-relaxed">
+                All submissions are stored live in this console. To receive forwarded email copies at <strong className="text-[#f1bd5b]">info@bncglobal.in</strong> via FormSubmit, please open the one-time activation email from FormSubmit in your inbox or <strong>Spam / Junk</strong> folder and click <em>"Activate Form"</em>.
+              </div>
+            </div>
+          </div>
+          <a
+            href="mailto:info@bncglobal.in?subject=BNC%20ELEVATE%20Admissions%20Test&body=Admissions%20lead%20dispatch%20test"
+            className="shrink-0 px-3 py-1.5 rounded-lg bg-sky-900/80 hover:bg-sky-800 text-sky-200 border border-sky-700 font-semibold text-[11px] transition-colors"
+          >
+            Open Mail Client
+          </a>
+        </div>
+
+        {/* Search Input for Leads */}
+        <div className="relative">
+          <Search className="w-4 h-4 text-slate-400 absolute left-4 top-3.5" />
+          <input
+            type="text"
+            value={leadSearchTerm}
+            onChange={(e) => setLeadSearchTerm(e.target.value)}
+            placeholder="Search leads by candidate name, email, phone, or program of interest..."
+            className="w-full pl-11 pr-4 py-3 rounded-2xl bg-[#091729]/95 border border-sky-900/60 text-white placeholder-slate-500 text-xs sm:text-sm focus:outline-none focus:border-[#f1bd5b] transition-all shadow-md"
+          />
+        </div>
+
+        {/* Leads Table */}
+        <div className="bg-[#091729]/95 border border-sky-900/60 rounded-3xl shadow-xl overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-sky-950 bg-slate-900/90 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                  <th className="py-3.5 px-6">Candidate</th>
+                  <th className="py-3.5 px-6">Contact Channels</th>
+                  <th className="py-3.5 px-6">Qualification & Program</th>
+                  <th className="py-3.5 px-6">Source / Brochure</th>
+                  <th className="py-3.5 px-6">Submitted</th>
+                  <th className="py-3.5 px-6 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-sky-950/60 text-xs">
+                {filteredLeads.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="py-12 text-center text-slate-400">
+                      No candidate inquiries match the current search.
+                    </td>
+                  </tr>
+                ) : (
+                  filteredLeads.map((lead) => (
+                    <tr key={lead.id} className="hover:bg-slate-900/50 transition-colors group">
+                      {/* Name */}
+                      <td className="py-4 px-6">
+                        <div className="font-bold text-white group-hover:text-[#f1bd5b] transition-colors">
+                          {lead.name}
+                        </div>
+                        <span className="inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-sky-950 text-sky-300 border border-sky-800/40">
+                          {lead.status}
+                        </span>
+                      </td>
+
+                      {/* Contact */}
+                      <td className="py-4 px-6 space-y-1">
+                        <div className="flex items-center gap-1.5 text-slate-300 font-mono">
+                          <Mail className="w-3.5 h-3.5 text-sky-400 shrink-0" />
+                          <a href={`mailto:${lead.email}`} className="hover:text-[#f1bd5b] transition-colors">
+                            {lead.email}
+                          </a>
+                        </div>
+                        <div className="flex items-center gap-1.5 text-slate-300">
+                          <Phone className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                          <a href={`tel:${lead.phone}`} className="hover:text-emerald-300 font-semibold">
+                            {lead.phone}
+                          </a>
+                        </div>
+                      </td>
+
+                      {/* Qualification & Program */}
+                      <td className="py-4 px-6">
+                        <div className="font-semibold text-slate-200">{lead.program || 'All Packages'}</div>
+                        <div className="text-[11px] text-slate-400 mt-0.5">{lead.qualification || "Bachelor's Degree"}</div>
+                      </td>
+
+                      {/* Source & Brochure */}
+                      <td className="py-4 px-6">
+                        <div className="text-slate-300 text-[11px]">{lead.source}</div>
+                        {lead.brochureDownloaded && (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-400 mt-1">
+                            <CheckCircle2 className="w-3 h-3" />
+                            <span>Brochure Downloaded</span>
+                          </span>
+                        )}
+                      </td>
+
+                      {/* Timestamp */}
+                      <td className="py-4 px-6 text-slate-400 text-[11px]">
+                        {lead.submittedAt}
+                      </td>
+
+                      {/* Actions */}
+                      <td className="py-4 px-6 text-right space-x-2">
+                        <a
+                          href={`https://wa.me/${(lead.phone || '').replace(/[^0-9]/g, '')}?text=${encodeURIComponent(
+                            `Hello ${lead.name}, thank you for your enquiry with BNC ELEVATE CIA coaching! CA Gurvinder Pal Singh's admissions desk is reaching out regarding your syllabus and cohort options.`
+                          )}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex p-1.5 rounded-lg bg-emerald-950 hover:bg-emerald-900 text-emerald-300 border border-emerald-700/50 transition-colors"
+                          title="Chat on WhatsApp"
+                        >
+                          <MessageSquare className="w-4 h-4" />
+                        </a>
+                        <a
+                          href={`mailto:${lead.email}?subject=${encodeURIComponent(`[BNC ELEVATE] CIA Coaching Guidance for ${lead.name}`)}&body=${encodeURIComponent(
+                            `Dear ${lead.name},\n\nThank you for reaching out to BNC ELEVATE.\n\nWe have received your enquiry regarding ${lead.program || 'our CIA Coaching Program'}.\n\nPlease let us know your preferred time for a 1-on-1 counseling call with CA Gurvinder Pal Singh.\n\nWarm regards,\nCA Gurvinder Pal Singh\nDirector & Senior Faculty, BNC Global\ninfo@bncglobal.in | +91 63960 18626`
+                          )}`}
+                          className="inline-flex p-1.5 rounded-lg bg-sky-950 hover:bg-sky-900 text-sky-300 border border-sky-700/50 transition-colors"
+                          title="Email Candidate"
+                        >
+                          <Mail className="w-4 h-4" />
+                        </a>
+                        <button
+                          type="button"
+                          onClick={() => handleConvertLeadToLearner(lead)}
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#b58b42]/20 hover:bg-[#b58b42]/30 text-[#f1bd5b] border border-[#b58b42]/50 text-xs font-bold transition-colors cursor-pointer"
+                          title="Convert to Enrolled Learner"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          <span className="hidden lg:inline">Enroll</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteLead(lead.id)}
+                          className="inline-flex p-1.5 rounded-lg bg-slate-800 hover:bg-rose-950 text-slate-400 hover:text-rose-400 transition-colors cursor-pointer"
+                          title="Delete Lead"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    )}
+  </main>
+
+      {/* MODAL: Grant New Learner Access */}
+      {isAddModalOpen && (
+        <div
+          onClick={() => setIsAddModalOpen(false)}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-sm overflow-y-auto animate-in fade-in duration-200"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="relative w-full max-w-xl my-8 bg-[#091729] border border-sky-800/80 rounded-3xl shadow-2xl overflow-hidden text-slate-100"
+          >
+            <div className="h-1.5 bg-gradient-to-r from-sky-600 via-[#f1bd5b] to-sky-700" />
+
+            <div className="flex items-center justify-between px-6 py-4 bg-[#0b1d33] border-b border-sky-950">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-sky-700 to-[#b58b42] flex items-center justify-center text-white shadow-md">
+                  <UserCheck className="w-5 h-5 text-[#f1bd5b]" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-white">Grant New Learner Access</h3>
+                  <p className="text-[11px] text-slate-400">
+                    Authorize a student with tuition verification
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsAddModalOpen(false)}
+                className="w-9 h-9 rounded-full flex items-center justify-center text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-700 cursor-pointer"
+              >
+                <X className="w-5 h-5 pointer-events-none" />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddLearner} className="p-6 space-y-4 text-xs">
+              <div>
+                <label className="block font-semibold text-slate-300 mb-1">Student Full Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  placeholder="e.g. Vikram Malhotra"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-[#f1bd5b]"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-semibold text-slate-300 mb-1">Student Email *</label>
+                  <input
+                    type="email"
+                    required
+                    value={newEmail}
+                    onChange={(e) => setNewEmail(e.target.value)}
+                    placeholder="vikram@example.com"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-[#f1bd5b]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-slate-300 mb-1">WhatsApp / Phone</label>
+                  <input
+                    type="text"
+                    value={newPhone}
+                    onChange={(e) => setNewPhone(e.target.value)}
+                    placeholder="+91 98765 43210"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-[#f1bd5b]"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-semibold text-slate-300 mb-1">
+                    Sequential Order Reference ID *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={newOrderId}
+                    onChange={(e) => setNewOrderId(e.target.value)}
+                    placeholder="e.g. 2026005"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white placeholder-slate-500 font-mono font-bold focus:outline-none focus:border-[#f1bd5b]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-slate-300 mb-1">Enrolled Package *</label>
+                  <select
+                    value={newPackage}
+                    onChange={(e) => setNewPackage(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white focus:outline-none focus:border-[#f1bd5b]"
+                  >
+                    <option>Premium Plus with AI Audit Lab</option>
+                    <option>Premium Live Interactive</option>
+                    <option>Basic Self-Paced Recorded Prep</option>
+                    <option>CA/CPA CIA Challenge Exam Prep</option>
+                    <option>IAP Part 1 Student Fast-Track</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-semibold text-slate-300 mb-1">Tuition Fee Status</label>
+                  <select
+                    value={newFeeStatus}
+                    onChange={(e) => setNewFeeStatus(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white focus:outline-none focus:border-[#f1bd5b]"
+                  >
+                    <option>Full Tuition Paid & Verified</option>
+                    <option>Installment 1/2 Received (Active)</option>
+                    <option>Corporate Sponsorship Cleared</option>
+                    <option>Scholarship Approved</option>
+                    <option>Pending Verification</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-slate-300 mb-1">Initial Access Status</label>
+                  <select
+                    value={newStatus}
+                    onChange={(e) => setNewStatus(e.target.value as any)}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white focus:outline-none focus:border-[#f1bd5b]"
+                  >
+                    <option value="active">Active (Access Granted Immediately)</option>
+                    <option value="pending">Pending Clearance (Awaiting Check)</option>
+                    <option value="revoked">Revoked / Suspended</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-300 mb-1">Administrative Notes</label>
+                <input
+                  type="text"
+                  value={newNotes}
+                  onChange={(e) => setNewNotes(e.target.value)}
+                  placeholder="e.g. Bank transfer reference UTR-98234, verified by finance desk"
+                  className="w-full px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-[#f1bd5b]"
+                />
+              </div>
+
+              <div className="pt-3 flex items-center justify-end gap-3 border-t border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setIsAddModalOpen(false)}
+                  className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-sky-700 to-[#b58b42] hover:from-sky-800 hover:to-[#9e7735] text-white font-bold cursor-pointer shadow-md"
+                >
+                  Authorize Learner
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: Edit Learner Details */}
+      {editingLearner && (
+        <div
+          onClick={() => setEditingLearner(null)}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-sm overflow-y-auto animate-in fade-in duration-200"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="relative w-full max-w-lg my-8 bg-[#091729] border border-sky-800/80 rounded-3xl shadow-2xl overflow-hidden text-slate-100"
+          >
+            <div className="h-1.5 bg-gradient-to-r from-sky-600 via-[#f1bd5b] to-sky-700" />
+
+            <div className="flex items-center justify-between px-6 py-4 bg-[#0b1d33] border-b border-sky-950">
+              <h3 className="text-base font-black text-white">Edit Learner Profile</h3>
+              <button
+                type="button"
+                onClick={() => setEditingLearner(null)}
+                className="w-9 h-9 rounded-full flex items-center justify-center text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-700 cursor-pointer"
+              >
+                <X className="w-5 h-5 pointer-events-none" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEdit} className="p-6 space-y-4 text-xs">
+              <div>
+                <label className="block font-semibold text-slate-300 mb-1">Student Name</label>
+                <input
+                  type="text"
+                  required
+                  value={editingLearner.name}
+                  onChange={(e) => setEditingLearner({ ...editingLearner, name: e.target.value })}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-300 mb-1">Enrolled Package</label>
+                <select
+                  value={editingLearner.packageName}
+                  onChange={(e) =>
+                    setEditingLearner({ ...editingLearner, packageName: e.target.value })
+                  }
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                >
+                  <option>Premium Plus with AI Audit Lab</option>
+                  <option>Premium Live Interactive</option>
+                  <option>Basic Self-Paced Recorded Prep</option>
+                  <option>CA/CPA CIA Challenge Exam Prep</option>
+                  <option>IAP Part 1 Student Fast-Track</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-300 mb-1">Tuition Fee Status</label>
+                <input
+                  type="text"
+                  value={editingLearner.feeStatus}
+                  onChange={(e) =>
+                    setEditingLearner({ ...editingLearner, feeStatus: e.target.value })
+                  }
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-300 mb-1">LMS Access Status</label>
+                <select
+                  value={editingLearner.status}
+                  onChange={(e) =>
+                    setEditingLearner({
+                      ...editingLearner,
+                      status: e.target.value as 'active' | 'revoked' | 'pending'
+                    })
+                  }
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                >
+                  <option value="active">Active (Access Granted)</option>
+                  <option value="revoked">Revoked (Access Blocked)</option>
+                  <option value="pending">Pending Clearance</option>
+                </select>
+              </div>
+
+              <div className="pt-3 flex items-center justify-end gap-3 border-t border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setEditingLearner(null)}
+                  className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-xl bg-gradient-to-r from-sky-700 to-[#b58b42] text-white font-bold cursor-pointer"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};

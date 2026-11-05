@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Currency, EnrollmentOrder } from '../types';
 import { PACKAGES } from '../data/ciaData';
 import { X, Check, ShieldCheck, ArrowRight, Sparkles, Building, User, Mail, Phone, MapPin, GraduationCap, CheckCircle2, Clock } from 'lucide-react';
@@ -80,6 +80,16 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
   // Final Order State
   const [completedOrder, setCompletedOrder] = useState<EnrollmentOrder | null>(null);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    if (isOpen) {
+      window.addEventListener('keydown', handleKeyDown);
+    }
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -193,10 +203,32 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm overflow-y-auto">
-      <div className="relative w-full max-w-3xl my-8 bg-white border border-slate-200 rounded-3xl shadow-2xl overflow-hidden text-slate-900">
+    <div
+      onClick={onClose}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-sm overflow-y-auto animate-in fade-in duration-200"
+    >
+      {/* Floating high-contrast exit button always visible on any viewport size */}
+      <button
+        type="button"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          onClose();
+        }}
+        aria-label="Close enrollment modal"
+        className="fixed top-4 right-4 sm:top-6 sm:right-6 z-[60] flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-slate-900/95 hover:bg-rose-900/90 text-slate-200 hover:text-white border border-slate-700 hover:border-rose-500 shadow-2xl transition-all cursor-pointer font-bold text-xs"
+        title="Close Window (Esc)"
+      >
+        <X className="w-4 h-4 pointer-events-none text-rose-400" />
+        <span>Close</span>
+      </button>
+
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="relative w-full max-w-3xl my-8 bg-white border border-slate-200 rounded-3xl shadow-2xl overflow-hidden text-slate-900"
+      >
         {/* Modal Header */}
-        <div className="relative z-10 flex items-center justify-between px-6 py-4 bg-sky-50/70 border-b border-sky-100">
+        <div className="sticky top-0 z-30 flex items-center justify-between px-6 py-4 bg-sky-50/90 border-b border-sky-100 backdrop-blur-sm">
           <div className="flex items-center gap-3">
             <span className="p-2 rounded-xl bg-amber-100 text-[#b58b42]">
               <ShieldCheck className="w-5 h-5" />
@@ -211,10 +243,17 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
             </div>
           </div>
           <button
-            onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-200/50 transition-colors cursor-pointer"
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onClose();
+            }}
+            aria-label="Close modal"
+            className="w-10 h-10 rounded-full flex items-center justify-center text-slate-500 hover:text-rose-600 bg-slate-100 hover:bg-rose-50 border border-slate-200 hover:border-rose-300 transition-all cursor-pointer shadow-xs hover:scale-105 active:scale-95 shrink-0 z-20"
+            title="Close (Esc)"
           >
-            <X className="w-5 h-5" />
+            <X className="w-5 h-5 pointer-events-none" />
           </button>
         </div>
 

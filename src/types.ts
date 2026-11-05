@@ -75,3 +75,39 @@ export interface EnrollmentOrder {
     aiAuditLab: boolean;
   };
 }
+
+export interface ManagedLearner {
+  id: string;
+  name: string;
+  email: string;
+  orderId: string;
+  packageName: string;
+  feeStatus: string;
+  status: 'active' | 'revoked' | 'pending';
+  enrollmentDate: string;
+  accessDuration: string;
+  notes?: string;
+  phone?: string;
+}
+
+export interface LmsAdminUser {
+  email: string;
+  name: string;
+  role: string;
+  authenticatedAt: string;
+}
+
+export interface EnquiryLead {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  qualification?: string;
+  program?: string;
+  source: string;
+  status: 'New' | 'Contacted' | 'Enrolled' | 'Archived';
+  submittedAt: string;
+  brochureDownloaded: boolean;
+  notes?: string;
+}
+

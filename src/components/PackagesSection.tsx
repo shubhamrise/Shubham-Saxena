@@ -1,21 +1,22 @@
 import React, { useState } from 'react';
 import { Currency } from '../types';
 import { PACKAGES } from '../data/ciaData';
-import { Check, ArrowRight, Sparkles, FileSpreadsheet, ChevronDown, ChevronUp } from 'lucide-react';
+import { Check, ArrowRight, Sparkles, FileSpreadsheet, ChevronDown, ChevronUp, Download, FileText } from 'lucide-react';
 import { motion } from 'motion/react';
 
 interface PackagesSectionProps {
   currency: Currency;
   onOpenCheckout: (packageId: string) => void;
   onOpenInquiry: () => void;
+  onOpenBrochure?: (packageId?: string) => void;
 }
 
 export const PackagesSection: React.FC<PackagesSectionProps> = ({
   currency,
   onOpenCheckout,
   onOpenInquiry,
+  onOpenBrochure,
 }) => {
-  const [billingPlan, setBillingPlan] = useState<'full' | 'installment'>('full');
   const [showComparison, setShowComparison] = useState(false);
 
   return (
@@ -36,39 +37,30 @@ export const PackagesSection: React.FC<PackagesSectionProps> = ({
         <div className="text-center max-w-3xl mx-auto mb-14">
           <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#b58b42]/20 border border-[#b58b42]/40 text-xs font-bold text-[#f1bd5b] uppercase tracking-widest mb-3">
             <Sparkles className="w-3.5 h-3.5 text-[#f1bd5b]" />
-            <span>TRANSPARENT TUITION & PACKAGES</span>
+            <span>EXECUTIVE CURRICULUM & ADMISSIONS</span>
           </div>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight mb-4">
             Invest in Your Global Audit Credential
           </h2>
           <p className="text-sm sm:text-base text-slate-300 leading-relaxed">
-            All packages include complete preparation for all 3 CIA parts, the BNC Test Bank ($499 value included), and full IIA registration concierge.
+            All packages include complete preparation for all 3 CIA parts, the BNC Test Bank ($499 value included), physical books, and full IIA registration concierge.
           </p>
 
-          {/* Billing Mode Switcher (Full vs 2-Part Installment) */}
-          <div className="mt-8 inline-flex items-center p-1 rounded-xl bg-slate-900/90 border border-slate-700/80 shadow-md">
+          {/* Brochure & Fee Structure Option in Header */}
+          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
             <button
-              onClick={() => setBillingPlan('full')}
-              className={`px-5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                billingPlan === 'full'
-                  ? 'bg-gradient-to-r from-sky-700 to-[#b58b42] text-white shadow-md shadow-sky-700/20'
-                  : 'text-slate-300 hover:text-white'
-              }`}
+              onClick={() => onOpenBrochure?.('all')}
+              className="btn-reflection px-6 py-3 rounded-xl bg-gradient-to-r from-sky-700 via-sky-800 to-[#b58b42] hover:from-sky-800 hover:to-[#9e7735] text-white text-xs font-bold transition-all cursor-pointer shadow-lg shadow-sky-800/25 flex items-center gap-2"
             >
-              Standard Enrollment (Full LMS)
+              <Download className="w-4 h-4 text-[#f1bd5b]" />
+              <span>Download Master Brochure & Fee Structure (PDF)</span>
             </button>
             <button
-              onClick={() => setBillingPlan('installment')}
-              className={`px-5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                billingPlan === 'installment'
-                  ? 'bg-gradient-to-r from-sky-700 to-[#b58b42] text-white shadow-md shadow-sky-700/20'
-                  : 'text-slate-300 hover:text-white'
-              }`}
+              onClick={onOpenInquiry}
+              className="px-5 py-3 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700 text-slate-200 text-xs font-semibold transition-all cursor-pointer flex items-center gap-2"
             >
-              <span>2-Part Installment Plan</span>
-              <span className="px-1.5 py-0.5 rounded text-[10px] bg-amber-400/20 text-[#f1bd5b] border border-[#f1bd5b]/40 font-bold">
-                0% Fee
-              </span>
+              <FileSpreadsheet className="w-4 h-4 text-sky-400" />
+              <span>Request Fee Counseling</span>
             </button>
           </div>
         </div>
@@ -77,14 +69,6 @@ export const PackagesSection: React.FC<PackagesSectionProps> = ({
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch mb-16 pt-6">
           {PACKAGES.map((pkg) => {
             const isPopular = pkg.isPopular;
-            const price =
-              currency === 'INR'
-                ? billingPlan === 'full'
-                  ? `₹${pkg.priceINR.toLocaleString('en-IN')}`
-                  : `₹${pkg.installmentINR.toLocaleString('en-IN')}`
-                : billingPlan === 'full'
-                ? `$${pkg.priceUSD}`
-                : `$${Math.round(pkg.priceUSD / 2)}`;
 
             return (
               <motion.div
@@ -117,18 +101,34 @@ export const PackagesSection: React.FC<PackagesSectionProps> = ({
                     {pkg.tagline}
                   </p>
 
-                  {/* Price Tag */}
+                  {/* Brochure & Fee Option (Replacing price tag with Download Brochure) */}
                   <div className="pb-6 mb-6 border-b border-sky-50">
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-4xl sm:text-5xl font-extrabold text-slate-900 tracking-tight">
-                        {price}
-                      </span>
-                      <span className="text-xs text-slate-500 font-medium">
-                        {billingPlan === 'full' ? '/ full program' : '/ month (2 installments)'}
-                      </span>
-                    </div>
-                    <div className="text-[11px] text-slate-500 mt-1">
-                      Covers all 3 CIA exam parts · IIA exam fees separate
+                    <div className="p-4 rounded-2xl bg-gradient-to-br from-sky-50/70 via-white to-amber-50/50 border border-sky-100 shadow-2xs">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-[10px] font-extrabold text-[#b58b42] uppercase tracking-wider flex items-center gap-1.5">
+                          <FileText className="w-3.5 h-3.5 text-[#b58b42]" />
+                          <span>TUITION & SYLLABUS</span>
+                        </span>
+                        <span className="text-[10px] font-bold text-sky-900 bg-sky-100 px-2 py-0.5 rounded-full">
+                          2026-27 Cohort
+                        </span>
+                      </div>
+                      
+                      <div className="text-sm font-bold text-slate-900 mb-1">
+                        Tuition & Complete Fee Structure
+                      </div>
+                      <p className="text-[11px] text-slate-500 leading-snug mb-3">
+                        Covers all 3 CIA exam parts · Comprehensive study kit & test bank included · IIA exam fees separate
+                      </p>
+
+                      <button
+                        type="button"
+                        onClick={() => onOpenBrochure?.(pkg.id)}
+                        className="w-full py-2.5 px-3.5 rounded-xl bg-gradient-to-r from-sky-800 via-sky-900 to-[#b58b42] hover:from-sky-900 hover:to-[#9e7735] text-white text-xs font-bold flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer group"
+                      >
+                        <Download className="w-3.5 h-3.5 text-[#f1bd5b] group-hover:translate-y-0.5 transition-transform" />
+                        <span>Download Brochure & Fee Structure</span>
+                      </button>
                     </div>
                   </div>
 
@@ -158,8 +158,8 @@ export const PackagesSection: React.FC<PackagesSectionProps> = ({
                   </div>
                 </div>
 
-                {/* Bottom CTA Button with Reflection Effect */}
-                <div className="relative z-10 pt-4 border-t border-sky-50">
+                {/* Bottom CTA Area with Reflection Effect */}
+                <div className="relative z-10 pt-4 border-t border-sky-50 space-y-2">
                   <button
                     onClick={() => onOpenCheckout(pkg.id)}
                     className={`btn-reflection w-full py-3.5 px-6 rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-md transition-all duration-200 cursor-pointer ${
@@ -168,10 +168,20 @@ export const PackagesSection: React.FC<PackagesSectionProps> = ({
                         : 'bg-sky-100/70 hover:bg-sky-200/70 text-sky-950 border border-sky-300 hover:border-sky-400'
                     }`}
                   >
-                    <span>Enroll Now</span>
+                    <span>Enroll / Reserve Seat</span>
                     <ArrowRight className="w-4 h-4" />
                   </button>
-                  <p className="text-[10px] text-slate-400 text-center mt-2">
+
+                  <button
+                    type="button"
+                    onClick={() => onOpenBrochure?.(pkg.id)}
+                    className="w-full py-1.5 text-xs font-semibold text-slate-600 hover:text-sky-900 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                  >
+                    <Download className="w-3.5 h-3.5 text-[#b58b42]" />
+                    <span>Download Brochure (PDF)</span>
+                  </button>
+
+                  <p className="text-[10px] text-slate-400 text-center">
                     Instant LMS portal access setup upon admissions confirmation
                   </p>
                 </div>
@@ -224,12 +234,45 @@ export const PackagesSection: React.FC<PackagesSectionProps> = ({
               <thead>
                 <tr className="bg-sky-50/70 text-slate-700 border-b border-sky-100">
                   <th className="p-4 font-bold">Feature / Inclusion</th>
-                  <th className="p-4 font-bold">Basic (₹40,000)</th>
-                  <th className="p-4 font-bold text-sky-800">Premium Live (₹72,000)</th>
-                  <th className="p-4 font-bold text-[#b58b42]">Premium Plus (₹1,00,000)</th>
+                  <th className="p-4 font-bold">Basic Self-Paced</th>
+                  <th className="p-4 font-bold text-sky-800">Premium Live Interactive</th>
+                  <th className="p-4 font-bold text-[#b58b42]">Premium Plus with AI Audit</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-slate-600">
+                <tr className="bg-amber-50/40">
+                  <td className="p-4 font-bold text-slate-900">Tuition & Fee Structure</td>
+                  <td className="p-4">
+                    <button
+                      type="button"
+                      onClick={() => onOpenBrochure?.('basic')}
+                      className="inline-flex items-center gap-1.5 text-xs font-bold text-sky-800 hover:text-[#b58b42] underline cursor-pointer"
+                    >
+                      <Download className="w-3.5 h-3.5 text-[#b58b42]" />
+                      <span>Download Brochure</span>
+                    </button>
+                  </td>
+                  <td className="p-4">
+                    <button
+                      type="button"
+                      onClick={() => onOpenBrochure?.('premium')}
+                      className="inline-flex items-center gap-1.5 text-xs font-bold text-sky-800 hover:text-[#b58b42] underline cursor-pointer"
+                    >
+                      <Download className="w-3.5 h-3.5 text-[#b58b42]" />
+                      <span>Download Brochure</span>
+                    </button>
+                  </td>
+                  <td className="p-4">
+                    <button
+                      type="button"
+                      onClick={() => onOpenBrochure?.('premium-plus')}
+                      className="inline-flex items-center gap-1.5 text-xs font-bold text-sky-800 hover:text-[#b58b42] underline cursor-pointer"
+                    >
+                      <Download className="w-3.5 h-3.5 text-[#b58b42]" />
+                      <span>Download Brochure</span>
+                    </button>
+                  </td>
+                </tr>
                 <tr>
                   <td className="p-4 font-medium text-slate-900">Full 3-Part CIA Curriculum</td>
                   <td className="p-4"><Check className="w-4 h-4 text-emerald-600" /></td>

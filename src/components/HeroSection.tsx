@@ -19,7 +19,8 @@ import {
   Phone,
   User,
   Send,
-  Clock
+  Clock,
+  Download
 } from 'lucide-react';
 
 interface HeroSectionProps {
@@ -27,6 +28,7 @@ interface HeroSectionProps {
   onOpenCheckout: (packageId?: string) => void;
   onOpenQuiz: () => void;
   onOpenInquiry: () => void;
+  onOpenLms?: () => void;
 }
 
 export const HeroSection: React.FC<HeroSectionProps> = ({
@@ -34,6 +36,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   onOpenCheckout,
   onOpenQuiz,
   onOpenInquiry,
+  onOpenLms,
 }) => {
   // Hero Direct Enquiry Form State
   const [enquiryName, setEnquiryName] = useState('');
@@ -43,6 +46,20 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   const [enquiryProgram, setEnquiryProgram] = useState('Full 3-Part Live Accelerator');
   const [enquirySubmitted, setEnquirySubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const triggerBrochureDownload = () => {
+    try {
+      const link = document.createElement('a');
+      link.href = '/assets/aistudio/BNC_Global_CIA_Student_Brochure_60003cf7.pdf';
+      link.download = 'BNC_Global_CIA_Student_Brochure.pdf';
+      link.target = '_blank';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      console.warn('Brochure download error', err);
+    }
+  };
 
   const handleEnquirySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,9 +77,29 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         submittedAt: new Date().toISOString(),
       });
       localStorage.setItem('bnc_hero_enquiries', JSON.stringify(existing));
+
+      // Also persist to unified bnc_all_leads for the Academic Admin Leads Console
+      const allLeads = JSON.parse(localStorage.getItem('bnc_all_leads') || '[]');
+      allLeads.unshift({
+        id: `lead-${Date.now()}`,
+        name: enquiryName,
+        phone: enquiryPhone,
+        email: enquiryEmail,
+        qualification: enquiryQualification,
+        program: enquiryProgram,
+        source: 'Hero Enquiry & Download Brochure',
+        status: 'New',
+        submittedAt: new Date().toLocaleString(),
+        brochureDownloaded: true,
+        notes: 'Submitted via Hero admissions desk.'
+      });
+      localStorage.setItem('bnc_all_leads', JSON.stringify(allLeads));
     } catch (err) {
       console.log('Enquiry storage error', err);
     }
+
+    // Automatically trigger brochure PDF download immediately
+    triggerBrochureDownload();
 
     try {
       await fetch('https://formsubmit.co/ajax/info@bncglobal.in', {
@@ -72,7 +109,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           Accept: 'application/json',
         },
         body: JSON.stringify({
-          _subject: `[BNC ELEVATE] Quick CIA Enquiry: ${enquiryName}`,
+          _subject: `[BNC ELEVATE] Quick CIA Enquiry & Brochure: ${enquiryName}`,
           _template: 'table',
           _captcha: 'false',
           'Enquiry Name': enquiryName,
@@ -81,6 +118,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           'Educational Qualification': enquiryQualification,
           'Preferred Program': enquiryProgram,
           'Submission Date': new Date().toLocaleString(),
+          'Brochure Downloaded': 'Yes (BNC_Global_CIA_Student_Brochure.pdf)',
         }),
       });
     } catch (err) {
@@ -179,6 +217,16 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               >
                 Request Syllabus PDF
               </button>
+
+              {onOpenLms && (
+                <button
+                  onClick={onOpenLms}
+                  className="inline-flex items-center gap-1.5 px-4 py-3 rounded-xl font-bold text-xs sm:text-sm text-[#f1bd5b] bg-[#b58b42]/20 hover:bg-[#b58b42]/30 border border-[#b58b42]/50 shadow-xs transition-all cursor-pointer"
+                >
+                  <BookOpen className="w-4 h-4" />
+                  <span>Student LMS Portal</span>
+                </button>
+              )}
             </div>
 
             {/* 3 Quantifiable Live Metrics Strip in 3-Column Grid */}
@@ -241,11 +289,14 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                     <CheckCircle2 className="w-8 h-8" />
                   </div>
                   <div>
-                    <h4 className="text-lg font-bold text-slate-900">Enquiry Dispatched!</h4>
+                    <h4 className="text-lg font-bold text-slate-900">Enquiry Dispatched & Brochure Downloaded!</h4>
                     <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">
                       Thank you, <strong className="text-slate-900">{enquiryName}</strong>. Your enquiry details have been delivered to{' '}
                       <span className="font-bold text-sky-950">info@bncglobal.in</span>.
                     </p>
+                    <div className="mt-2.5 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-900 font-medium">
+                      ✓ The official 10-page BNC Global CIA® Student Brochure (PDF) has been automatically downloaded to your system!
+                    </div>
                     <p className="text-xs text-slate-500 mt-2">
                       Our Lead Academic Counselor will contact you via WhatsApp / Phone at{' '}
                       <strong className="text-blue-950">{enquiryPhone}</strong> within 2 business hours.
@@ -253,6 +304,23 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                   </div>
 
                   <div className="pt-2 flex flex-col gap-2">
+                    <button
+                      type="button"
+                      onClick={triggerBrochureDownload}
+                      className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-sky-700 to-[#b58b42] hover:from-sky-800 hover:to-[#9e7735] text-white font-bold text-xs shadow-md transition-all cursor-pointer"
+                    >
+                      <Download className="w-4 h-4" />
+                      <span>Download Brochure Again (PDF)</span>
+                    </button>
+                    <a
+                      href={`mailto:info@bncglobal.in?subject=${encodeURIComponent(`[BNC ELEVATE] CIA Enquiry & Brochure Request: ${enquiryName}`)}&body=${encodeURIComponent(
+                        `Candidate Name: ${enquiryName}\nPhone / WhatsApp: ${enquiryPhone}\nEmail: ${enquiryEmail}\nEducational Qualification: ${enquiryQualification}\nProgram of Interest: ${enquiryProgram}\nBrochure Downloaded: Yes\nSubmitted At: ${new Date().toLocaleString()}\n\nAdmissions Note: Please dispatch cohort batch dates and scholarship fee structure to my email.`
+                      )}`}
+                      className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-md transition-all border border-slate-700"
+                    >
+                      <Mail className="w-4 h-4 text-[#f1bd5b]" />
+                      <span>Send Direct Email to info@bncglobal.in</span>
+                    </a>
                     <a
                       href="https://wa.me/916396018626?text=Hi%20BNC%20ELEVATE%2C%20I%20have%20submitted%20an%20enquiry%20for%20CIA%20coaching."
                       target="_blank"
@@ -365,17 +433,17 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                     <button
                       type="submit"
                       disabled={isSubmitting}
-                      className="btn-reflection w-full inline-flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-sky-700 via-sky-800 to-[#b58b42] hover:from-sky-800 hover:to-[#9e7735] text-white font-bold text-xs sm:text-sm shadow-md shadow-sky-800/25 hover:shadow-[#b58b42]/30 transition-all cursor-pointer disabled:opacity-75"
+                      className="btn-reflection w-full inline-flex items-center justify-center gap-2 py-3.5 rounded-xl bg-gradient-to-r from-sky-700 via-sky-800 to-[#b58b42] hover:from-sky-800 hover:to-[#9e7735] text-white font-bold text-xs sm:text-sm shadow-md shadow-sky-800/25 hover:shadow-[#b58b42]/30 transition-all cursor-pointer disabled:opacity-75"
                     >
                       {isSubmitting ? (
                         <>
                           <Clock className="w-4 h-4 animate-spin" />
-                          <span>Submitting Enquiry...</span>
+                          <span>Submitting & Downloading Brochure...</span>
                         </>
                       ) : (
                         <>
-                          <Send className="w-4 h-4" />
-                          <span>Submit Enquiry</span>
+                          <Download className="w-4 h-4" />
+                          <span>Submit Enquiry & Download Brochure</span>
                         </>
                       )}
                     </button>

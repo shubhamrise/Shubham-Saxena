@@ -47,10 +47,15 @@ export const AiAdvisorChatbot: React.FC<AiAdvisorChatbotProps> = ({
   };
 
   useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
     if (isOpen) {
       scrollToBottom();
+      window.addEventListener('keydown', handleKeyDown);
     }
-  }, [messages, isOpen]);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [messages, isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -81,8 +86,8 @@ export const AiAdvisorChatbot: React.FC<AiAdvisorChatbotProps> = ({
         aiReply = "Official IIA India Exam Fees for 2026-27 (with 18% GST):\n\n• CIA Application Fee: US$ 84.96\n• Part 1 Exam: US$ 219.48\n• Part 2 Exam: US$ 198.24\n• Part 3 Exam: US$ 198.24\n• Full Program Total: US$ 700.92 (approx. ₹60,600).\n\nIIA India student members can start with the IAP route for just US$ 247.80 total!";
         action = { label: "Open IIA Fee Calculator", targetId: "fees" };
       } else if (lower.includes('premium') || lower.includes('package') || lower.includes('price') || lower.includes('emi') || lower.includes('ai tool')) {
-        aiReply = "We offer 3 tailored tuition tiers:\n\n1. Basic (₹40,000 / $490): 18-month LMS, recorded classes, 5,000+ test bank, mock exams.\n2. Premium Live (₹72,000 / $885) [Most Popular]: Live interactive weekend classes (Fri/Sat), hardcopy books couriered home, doubt solving.\n3. Premium Plus (₹1,00,000 / $1,225): Live classes + 20-hour AI Audit Tools Lab for automated workpapers & data analytics.\n\nAll packages have 2-part zero-cost EMI options!";
-        action = { label: "Compare Package Features", targetId: "packages" };
+        aiReply = "We offer 3 tailored preparation tiers:\n\n1. Basic Self-Paced: 18-month LMS, 100+ recorded hours, 5,000+ test bank, mock exams.\n2. Premium Live Interactive [Most Popular]: 100+ hours live interactive weekend classes (Fri/Sat), hardcopy books couriered home, doubt solving clinics.\n3. Premium Plus with AI Audit: Live classes + 20-hour hands-on AI Audit Tools Lab for automated workpapers & data analytics.\n\nYou can download the complete 2026-27 brochure with transparent fee structures and installment options directly in the packages section!";
+        action = { label: "View Packages & Download Brochure", targetId: "packages" };
       } else if (lower.includes('iap') || lower.includes('practitioner') || lower.includes('part 1') || lower.includes('student')) {
         aiReply = "The Internal Audit Practitioner (IAP) is a permanent international designation awarded by the IIA upon clearing Part 1 alone. No university degree is required! Your Part 1 pass remains valid credit toward the full CIA for 4 years, and the IIA waives your CIA application fee.";
         action = { label: "View IAP Details", targetId: "packages" };
@@ -136,8 +141,14 @@ export const AiAdvisorChatbot: React.FC<AiAdvisorChatbotProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-end sm:justify-end p-4 sm:p-6 bg-slate-950/40 backdrop-blur-sm pointer-events-auto">
-      <div className="w-full sm:w-[420px] max-h-[85vh] bg-white border border-slate-200/90 rounded-2xl shadow-2xl flex flex-col overflow-hidden text-slate-800 animate-in fade-in slide-in-from-bottom-6 duration-300">
+    <div
+      onClick={onClose}
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-end sm:justify-end p-4 sm:p-6 bg-slate-950/40 backdrop-blur-sm pointer-events-auto"
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="w-full sm:w-[420px] max-h-[85vh] bg-white border border-slate-200/90 rounded-2xl shadow-2xl flex flex-col overflow-hidden text-slate-800 animate-in fade-in slide-in-from-bottom-6 duration-300"
+      >
         {/* Chat Header */}
         <div className="flex items-center justify-between px-5 py-3.5 bg-gradient-to-r from-sky-800 via-sky-700 to-[#b58b42] text-white border-b border-sky-600/30">
           <div className="flex items-center gap-2.5">
@@ -163,11 +174,17 @@ export const AiAdvisorChatbot: React.FC<AiAdvisorChatbotProps> = ({
               <RefreshCw className="w-4 h-4" />
             </button>
             <button
-              onClick={onClose}
-              className="p-1 rounded-md text-sky-100 hover:text-white hover:bg-white/10 transition-colors"
-              title="Close Chat"
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onClose();
+              }}
+              className="p-1.5 rounded-lg text-sky-100 hover:text-white hover:bg-white/20 transition-all cursor-pointer"
+              title="Close Chat (Esc)"
+              aria-label="Close Chat"
             >
-              <X className="w-5 h-5" />
+              <X className="w-5 h-5 pointer-events-none" />
             </button>
           </div>
         </div>
