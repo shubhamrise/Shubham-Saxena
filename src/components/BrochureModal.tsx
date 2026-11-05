@@ -1,5 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { X, Download, CheckCircle2, FileText, Sparkles, Phone, Mail, ShieldCheck, ArrowRight } from 'lucide-react';
+import {
+  saveLeadToAdminConsole,
+  dispatchToInfoBncGlobal,
+  triggerBrochureDownload
+} from '../services/enquiryService';
 
 interface BrochureModalProps {
   isOpen: boolean;
@@ -44,27 +49,24 @@ export const BrochureModal: React.FC<BrochureModalProps> = ({
 
   if (!isOpen) return null;
 
-  // Trigger official BNC Global CIA Student Brochure PDF download
-  const triggerBrochureDownload = () => {
-    try {
-      const link = document.createElement('a');
-      link.href = '/assets/aistudio/BNC_Global_CIA_Student_Brochure_60003cf7.pdf';
-      link.download = 'BNC_Global_CIA_Student_Brochure.pdf';
-      link.target = '_blank';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } catch (err) {
-      console.warn('Brochure download error', err);
-    }
-  };
-
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
+    const payload = {
+      name,
+      email,
+      phone,
+      qualification: "Bachelor's Degree",
+      program: selectedPkg,
+      source: 'Brochure Modal Download',
+      notes: 'Downloaded official BNC Global CIA student brochure'
+    };
+
+    // 1. Instantly persist to the central Admin Leads Console
+    saveLeadToAdminConsole(payload);
+
     try {
-      // Save lead in localStorage
       const existing = JSON.parse(localStorage.getItem('bnc_brochure_downloads') || '[]');
       existing.unshift({
         name,
@@ -74,42 +76,18 @@ export const BrochureModal: React.FC<BrochureModalProps> = ({
         downloadedAt: new Date().toISOString()
       });
       localStorage.setItem('bnc_brochure_downloads', JSON.stringify(existing));
-
-      // Also persist to unified bnc_all_leads
-      const allLeads = JSON.parse(localStorage.getItem('bnc_all_leads') || '[]');
-      allLeads.unshift({
-        id: `lead-br-${Date.now()}`,
-        name,
-        email,
-        phone,
-        qualification: "Bachelor's Degree",
-        program: selectedPkg,
-        source: 'Brochure Modal Download',
-        status: 'New',
-        submittedAt: new Date().toLocaleString(),
-        brochureDownloaded: true,
-        notes: 'Downloaded 10-page BNC Global CIA Student Brochure.'
-      });
-      localStorage.setItem('bnc_all_leads', JSON.stringify(allLeads));
-
-      // Attempt notification dispatch
-      fetch('https://formsubmit.co/ajax/info@bncglobal.in', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        body: JSON.stringify({
-          _subject: `[BNC ELEVATE] Brochure Download: ${name} (${selectedPkg})`,
-          Name: name,
-          Email: email,
-          Phone: phone,
-          Package: selectedPkg,
-          Timestamp: new Date().toLocaleString()
-        })
-      }).catch((err) => console.warn('Dispatch failed', err));
     } catch (err) {
-      console.warn('Storage failed', err);
+      console.warn('Storage notice', err);
     }
 
-    // Trigger official PDF download
+    // 2. Multi-pathway dispatch to info@bncglobal.in (Native Form POST + AJAX)
+    try {
+      await dispatchToInfoBncGlobal(payload);
+    } catch (err) {
+      console.warn('Brochure dispatch notice', err);
+    }
+
+    // 3. Trigger official brochure PDF download
     setTimeout(() => {
       triggerBrochureDownload();
       setIsSubmitting(false);

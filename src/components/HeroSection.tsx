@@ -22,6 +22,13 @@ import {
   Clock,
   Download
 } from 'lucide-react';
+import {
+  saveLeadToAdminConsole,
+  dispatchToInfoBncGlobal,
+  triggerBrochureDownload,
+  getDirectMailtoUrl,
+  getDirectWhatsAppUrl
+} from '../services/enquiryService';
 
 interface HeroSectionProps {
   currency: Currency;
@@ -47,24 +54,24 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   const [enquirySubmitted, setEnquirySubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const triggerBrochureDownload = () => {
-    try {
-      const link = document.createElement('a');
-      link.href = '/assets/aistudio/BNC_Global_CIA_Student_Brochure_60003cf7.pdf';
-      link.download = 'BNC_Global_CIA_Student_Brochure.pdf';
-      link.target = '_blank';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } catch (err) {
-      console.warn('Brochure download error', err);
-    }
-  };
-
   const handleEnquirySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
+    const payload = {
+      name: enquiryName,
+      phone: enquiryPhone,
+      email: enquiryEmail,
+      qualification: enquiryQualification,
+      program: enquiryProgram,
+      source: 'Hero Enquiry & Download Brochure',
+      notes: 'Submitted through homepage Hero admissions desk.'
+    };
+
+    // 1. Instantly record lead in the Admin Console (accessible via info@bncglobal.in)
+    saveLeadToAdminConsole(payload);
+
+    // Also update legacy local storage key for compatibility
     try {
       const existing = JSON.parse(localStorage.getItem('bnc_hero_enquiries') || '[]');
       existing.unshift({
@@ -74,55 +81,21 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         enquiryQualification,
         enquiryProgram,
         targetEmail: 'info@bncglobal.in',
-        submittedAt: new Date().toISOString(),
+        submittedAt: new Date().toISOString()
       });
       localStorage.setItem('bnc_hero_enquiries', JSON.stringify(existing));
-
-      // Also persist to unified bnc_all_leads for the Academic Admin Leads Console
-      const allLeads = JSON.parse(localStorage.getItem('bnc_all_leads') || '[]');
-      allLeads.unshift({
-        id: `lead-${Date.now()}`,
-        name: enquiryName,
-        phone: enquiryPhone,
-        email: enquiryEmail,
-        qualification: enquiryQualification,
-        program: enquiryProgram,
-        source: 'Hero Enquiry & Download Brochure',
-        status: 'New',
-        submittedAt: new Date().toLocaleString(),
-        brochureDownloaded: true,
-        notes: 'Submitted via Hero admissions desk.'
-      });
-      localStorage.setItem('bnc_all_leads', JSON.stringify(allLeads));
-    } catch (err) {
-      console.log('Enquiry storage error', err);
+    } catch (e) {
+      console.warn(e);
     }
 
-    // Automatically trigger brochure PDF download immediately
+    // 2. Automatically trigger official brochure PDF download immediately
     triggerBrochureDownload();
 
+    // 3. Multi-pathway dispatch to info@bncglobal.in (Native Hidden Form POST + AJAX)
     try {
-      await fetch('https://formsubmit.co/ajax/info@bncglobal.in', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-        body: JSON.stringify({
-          _subject: `[BNC ELEVATE] Quick CIA Enquiry & Brochure: ${enquiryName}`,
-          _template: 'table',
-          _captcha: 'false',
-          'Enquiry Name': enquiryName,
-          'Phone / WhatsApp': enquiryPhone,
-          'Email Address': enquiryEmail,
-          'Educational Qualification': enquiryQualification,
-          'Preferred Program': enquiryProgram,
-          'Submission Date': new Date().toLocaleString(),
-          'Brochure Downloaded': 'Yes (BNC_Global_CIA_Student_Brochure.pdf)',
-        }),
-      });
+      await dispatchToInfoBncGlobal(payload);
     } catch (err) {
-      console.warn('Enquiry dispatch error', err);
+      console.warn('Enquiry dispatch notice:', err);
     } finally {
       setIsSubmitting(false);
       setEnquirySubmitted(true);
@@ -240,10 +213,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               </div>
 
               <div className="card-reflection p-4 rounded-2xl bg-slate-900/80 backdrop-blur-md border border-slate-700/80 shadow-lg hover:border-sky-400 transition-all">
-                <div className="text-2xl sm:text-3xl font-extrabold text-sky-400 tracking-tight mb-0.5 tabular-nums">$499</div>
-                <div className="text-[11px] font-bold text-white uppercase tracking-wider mb-1">Test Bank Included Free</div>
+                <div className="text-2xl sm:text-3xl font-extrabold text-sky-400 tracking-tight mb-0.5 tabular-nums">5,000+</div>
+                <div className="text-[11px] font-bold text-white uppercase tracking-wider mb-1">Practice MCQs & Books</div>
                 <div className="text-[11px] text-slate-300 leading-relaxed">
-                  Physical copy of BNC CIA Books & 5,000+ practice questions delivered to your doorstep.
+                  Comprehensive BNC CIA Books & 5,000+ practice questions delivered to your doorstep.
                 </div>
               </div>
 
@@ -558,7 +531,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                     </p>
                     <div className="pl-11 text-[11px] font-bold text-sky-900 flex items-center gap-1.5">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
-                      <span>Average package: ₹12L - ₹28L+</span>
+                      <span>Average industry compensation: 12L - 28L+ p.a.</span>
                     </div>
                   </div>
                 </div>

@@ -245,11 +245,6 @@ export const AdmissionsDeskModal: React.FC<AdmissionsDeskModalProps> = ({ isOpen
                           {lead.type}
                         </span>
                         <h4 className="font-bold text-slate-900 text-sm">{lead.name}</h4>
-                        {lead.amount && (
-                          <span className="text-xs font-extrabold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">
-                            {lead.amount}
-                          </span>
-                        )}
                       </div>
 
                       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-600">

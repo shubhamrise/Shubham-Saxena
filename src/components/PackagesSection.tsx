@@ -286,7 +286,7 @@ export const PackagesSection: React.FC<PackagesSectionProps> = ({
                   <td className="p-4"><Check className="w-4 h-4 text-emerald-600" /></td>
                 </tr>
                 <tr>
-                  <td className="p-4 font-medium text-slate-900">BNC CIA 5,000+ MCQ Test Bank ($499 Value)</td>
+                  <td className="p-4 font-medium text-slate-900">BNC CIA 5,000+ MCQ Test Bank (Included Free)</td>
                   <td className="p-4"><Check className="w-4 h-4 text-emerald-600" /></td>
                   <td className="p-4"><Check className="w-4 h-4 text-emerald-600" /></td>
                   <td className="p-4"><Check className="w-4 h-4 text-emerald-600" /></td>

@@ -5,7 +5,9 @@ import {
   LMS_RESOURCES,
   UPCOMING_LIVE_CLASSES,
   LmsLesson,
-  LmsMcqQuestion
+  LmsModule,
+  LmsMcqQuestion,
+  LmsResource
 } from '../data/lmsData';
 import {
   BookOpen,
@@ -46,7 +48,7 @@ import {
   BadgeAlert
 } from 'lucide-react';
 import { LmsAdminConsole } from './LmsAdminConsole';
-import { ManagedLearner, LmsAdminUser } from '../types';
+import { ManagedLearner, LmsAdminUser, LiveClassItem, StudentDoubtItem } from '../types';
 
 export interface AuthenticatedStudent {
   name: string;
@@ -185,9 +187,78 @@ export const StudentLmsPortal: React.FC<StudentLmsPortalProps> = ({
   // Navigation tabs
   const [activeTab, setActiveTab] = useState<'curriculum' | 'testbank' | 'live' | 'resources' | 'ailab' | 'readiness'>('curriculum');
   const [selectedPart, setSelectedPart] = useState<'all' | 'part-1' | 'part-2' | 'part-3' | 'ai-lab'>('part-1');
+
+  // LMS Data States (backed by localStorage so Admin edits persist across student view)
+  const [lmsModules, setLmsModules] = useState<LmsModule[]>(() => {
+    try {
+      const saved = localStorage.getItem('bnc_lms_modules');
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return LMS_MODULES;
+  });
+
+  const [testBankQuestions, setTestBankQuestions] = useState<LmsMcqQuestion[]>(() => {
+    try {
+      const saved = localStorage.getItem('bnc_lms_test_bank');
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return LMS_TEST_BANK_QUESTIONS;
+  });
+
+  const [liveClasses, setLiveClasses] = useState<LiveClassItem[]>(() => {
+    try {
+      const saved = localStorage.getItem('bnc_lms_live_classes');
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return UPCOMING_LIVE_CLASSES;
+  });
+
+  const [lmsResources, setLmsResources] = useState<LmsResource[]>(() => {
+    try {
+      const saved = localStorage.getItem('bnc_lms_resources');
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return LMS_RESOURCES;
+  });
+
+  const handleUpdateModules = (updated: LmsModule[]) => {
+    setLmsModules(updated);
+    try {
+      localStorage.setItem('bnc_lms_modules', JSON.stringify(updated));
+    } catch (e) {
+      console.warn(e);
+    }
+  };
+
+  const handleUpdateTestBank = (updated: LmsMcqQuestion[]) => {
+    setTestBankQuestions(updated);
+    try {
+      localStorage.setItem('bnc_lms_test_bank', JSON.stringify(updated));
+    } catch (e) {
+      console.warn(e);
+    }
+  };
+
+  const handleUpdateLiveClasses = (updated: LiveClassItem[]) => {
+    setLiveClasses(updated);
+    try {
+      localStorage.setItem('bnc_lms_live_classes', JSON.stringify(updated));
+    } catch (e) {
+      console.warn(e);
+    }
+  };
+
+  const handleUpdateResources = (updated: LmsResource[]) => {
+    setLmsResources(updated);
+    try {
+      localStorage.setItem('bnc_lms_resources', JSON.stringify(updated));
+    } catch (e) {
+      console.warn(e);
+    }
+  };
   
   // Video Player state
-  const [activeLesson, setActiveLesson] = useState<LmsLesson>(LMS_MODULES[0].lessons[0]);
+  const [activeLesson, setActiveLesson] = useState<LmsLesson>(lmsModules[0]?.lessons[0] || LMS_MODULES[0].lessons[0]);
   const [isPlaying, setIsPlaying] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState<number>(1);
   const [playerProgress, setPlayerProgress] = useState(35); // 35% viewed
@@ -233,15 +304,31 @@ export const StudentLmsPortal: React.FC<StudentLmsPortalProps> = ({
   // Live Class & Doubt state
   const [doubtText, setDoubtText] = useState('');
   const [doubtSubmitted, setDoubtSubmitted] = useState(false);
-  const [userDoubts, setUserDoubts] = useState<Array<{ id: string; question: string; time: string; status: string; reply?: string }>>([
-    {
-      id: 'd-1',
-      question: 'In GIAS Standard 2.1, does consulting on an ERP migration immediately disqualify the team from conducting assurance on the same system later?',
-      time: 'Yesterday at 4:15 PM',
-      status: 'Answered by CA Gurvinder Pal Singh',
-      reply: 'Yes, if the internal audit team designed or implemented operating controls during the migration, independence is impaired for a minimum of 1 year. If advisory was strictly limited to evaluating design without management decision-making, assurance can proceed with disclosure to the Audit Committee.'
+  const [userDoubts, setUserDoubts] = useState<StudentDoubtItem[]>(() => {
+    try {
+      const saved = localStorage.getItem('bnc_lms_user_doubts');
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return [
+      {
+        id: 'd-1',
+        question: 'In GIAS Standard 2.1, does consulting on an ERP migration immediately disqualify the team from conducting assurance on the same system later?',
+        time: 'Yesterday at 4:15 PM',
+        status: 'Answered by CA Gurvinder Pal Singh',
+        reply: 'Yes, if the internal audit team designed or implemented operating controls during the migration, independence is impaired for a minimum of 1 year. If advisory was strictly limited to evaluating design without management decision-making, assurance can proceed with disclosure to the Audit Committee.',
+        studentName: 'Rohit Verma'
+      }
+    ];
+  });
+
+  const handleUpdateDoubts = (updated: StudentDoubtItem[]) => {
+    setUserDoubts(updated);
+    try {
+      localStorage.setItem('bnc_lms_user_doubts', JSON.stringify(updated));
+    } catch (e) {
+      console.warn(e);
     }
-  ]);
+  };
 
   // Toast feedback
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -551,12 +638,12 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
 
   // Filter modules
   const filteredModules = selectedPart === 'all'
-    ? LMS_MODULES
-    : LMS_MODULES.filter((m) => m.partId === selectedPart);
+    ? lmsModules
+    : lmsModules.filter((m) => m.partId === selectedPart);
 
   // Calculate completion percentage
-  const totalLessonsCount = LMS_MODULES.reduce((acc, m) => acc + m.lessons.length, 0);
-  const completionPercentage = Math.round((completedLessons.length / totalLessonsCount) * 100);
+  const totalLessonsCount = lmsModules.reduce((acc, m) => acc + m.lessons.length, 0);
+  const completionPercentage = Math.round((completedLessons.length / (totalLessonsCount || 1)) * 100);
 
   // If an administrator is authenticated and not currently previewing student view, show Academic Admin Console
   if (adminUser && !currentUser) {
@@ -566,6 +653,16 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
         learners={managedLearners}
         onUpdateLearners={handleUpdateLearners}
         onLogoutAdmin={handleLogoutAdmin}
+        modules={lmsModules}
+        onUpdateModules={handleUpdateModules}
+        testBank={testBankQuestions}
+        onUpdateTestBank={handleUpdateTestBank}
+        liveClasses={liveClasses}
+        onUpdateLiveClasses={handleUpdateLiveClasses}
+        resources={lmsResources}
+        onUpdateResources={handleUpdateResources}
+        doubts={userDoubts}
+        onUpdateDoubts={handleUpdateDoubts}
         onSwitchToStudentView={(learner) => {
           if (learner) {
             setCurrentUser({
@@ -1047,10 +1144,36 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
   }
 
 
-  const currentMcq = LMS_TEST_BANK_QUESTIONS[currentQuestionIndex];
+  const currentMcq = testBankQuestions[currentQuestionIndex] || testBankQuestions[0];
 
   return (
     <div className="min-h-screen bg-[#071322] text-slate-100 flex flex-col font-sans">
+      {/* Master Admin Preview Floating Header */}
+      {adminUser && (
+        <div className="bg-gradient-to-r from-amber-600 via-sky-800 to-slate-900 text-white px-4 py-2.5 flex flex-wrap items-center justify-between gap-3 text-xs font-bold border-b border-amber-400/40 sticky top-0 z-50 shadow-lg">
+          <div className="flex items-center gap-2">
+            <span className="p-1 rounded-md bg-white/20 border border-white/30 text-amber-200">
+              <ShieldCheck className="w-4 h-4" />
+            </span>
+            <span>ACADEMIC ADMIN PREVIEW · Logged in as {adminUser.email} · Viewing Student: {currentUser?.name} (#{currentUser?.orderId})</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setCurrentUser(null)}
+              className="px-3.5 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs transition-all cursor-pointer shadow-sm"
+            >
+              ⚙️ Return to Admin Console
+            </button>
+            <button
+              onClick={handleLogoutAdmin}
+              className="px-3 py-1.5 rounded-lg bg-slate-900/80 hover:bg-rose-950 text-slate-200 hover:text-rose-200 border border-slate-700 text-xs font-semibold transition-all cursor-pointer"
+            >
+              Log Out
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Student Dossier Modal */}
       {showProfileModal && currentUser && (
         <div
@@ -1611,7 +1734,7 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
                   PEARSON VUE REAL EXAM SIMULATOR
                 </span>
                 <h3 className="text-lg font-black text-white mt-1">
-                  BNC CIA Practice Bank · Question {currentQuestionIndex + 1} of {LMS_TEST_BANK_QUESTIONS.length}
+                  BNC CIA Practice Bank · Question {currentQuestionIndex + 1} of {testBankQuestions.length}
                 </h3>
               </div>
 
@@ -1743,17 +1866,17 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
                   ) : (
                     <button
                       onClick={() => {
-                        if (currentQuestionIndex < LMS_TEST_BANK_QUESTIONS.length - 1) {
+                        if (currentQuestionIndex < testBankQuestions.length - 1) {
                           setCurrentQuestionIndex((prev) => prev + 1);
                           setSelectedAnswer(null);
                           setIsAnswerSubmitted(false);
                         } else {
-                          showToast(`Test Complete! Score: ${testScore + (selectedAnswer === currentMcq.correctIndex ? 1 : 0)}/${LMS_TEST_BANK_QUESTIONS.length}`);
+                          showToast(`Test Complete! Score: ${testScore + (selectedAnswer === currentMcq.correctIndex ? 1 : 0)}/${testBankQuestions.length}`);
                         }
                       }}
                       className="px-6 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white font-bold text-xs shadow-md cursor-pointer transition-all"
                     >
-                      {currentQuestionIndex < LMS_TEST_BANK_QUESTIONS.length - 1 ? 'Next Question →' : 'Finish & Score Test'}
+                      {currentQuestionIndex < testBankQuestions.length - 1 ? 'Next Question →' : 'Finish & Score Test'}
                     </button>
                   )}
                 </div>
@@ -1781,7 +1904,7 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
                 </div>
 
                 <div className="space-y-4 pt-2">
-                  {UPCOMING_LIVE_CLASSES.map((session) => (
+                  {liveClasses.map((session) => (
                     <div
                       key={session.id}
                       className="p-5 rounded-2xl bg-slate-950/80 border border-slate-800 hover:border-sky-600 transition-all space-y-3"
@@ -1897,7 +2020,7 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {LMS_RESOURCES.map((res) => (
+              {lmsResources.map((res) => (
                 <div
                   key={res.id}
                   className="p-6 rounded-3xl bg-slate-900/90 border border-slate-800 hover:border-[#b58b42]/60 transition-all flex flex-col justify-between space-y-4"

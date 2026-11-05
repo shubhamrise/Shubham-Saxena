@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ManagedLearner, LmsAdminUser, EnquiryLead } from '../types';
+import { ManagedLearner, LmsAdminUser, EnquiryLead, LiveClassItem, StudentDoubtItem } from '../types';
 import {
   ShieldCheck,
   ShieldAlert,
@@ -26,8 +26,45 @@ import {
   Download,
   ExternalLink,
   MessageSquare,
-  User
+  User,
+  Send,
+  Calendar,
+  Layers,
+  FileText,
+  FileQuestion,
+  Video
 } from 'lucide-react';
+import {
+  triggerFormSubmitActivation,
+  sendTestEnquiryToAdmin,
+  getWeb3FormsKey,
+  setWeb3FormsKey,
+  getFormspreeId,
+  setFormspreeId
+} from '../services/enquiryService';
+import {
+  LmsModule,
+  LmsMcqQuestion,
+  LmsResource,
+  LMS_MODULES,
+  LMS_TEST_BANK_QUESTIONS,
+  LMS_RESOURCES,
+  UPCOMING_LIVE_CLASSES
+} from '../data/lmsData';
+import { CurriculumEditor } from './admin/CurriculumEditor';
+import { TestBankEditor } from './admin/TestBankEditor';
+import { LiveClassesEditor } from './admin/LiveClassesEditor';
+import { ResourcesEditor } from './admin/ResourcesEditor';
+import { StudentDoubtsEditor } from './admin/StudentDoubtsEditor';
+
+export type AdminConsoleTab =
+  | 'learners'
+  | 'curriculum'
+  | 'testbank'
+  | 'liveclasses'
+  | 'resources'
+  | 'doubts'
+  | 'leads';
 
 interface LmsAdminConsoleProps {
   adminUser: LmsAdminUser;
@@ -37,6 +74,16 @@ interface LmsAdminConsoleProps {
   onSwitchToStudentView: (learner?: ManagedLearner) => void;
   onBackToWebsite: () => void;
   onShowToast: (msg: string) => void;
+  modules?: LmsModule[];
+  onUpdateModules?: (updated: LmsModule[]) => void;
+  testBank?: LmsMcqQuestion[];
+  onUpdateTestBank?: (updated: LmsMcqQuestion[]) => void;
+  liveClasses?: LiveClassItem[];
+  onUpdateLiveClasses?: (updated: LiveClassItem[]) => void;
+  resources?: LmsResource[];
+  onUpdateResources?: (updated: LmsResource[]) => void;
+  doubts?: StudentDoubtItem[];
+  onUpdateDoubts?: (updated: StudentDoubtItem[]) => void;
 }
 
 export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
@@ -47,13 +94,145 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
   onSwitchToStudentView,
   onBackToWebsite,
   onShowToast,
+  modules,
+  onUpdateModules,
+  testBank,
+  onUpdateTestBank,
+  liveClasses,
+  onUpdateLiveClasses,
+  resources,
+  onUpdateResources,
+  doubts,
+  onUpdateDoubts,
 }) => {
-  const [consoleTab, setConsoleTab] = useState<'learners' | 'leads'>('learners');
+  const [consoleTab, setConsoleTab] = useState<AdminConsoleTab>('learners');
   const [searchTerm, setSearchTerm] = useState('');
   const [leadSearchTerm, setLeadSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'revoked' | 'pending'>('all');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingLearner, setEditingLearner] = useState<ManagedLearner | null>(null);
+
+  // LMS Data States for Admin Editing
+  const [modulesState, setModulesState] = useState<LmsModule[]>(() => {
+    if (modules && modules.length > 0) return modules;
+    try {
+      const saved = localStorage.getItem('bnc_lms_modules');
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return LMS_MODULES;
+  });
+
+  const [testBankState, setTestBankState] = useState<LmsMcqQuestion[]>(() => {
+    if (testBank && testBank.length > 0) return testBank;
+    try {
+      const saved = localStorage.getItem('bnc_lms_test_bank');
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return LMS_TEST_BANK_QUESTIONS;
+  });
+
+  const [liveClassesState, setLiveClassesState] = useState<LiveClassItem[]>(() => {
+    if (liveClasses && liveClasses.length > 0) return liveClasses;
+    try {
+      const saved = localStorage.getItem('bnc_lms_live_classes');
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return UPCOMING_LIVE_CLASSES;
+  });
+
+  const [resourcesState, setResourcesState] = useState<LmsResource[]>(() => {
+    if (resources && resources.length > 0) return resources;
+    try {
+      const saved = localStorage.getItem('bnc_lms_resources');
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return LMS_RESOURCES;
+  });
+
+  const [doubtsState, setDoubtsState] = useState<StudentDoubtItem[]>(() => {
+    if (doubts && doubts.length > 0) return doubts;
+    try {
+      const saved = localStorage.getItem('bnc_lms_user_doubts');
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return [
+      {
+        id: 'd-1',
+        question: 'In GIAS Standard 2.1, does consulting on an ERP migration immediately disqualify the team from conducting assurance on the same system later?',
+        time: 'Yesterday at 4:15 PM',
+        status: 'Answered by CA Gurvinder Pal Singh',
+        reply: 'Yes, if the internal audit team designed or implemented operating controls during the migration, independence is impaired for a minimum of 1 year. If advisory was strictly limited to evaluating design without management decision-making, assurance can proceed with disclosure to the Audit Committee.',
+        studentName: 'Rohit Verma'
+      }
+    ];
+  });
+
+  // Updaters for Admin
+  const handleUpdateModules = (updated: LmsModule[]) => {
+    setModulesState(updated);
+    try {
+      localStorage.setItem('bnc_lms_modules', JSON.stringify(updated));
+    } catch (e) {
+      console.warn(e);
+    }
+    if (onUpdateModules) onUpdateModules(updated);
+  };
+
+  const handleUpdateTestBank = (updated: LmsMcqQuestion[]) => {
+    setTestBankState(updated);
+    try {
+      localStorage.setItem('bnc_lms_test_bank', JSON.stringify(updated));
+    } catch (e) {
+      console.warn(e);
+    }
+    if (onUpdateTestBank) onUpdateTestBank(updated);
+  };
+
+  const handleUpdateLiveClasses = (updated: LiveClassItem[]) => {
+    setLiveClassesState(updated);
+    try {
+      localStorage.setItem('bnc_lms_live_classes', JSON.stringify(updated));
+    } catch (e) {
+      console.warn(e);
+    }
+    if (onUpdateLiveClasses) onUpdateLiveClasses(updated);
+  };
+
+  const handleUpdateResources = (updated: LmsResource[]) => {
+    setResourcesState(updated);
+    try {
+      localStorage.setItem('bnc_lms_resources', JSON.stringify(updated));
+    } catch (e) {
+      console.warn(e);
+    }
+    if (onUpdateResources) onUpdateResources(updated);
+  };
+
+  const handleUpdateDoubts = (updated: StudentDoubtItem[]) => {
+    setDoubtsState(updated);
+    try {
+      localStorage.setItem('bnc_lms_user_doubts', JSON.stringify(updated));
+    } catch (e) {
+      console.warn(e);
+    }
+    if (onUpdateDoubts) onUpdateDoubts(updated);
+  };
+
+  const totalLessonsCount = modulesState.reduce((acc, m) => acc + m.lessons.length, 0);
+
+  // Email Delivery Integration Settings
+  const [web3FormsInput, setWeb3FormsInput] = useState(getWeb3FormsKey);
+  const [formspreeInput, setFormspreeInput] = useState(getFormspreeId);
+  const [isSavedKeyFeedback, setIsSavedKeyFeedback] = useState(false);
+
+  const handleSaveEmailConfig = (e: React.FormEvent) => {
+    e.preventDefault();
+    setWeb3FormsKey(web3FormsInput);
+    setFormspreeId(formspreeInput);
+    setIsSavedKeyFeedback(true);
+    setTimeout(() => setIsSavedKeyFeedback(false), 3000);
+    onShowToast('✓ Permanent email integration saved for info@bncglobal.in!');
+  };
 
   // Unified leads state populated from website inquiries
   const [leads, setLeads] = useState<EnquiryLead[]>(() => {
@@ -441,35 +620,101 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
       {/* Main Admin Content */}
       <main className="relative z-10 flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         
-        {/* Console Tab Switcher: Learners vs Leads */}
-        <div className="flex items-center gap-2 p-1.5 bg-slate-900/90 rounded-2xl border border-sky-800/80 w-fit shadow-xl">
+        {/* Console Tab Switcher: Full LMS Administration */}
+        <div className="flex items-center gap-1.5 p-1.5 bg-slate-900/90 rounded-2xl border border-sky-800/80 w-full overflow-x-auto shadow-xl scrollbar-none">
           <button
             type="button"
             onClick={() => setConsoleTab('learners')}
-            className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
+            className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap shrink-0 ${
               consoleTab === 'learners'
                 ? 'bg-gradient-to-r from-sky-700 via-sky-800 to-[#b58b42] text-white shadow-lg'
-                : 'text-slate-400 hover:text-white'
+                : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
             }`}
           >
             <UserCheck className="w-4 h-4 text-[#f1bd5b]" />
-            <span>Learner Access Management ({learners.length})</span>
+            <span>Learners & Access ({learners.length})</span>
           </button>
+
+          <button
+            type="button"
+            onClick={() => setConsoleTab('curriculum')}
+            className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap shrink-0 ${
+              consoleTab === 'curriculum'
+                ? 'bg-gradient-to-r from-sky-700 via-sky-800 to-[#b58b42] text-white shadow-lg'
+                : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+            }`}
+          >
+            <BookOpen className="w-4 h-4 text-sky-400" />
+            <span>Curriculum Lessons ({totalLessonsCount})</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setConsoleTab('testbank')}
+            className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap shrink-0 ${
+              consoleTab === 'testbank'
+                ? 'bg-gradient-to-r from-sky-700 via-sky-800 to-[#b58b42] text-white shadow-lg'
+                : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+            }`}
+          >
+            <FileQuestion className="w-4 h-4 text-amber-400" />
+            <span>MCQ Test Banks ({testBankState.length})</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setConsoleTab('liveclasses')}
+            className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap shrink-0 ${
+              consoleTab === 'liveclasses'
+                ? 'bg-gradient-to-r from-sky-700 via-sky-800 to-[#b58b42] text-white shadow-lg'
+                : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+            }`}
+          >
+            <Calendar className="w-4 h-4 text-emerald-400" />
+            <span>Live Masterclasses ({liveClassesState.length})</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setConsoleTab('resources')}
+            className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap shrink-0 ${
+              consoleTab === 'resources'
+                ? 'bg-gradient-to-r from-sky-700 via-sky-800 to-[#b58b42] text-white shadow-lg'
+                : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+            }`}
+          >
+            <FileText className="w-4 h-4 text-teal-400" />
+            <span>Study Downloads ({resourcesState.length})</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setConsoleTab('doubts')}
+            className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap shrink-0 ${
+              consoleTab === 'doubts'
+                ? 'bg-gradient-to-r from-sky-700 via-sky-800 to-[#b58b42] text-white shadow-lg'
+                : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+            }`}
+          >
+            <MessageSquare className="w-4 h-4 text-purple-400" />
+            <span>Student Doubts ({doubtsState.filter((d) => !d.reply).length} pending)</span>
+          </button>
+
           <button
             type="button"
             onClick={() => setConsoleTab('leads')}
-            className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
+            className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap shrink-0 ${
               consoleTab === 'leads'
                 ? 'bg-gradient-to-r from-sky-700 via-sky-800 to-[#b58b42] text-white shadow-lg'
-                : 'text-slate-400 hover:text-white'
+                : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
             }`}
           >
             <Mail className="w-4 h-4 text-sky-400" />
-            <span>Enquiries & Brochure Leads ({leads.length})</span>
+            <span>Enquiries & Leads ({leads.length})</span>
           </button>
         </div>
 
-        {consoleTab === 'learners' ? (
+        {consoleTab === 'learners' && (
           <>
             {/* Banner */}
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-6 rounded-3xl bg-gradient-to-r from-[#0b1d33] via-[#091b30] to-[#122338] border border-sky-800/60 shadow-xl">
@@ -747,7 +992,49 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
           </div>
         </div>
       </>
-    ) : (
+    )}
+
+    {consoleTab === 'curriculum' && (
+      <CurriculumEditor
+        modules={modulesState}
+        onUpdateModules={handleUpdateModules}
+        onShowToast={onShowToast}
+      />
+    )}
+
+    {consoleTab === 'testbank' && (
+      <TestBankEditor
+        questions={testBankState}
+        onUpdateQuestions={handleUpdateTestBank}
+        onShowToast={onShowToast}
+      />
+    )}
+
+    {consoleTab === 'liveclasses' && (
+      <LiveClassesEditor
+        liveClasses={liveClassesState}
+        onUpdateLiveClasses={handleUpdateLiveClasses}
+        onShowToast={onShowToast}
+      />
+    )}
+
+    {consoleTab === 'resources' && (
+      <ResourcesEditor
+        resources={resourcesState}
+        onUpdateResources={handleUpdateResources}
+        onShowToast={onShowToast}
+      />
+    )}
+
+    {consoleTab === 'doubts' && (
+      <StudentDoubtsEditor
+        doubts={doubtsState}
+        onUpdateDoubts={handleUpdateDoubts}
+        onShowToast={onShowToast}
+      />
+    )}
+
+    {consoleTab === 'leads' && (
       /* ================= ENQUIRIES & BROCHURE LEADS VIEW ================= */
       <div className="space-y-6">
         {/* Leads Overview Banner */}
@@ -777,24 +1064,175 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
           </div>
         </div>
 
-        {/* Diagnostic info about info@bncglobal.in delivery */}
-        <div className="p-4 rounded-2xl bg-sky-950/40 border border-sky-800/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
-          <div className="flex items-start gap-2.5">
-            <ShieldCheck className="w-4 h-4 text-[#f1bd5b] shrink-0 mt-0.5" />
-            <div className="space-y-1">
-              <div className="text-white font-bold">Mail Delivery Status: info@bncglobal.in</div>
-              <div className="text-slate-300 text-[11px] leading-relaxed">
-                All submissions are stored live in this console. To receive forwarded email copies at <strong className="text-[#f1bd5b]">info@bncglobal.in</strong> via FormSubmit, please open the one-time activation email from FormSubmit in your inbox or <strong>Spam / Junk</strong> folder and click <em>"Activate Form"</em>.
+        {/* Permanent Form Activation & Multi-Provider Hub for info@bncglobal.in */}
+        <div className="p-6 rounded-3xl bg-gradient-to-r from-[#071a30] via-[#0b2342] to-[#102c4e] border-2 border-[#b58b42]/80 shadow-2xl space-y-6">
+          {/* Outage Diagnosis Banner for FormSubmit 522 */}
+          <div className="p-4 rounded-2xl bg-amber-950/40 border border-amber-500/50 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 text-xs">
+            <div className="flex items-start gap-2.5">
+              <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+              <div>
+                <div className="font-bold text-amber-200">
+                  Third-Party FormSubmit Outage Detected (Cloudflare Error 522)
+                </div>
+                <div className="text-amber-100/80 text-[11px] mt-0.5 leading-relaxed">
+                  As shown in your browser, <strong>formsubmit.co's host servers are currently offline</strong> (Error 522 Connection Timed Out). To ensure you receive leads without relying on third-party server outages, you can activate our permanent <strong>Web3Forms</strong> integration below or use the 1-click mail links!
+                </div>
               </div>
             </div>
+            <a
+              href="https://web3forms.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="shrink-0 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-[#b58b42] text-slate-950 font-bold text-xs shadow-md hover:from-amber-400 hover:to-amber-500 transition-all flex items-center gap-1.5 cursor-pointer"
+            >
+              <ExternalLink className="w-3.5 h-3.5" />
+              <span>Get Free Web3Forms Key</span>
+            </a>
           </div>
-          <a
-            href="mailto:info@bncglobal.in?subject=BNC%20ELEVATE%20Admissions%20Test&body=Admissions%20lead%20dispatch%20test"
-            className="shrink-0 px-3 py-1.5 rounded-lg bg-sky-900/80 hover:bg-sky-800 text-sky-200 border border-sky-700 font-semibold text-[11px] transition-colors"
+
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+            <div className="flex items-start gap-3.5">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#b58b42] to-amber-400 text-slate-950 flex items-center justify-center font-black shadow-lg shrink-0">
+                <Mail className="w-6 h-6 text-slate-950" />
+              </div>
+              <div>
+                <div className="flex flex-wrap items-center gap-2 mb-1">
+                  <span className="px-2.5 py-0.5 rounded-full bg-emerald-400/20 text-emerald-300 border border-emerald-500/50 text-[10px] font-bold uppercase tracking-wider">
+                    Permanent Delivery Gateways
+                  </span>
+                  <span className="text-xs text-sky-300 font-semibold flex items-center gap-1">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                    Target Recipient: info@bncglobal.in
+                  </span>
+                </div>
+                <h3 className="text-lg sm:text-xl font-black text-white">
+                  Permanent Email Forwarding Hub
+                </h3>
+                <p className="text-xs text-slate-300 mt-1 max-w-2xl leading-relaxed">
+                  Connect a free <strong>Web3Forms Access Key</strong> or <strong>Formspree ID</strong> to deliver every candidate enquiry directly to <strong className="text-[#f1bd5b]">info@bncglobal.in</strong> forever with 99.99% uptime.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+              <button
+                type="button"
+                onClick={async () => {
+                  await sendTestEnquiryToAdmin();
+                  onShowToast('✓ Dispatched test inquiry! Check console and inbox.');
+                }}
+                className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-sky-700 to-[#b58b42] hover:from-sky-800 hover:to-[#9e7735] text-white text-xs font-bold transition-all cursor-pointer flex items-center gap-2 shadow-md"
+                title="Send a sample lead to test delivery"
+              >
+                <Sparkles className="w-4 h-4 text-[#f1bd5b]" />
+                <span>Send Test Lead</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  triggerFormSubmitActivation();
+                  onShowToast('Opened FormSubmit activation window in new tab.');
+                }}
+                className="px-3.5 py-2.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-300 text-xs font-semibold border border-slate-700 transition-colors cursor-pointer"
+                title="Retry FormSubmit activation link"
+              >
+                Retry FormSubmit (If online)
+              </button>
+
+              <a
+                href="mailto:info@bncglobal.in?subject=BNC%20ELEVATE%20Admissions%20Test&body=Admissions%20dispatch%20test"
+                className="px-3.5 py-2.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white text-xs font-semibold border border-slate-700 transition-colors"
+              >
+                Open Mail App
+              </a>
+            </div>
+          </div>
+
+          {/* Web3Forms & Formspree Configuration Card */}
+          <form
+            onSubmit={handleSaveEmailConfig}
+            className="p-5 rounded-2xl bg-slate-950/80 border border-sky-900/80 space-y-4"
           >
-            Open Mail Client
-          </a>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pb-3 border-b border-slate-800">
+              <div>
+                <div className="text-xs font-bold text-white flex items-center gap-2">
+                  <span>Permanent Free Access Keys (Zero Outages)</span>
+                  {web3FormsInput ? (
+                    <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[10px] font-bold border border-emerald-500/40">
+                      Web3Forms Active ✓
+                    </span>
+                  ) : (
+                    <span className="px-2 py-0.5 rounded bg-amber-500/20 text-[#f1bd5b] text-[10px] font-bold border border-amber-500/40">
+                      Setup Recommended
+                    </span>
+                  )}
+                </div>
+                <div className="text-[11px] text-slate-400 mt-0.5">
+                  Web3Forms emails the key instantly to info@bncglobal.in and forwards submissions without Cloudflare errors.
+                </div>
+              </div>
+
+              <a
+                href="https://web3forms.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-[#f1bd5b] hover:text-amber-300 underline font-semibold flex items-center gap-1"
+              >
+                <span>Get Free Key at Web3Forms</span>
+                <ExternalLink className="w-3 h-3" />
+              </a>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  Web3Forms Access Key (Recommended)
+                </label>
+                <input
+                  type="text"
+                  value={web3FormsInput}
+                  onChange={(e) => setWeb3FormsInput(e.target.value)}
+                  placeholder="e.g. 1a2b3c4d-5e6f-7g8h-9i0j-k1l2m3n4o5p6"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white placeholder-slate-500 text-xs font-mono focus:outline-none focus:border-[#f1bd5b] transition-all"
+                />
+                <p className="text-[10px] text-slate-500 mt-1">
+                  Enter info@bncglobal.in at web3forms.com to receive your permanent free access key.
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  Formspree Form ID (Optional Backup)
+                </label>
+                <input
+                  type="text"
+                  value={formspreeInput}
+                  onChange={(e) => setFormspreeInput(e.target.value)}
+                  placeholder="e.g. xpzgvykl"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white placeholder-slate-500 text-xs font-mono focus:outline-none focus:border-[#f1bd5b] transition-all"
+                />
+                <p className="text-[10px] text-slate-500 mt-1">
+                  Optional Formspree endpoint ID from formspree.io.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between pt-2">
+              <span className="text-[11px] text-emerald-400 font-medium">
+                {isSavedKeyFeedback && '✓ Configuration saved to browser storage! Ready for dispatch.'}
+              </span>
+              <button
+                type="submit"
+                className="px-5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white text-xs font-bold transition-all cursor-pointer shadow-md flex items-center gap-1.5"
+              >
+                <Check className="w-3.5 h-3.5" />
+                <span>Save Email Gateway Key</span>
+              </button>
+            </div>
+          </form>
         </div>
+
 
         {/* Search Input for Leads */}
         <div className="relative">

@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { X, Send, CheckCircle2, Phone, Mail, User, GraduationCap, Building2, Clock } from 'lucide-react';
+import {
+  saveLeadToAdminConsole,
+  dispatchToInfoBncGlobal
+} from '../services/enquiryService';
 
 interface InquiryModalProps {
   isOpen: boolean;
@@ -39,7 +43,19 @@ export const InquiryModal: React.FC<InquiryModalProps> = ({
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Store inquiry in local storage
+    const payload = {
+      name,
+      email,
+      phone,
+      qualification,
+      program: packageInterest,
+      source: 'Faculty Counseling Desk',
+      notes: `Firm/College: ${collegeOrFirm || 'Not provided'}`
+    };
+
+    // 1. Instantly record lead in the Admin Leads Console
+    saveLeadToAdminConsole(payload);
+
     try {
       const existing = JSON.parse(localStorage.getItem('bnc_inquiries') || '[]');
       existing.unshift({
@@ -57,26 +73,9 @@ export const InquiryModal: React.FC<InquiryModalProps> = ({
       console.log('Inquiry storage error', err);
     }
 
+    // 2. Multi-pathway dispatch to info@bncglobal.in
     try {
-      await fetch('https://formsubmit.co/ajax/info@bncglobal.in', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-        body: JSON.stringify({
-          _subject: `[BNC ELEVATE] Consultation Request: ${name}`,
-          _template: 'table',
-          _captcha: 'false',
-          'Candidate Name': name,
-          'Phone / WhatsApp': phone,
-          'Email Address': email,
-          'College or Current Firm': collegeOrFirm || 'Not provided',
-          'Highest Qualification': qualification,
-          'Program of Interest': packageInterest,
-          'Submission Timestamp': new Date().toLocaleString(),
-        }),
-      });
+      await dispatchToInfoBncGlobal(payload);
     } catch (err) {
       console.warn('Inquiry dispatch error', err);
     } finally {

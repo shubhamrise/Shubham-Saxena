@@ -191,7 +191,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenCheckout, onOpenInquiry, o
         {/* Legal Disclaimers & Notes */}
         <div className="py-8 space-y-3 text-[11px] text-slate-400 leading-relaxed">
           <p>
-            <strong className="text-slate-200">Tuition & Fee Policy:</strong> Package prices displayed are solely for BNC Global training, study materials, mock examinations, LMS access, and concierge support. Official IIA fees (including IIA India annual membership, certification application, and per-part exam registration fees) are levied directly by the Institute of Internal Auditors (IIA) and are paid separately by the candidate through the CCMS portal. IIA fees are subject to revision by the IIA.
+            <strong className="text-slate-200">Tuition & Fee Policy:</strong> Packages and cohort enrollments are solely for BNC Global training, study materials, mock examinations, LMS access, and concierge support. Official IIA fees (including IIA India annual membership, certification application, and per-part exam registration fees) are levied directly by the Institute of Internal Auditors (IIA) and are paid separately by the candidate through the CCMS portal. IIA fees are subject to revision by the IIA.
           </p>
           <p>
             <strong className="text-slate-200">Career & Placement Advisory:</strong> Career assistance, vacancy notifications, and interview referrals are provided to support career progression and do not constitute an explicit legal guarantee of employment. Qualifying internal audit work experience is assessed and verified independently by the IIA upon submission of character references.

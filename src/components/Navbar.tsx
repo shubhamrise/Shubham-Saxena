@@ -165,31 +165,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             {/* Zone 3: Currency Switcher, AI Advisor & Primary Action */}
             <div className="hidden sm:flex items-center gap-3 shrink-0">
-              {/* Currency Selector */}
-              <div className="flex items-center p-0.5 rounded-lg bg-sky-50/70 border border-sky-100 text-xs font-semibold">
-                <button
-                  onClick={() => setCurrency('INR')}
-                  className={`px-2.5 py-1.5 rounded-md transition-all cursor-pointer ${
-                    currency === 'INR'
-                      ? 'bg-white text-sky-800 shadow-xs font-bold border border-sky-200'
-                      : 'text-slate-500 hover:text-slate-800'
-                  }`}
-                  title="Indian Rupee"
-                >
-                  ₹ INR
-                </button>
-                <button
-                  onClick={() => setCurrency('USD')}
-                  className={`px-2.5 py-1.5 rounded-md transition-all cursor-pointer ${
-                    currency === 'USD'
-                      ? 'bg-white text-sky-800 shadow-xs font-bold border border-sky-200'
-                      : 'text-slate-500 hover:text-slate-800'
-                  }`}
-                  title="US Dollar"
-                >
-                  $ USD
-                </button>
-              </div>
+
 
               {/* Student LMS Direct Access */}
               {onOpenLms && (
@@ -238,29 +214,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         {/* Mobile Dropdown Menu */}
         {mobileMenuOpen && (
           <div className="lg:hidden border-b border-slate-200 bg-white px-4 pt-3 pb-6 space-y-3 shadow-lg">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <span className="text-xs text-slate-500 uppercase tracking-wider font-semibold">
-                Currency
-              </span>
-              <div className="flex items-center gap-1 bg-sky-50 p-1 rounded-lg border border-sky-100">
-                <button
-                  onClick={() => setCurrency('INR')}
-                  className={`px-3 py-1 rounded text-xs font-semibold ${
-                    currency === 'INR' ? 'bg-gradient-to-r from-sky-700 to-[#b58b42] text-white font-bold' : 'text-slate-600'
-                  }`}
-                >
-                  ₹ INR
-                </button>
-                <button
-                  onClick={() => setCurrency('USD')}
-                  className={`px-3 py-1 rounded text-xs font-semibold ${
-                    currency === 'USD' ? 'bg-gradient-to-r from-sky-700 to-[#b58b42] text-white font-bold' : 'text-slate-600'
-                  }`}
-                >
-                  $ USD
-                </button>
-              </div>
-            </div>
+
 
             <div className="grid grid-cols-1 gap-1">
               {navLinks.map((link) => (

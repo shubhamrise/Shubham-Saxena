@@ -162,7 +162,36 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       console.warn('Storage save error', e);
     }
 
-    // Send HTTP POST to FormSubmit API delivering directly to info@bncglobal.in
+    // 1. Send via Web3Forms (Permanent 100% reliable endpoint)
+    try {
+      await fetch('https://api.web3forms.com/submit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({
+          access_key: '47c5850f-6624-4499-b44a-7899849e4b1b',
+          subject: `[BNC ELEVATE] New CIA Enrollment: ${name} (${currentPkg.name})`,
+          from_name: 'BNC ELEVATE Admissions Desk',
+          'Order ID': orderId,
+          'Candidate Name': name,
+          'Candidate Email': email,
+          'WhatsApp / Phone': phone,
+          'City of Residence': city || 'Not specified',
+          'Qualification': qualification,
+          'Selected Package': currentPkg.name,
+          'Physical Books Delivery': printedBooks ? 'Yes' : 'No',
+          'Candidate Notes': notes || 'Standard enrollment application',
+          'Submission Timestamp': new Date().toLocaleString(),
+          message: `New Enrollment Application:\n• Order ID: ${orderId}\n• Candidate: ${name}\n• Email: ${email}\n• Phone: ${phone}\n• City: ${city || 'N/A'}\n• Qualification: ${qualification}\n• Selected Package: ${currentPkg.name}\n• Books Delivery: ${printedBooks ? 'Yes' : 'No'}\n• Notes: ${notes || 'None'}`
+        }),
+      });
+    } catch (e) {
+      console.warn('Web3Forms dispatch', e);
+    }
+
+    // 2. Fallback secondary dispatch to FormSubmit
     try {
       await fetch('https://formsubmit.co/ajax/info@bncglobal.in', {
         method: 'POST',
@@ -181,11 +210,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
           'City of Residence': city || 'Not specified',
           'Qualification': qualification,
           'Selected Package': currentPkg.name,
-          'Estimated Tuition': `${currency} ${finalTotal.toLocaleString()}`,
           'Physical Books Delivery': printedBooks ? 'Yes' : 'No',
-          '1-on-1 Faculty Mentorship': oneOnOneMentoring ? 'Yes' : 'No',
-          'Hands-on AI Lab': aiAuditLab ? 'Yes' : 'No',
-          'Promo Discount Applied': discountAmount > 0 ? `${currency} ${discountAmount}` : 'None',
           'Candidate Notes': notes || 'Standard enrollment application',
           'Submission Timestamp': new Date().toLocaleString(),
         }),
@@ -288,7 +313,6 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2.5">
                   {PACKAGES.map((pkg) => {
                     const isSelected = activePackageId === pkg.id;
-                    const price = currency === 'INR' ? `₹${pkg.priceINR.toLocaleString('en-IN')}` : `$${pkg.priceUSD}`;
                     return (
                       <div
                         key={pkg.id}
@@ -305,7 +329,9 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                           </span>
                         )}
                         <h4 className="font-bold text-slate-900 text-base mb-1">{pkg.name}</h4>
-                        <div className="text-xl font-extrabold text-sky-700 mb-2">{price}</div>
+                        <div className="text-xs font-bold text-sky-900 bg-sky-50 px-2.5 py-1 rounded-lg inline-block mb-2 border border-sky-100">
+                          {pkg.deliverables.mode}
+                        </div>
                         <p className="text-xs text-slate-600 line-clamp-2">{pkg.tagline}</p>
                         <div className="mt-3 pt-3 border-t border-sky-100 text-[11px] text-slate-700 space-y-1">
                           <div className="flex items-center gap-1.5">
@@ -326,7 +352,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
               {/* Add-ons */}
               <div>
                 <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider mb-2">
-                  Optional Candidate Add-ons
+                  Optional Study Materials
                 </label>
                 <div className="space-y-2">
                   <label className="flex items-center justify-between p-3.5 rounded-xl bg-slate-50/90 border border-slate-200 cursor-pointer hover:bg-sky-50/50 transition-colors">
@@ -343,35 +369,13 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                         </div>
                         <div className="text-xs text-slate-600 mt-0.5">
                           {activePackageId === 'basic'
-                            ? `Doorstep express courier across India (${currency === 'INR' ? '₹4,500' : '$55'})`
+                            ? 'Doorstep express courier across India · 3-volume comprehensive printed question bank'
                             : 'Included Free with Premium & Premium Plus cohorts'}
                         </div>
                       </div>
                     </div>
                     <span className="text-xs font-extrabold text-emerald-700 whitespace-nowrap">
-                      {activePackageId === 'basic' ? (currency === 'INR' ? '+₹4,500' : '+$55') : 'INCLUDED'}
-                    </span>
-                  </label>
-
-                  <label className="flex items-center justify-between p-3.5 rounded-xl bg-slate-50/90 border border-slate-200 cursor-pointer hover:bg-sky-50/50 transition-colors">
-                    <div className="flex items-center gap-3">
-                      <input
-                        type="checkbox"
-                        checked={oneOnOneMentoring}
-                        onChange={(e) => setOneOnOneMentoring(e.target.checked)}
-                        className="w-4 h-4 rounded text-sky-700 focus:ring-sky-600"
-                      />
-                      <div>
-                        <div className="text-sm font-bold text-slate-900">
-                          1-on-1 Faculty Mentorship & Mock Interview
-                        </div>
-                        <div className="text-xs text-slate-600 mt-0.5">
-                          Personalized resume audit & audit interview preparation with Senior Audit Partner
-                        </div>
-                      </div>
-                    </div>
-                    <span className="text-xs font-extrabold text-sky-800 whitespace-nowrap">
-                      {currency === 'INR' ? '+₹8,000' : '+$100'}
+                      {activePackageId === 'basic' ? 'ADD-ON OPTION' : 'INCLUDED FREE'}
                     </span>
                   </label>
                 </div>
@@ -380,9 +384,12 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
               {/* Order Summary Footnote */}
               <div className="p-4 rounded-2xl bg-sky-50/60 border border-sky-100 flex items-center justify-between">
                 <div>
-                  <span className="text-xs font-semibold text-slate-600">Estimated Total:</span>
-                  <div className="text-2xl font-black text-slate-950">
-                    {currency === 'INR' ? `₹${finalTotal.toLocaleString('en-IN')}` : `$${finalTotal}`}
+                  <span className="text-xs font-semibold text-slate-600">Selected Program Tier:</span>
+                  <div className="text-lg font-black text-slate-950">
+                    {currentPkg.name}
+                  </div>
+                  <div className="text-[11px] text-[#b58b42] font-semibold mt-0.5">
+                    Weekend Cohort · Admissions Desk: info@bncglobal.in
                   </div>
                 </div>
                 <button
@@ -489,63 +496,34 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                 </div>
               </div>
 
-              {/* Coupon / Discount Code */}
-              <div className="p-3.5 rounded-2xl bg-sky-50/60 border border-sky-100">
-                <form onSubmit={handleApplyCoupon} className="flex gap-2">
-                  <input
-                    type="text"
-                    value={couponCode}
-                    onChange={(e) => setCouponCode(e.target.value)}
-                    placeholder="Have a Promo / Referral Code? (e.g. EARLYBIRD10)"
-                    className="flex-1 px-3 py-2 rounded-xl bg-white border border-slate-300 text-slate-900 text-xs uppercase tracking-wider focus:outline-none focus:border-sky-600"
-                  />
-                  <button
-                    type="submit"
-                    className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold cursor-pointer"
-                  >
-                    Apply
-                  </button>
-                </form>
-                {couponApplied && (
-                  <p className="text-xs text-[#b58b42] mt-1.5 font-bold flex items-center gap-1">
-                    <Sparkles className="w-3.5 h-3.5" />
-                    Coupon applied! You saved {currency === 'INR' ? `₹${discountAmount.toLocaleString('en-IN')}` : `$${discountAmount}`} (10% off).
-                  </p>
-                )}
-              </div>
-
-              {/* Request Summary Box */}
+              {/* Selected Program Deliverables Box */}
               <div className="p-4 rounded-2xl bg-sky-50/60 border border-sky-100 space-y-2 text-xs">
-                <div className="flex justify-between text-slate-700">
-                  <span className="font-semibold">{currentPkg.name}</span>
-                  <span className="font-bold">{currency === 'INR' ? `₹${basePrice.toLocaleString('en-IN')}` : `$${basePrice}`}</span>
-                </div>
-                {printedBooks && activePackageId === 'basic' && (
-                  <div className="flex justify-between text-slate-600">
-                    <span>Physical Test Bank Courier</span>
-                    <span>{currency === 'INR' ? '₹4,500' : '$55'}</span>
-                  </div>
-                )}
-                {oneOnOneMentoring && (
-                  <div className="flex justify-between text-slate-600">
-                    <span>1-on-1 Faculty Mentorship</span>
-                    <span>{currency === 'INR' ? '₹8,000' : '$100'}</span>
-                  </div>
-                )}
-                {discountAmount > 0 && (
-                  <div className="flex justify-between text-[#b58b42] font-bold">
-                    <span>Promo Discount ({couponDiscountPercent}%)</span>
-                    <span>-{currency === 'INR' ? `₹${discountAmount.toLocaleString('en-IN')}` : `$${discountAmount}`}</span>
-                  </div>
-                )}
-                <div className="pt-2 border-t border-sky-100 flex justify-between text-sm font-extrabold text-slate-900">
-                  <span>Estimated Total Tuition:</span>
-                  <span className="text-sky-800 text-base">
-                    {currency === 'INR' ? `₹${finalTotal.toLocaleString('en-IN')}` : `$${finalTotal}`}
+                <div className="flex justify-between items-center text-slate-900 pb-2 border-b border-sky-100">
+                  <span className="font-bold text-sm text-sky-950">{currentPkg.name}</span>
+                  <span className="text-[11px] font-extrabold text-[#b58b42] uppercase tracking-wider bg-amber-50 px-2.5 py-0.5 rounded-full border border-[#b58b42]/30">
+                    Selected Package
                   </span>
                 </div>
-                <div className="text-[11px] text-slate-500 pt-1">
-                  * Our admissions director will review your profile, verify batch eligibility, and issue your official enrollment invoice.
+                <div className="flex justify-between text-slate-700">
+                  <span>Curriculum Format:</span>
+                  <span className="font-semibold text-slate-900">{currentPkg.deliverables.mode}</span>
+                </div>
+                <div className="flex justify-between text-slate-700">
+                  <span>Instruction Hours:</span>
+                  <span className="font-semibold text-slate-900">{currentPkg.deliverables.hours}</span>
+                </div>
+                <div className="flex justify-between text-slate-700">
+                  <span>Student LMS Portal:</span>
+                  <span className="font-semibold text-slate-900">{currentPkg.deliverables.lmsAccess} Access</span>
+                </div>
+                <div className="flex justify-between text-slate-700">
+                  <span>Physical Study Material:</span>
+                  <span className="font-semibold text-emerald-700">
+                    {printedBooks ? 'Included (Doorstep Express Courier)' : 'Digital Study Kit Included'}
+                  </span>
+                </div>
+                <div className="text-[11px] text-slate-500 pt-2 border-t border-sky-100">
+                  * Direct admissions query routed to <span className="font-bold text-sky-900">info@bncglobal.in</span>. Our team will verify batch eligibility and provide joining instructions.
                 </div>
               </div>
 
@@ -625,12 +603,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                   <span className="text-slate-800">{completedOrder.studentPhone}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Estimated Tuition:</span>
-                  <span className="font-bold text-slate-900 text-sm">
-                    {completedOrder.currency === 'INR'
-                      ? `₹${completedOrder.totalPrice.toLocaleString('en-IN')}`
-                      : `$${completedOrder.totalPrice}`}
-                  </span>
+                  <span className="text-slate-500">Admissions Processing:</span>
+                  <span className="font-bold text-emerald-700">Direct Route to info@bncglobal.in</span>
                 </div>
                 <div className="flex justify-between pt-2 border-t border-slate-200 text-emerald-700 font-bold">
                   <span>Status:</span>

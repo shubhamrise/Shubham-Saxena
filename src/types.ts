@@ -111,3 +111,23 @@ export interface EnquiryLead {
   notes?: string;
 }
 
+export interface LiveClassItem {
+  id: string;
+  title: string;
+  instructor: string;
+  date: string;
+  time: string;
+  meetingId: string;
+  passcode: string;
+  topics: string[];
+}
+
+
+export interface StudentDoubtItem {
+  id: string;
+  question: string;
+  time: string;
+  status: string;
+  reply?: string;
+  studentName?: string;
+}
