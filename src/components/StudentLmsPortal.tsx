@@ -45,7 +45,9 @@ import {
   UserCheck,
   UserX,
   Shield,
-  BadgeAlert
+  BadgeAlert,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import { LmsAdminConsole } from './LmsAdminConsole';
 import { ManagedLearner, LmsAdminUser, LiveClassItem, StudentDoubtItem } from '../types';
@@ -174,6 +176,7 @@ export const StudentLmsPortal: React.FC<StudentLmsPortalProps> = ({
   const [inputOrderId, setInputOrderId] = useState('');
   const [inputEmail, setInputEmail] = useState('');
   const [inputPassword, setInputPassword] = useState('');
+  const [showStudentPassword, setShowStudentPassword] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
@@ -181,6 +184,7 @@ export const StudentLmsPortal: React.FC<StudentLmsPortalProps> = ({
   // Admin Login Form fields
   const [adminEmail, setAdminEmail] = useState('');
   const [adminPassword, setAdminPassword] = useState('');
+  const [showAdminPassword, setShowAdminPassword] = useState(false);
   const [adminError, setAdminError] = useState<string | null>(null);
   const [isAdminSubmitting, setIsAdminSubmitting] = useState(false);
 
@@ -945,17 +949,28 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
                         <label className="block text-xs font-semibold text-slate-300 mb-1.5 text-left">
                           Student Password / Passcode <span className="text-[#f1bd5b]">*</span>
                         </label>
-                        <input
-                          type="password"
-                          value={inputPassword}
-                          onChange={(e) => setInputPassword(e.target.value)}
-                          placeholder="••••••••"
-                          required
-                          className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700/80 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-[#f1bd5b] focus:ring-1 focus:ring-[#f1bd5b] transition-all"
-                        />
-                        <p className="text-[11px] text-slate-400 mt-1 text-left">
-                          Default cohort passcode: <code className="text-[#f1bd5b]">BNC@2026</code>
-                        </p>
+                        <div className="relative">
+                          <input
+                            type={showStudentPassword ? 'text' : 'password'}
+                            value={inputPassword}
+                            onChange={(e) => setInputPassword(e.target.value)}
+                            placeholder="••••••••"
+                            required
+                            className="w-full px-4 py-3 pr-11 rounded-xl bg-slate-900 border border-slate-700/80 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-[#f1bd5b] focus:ring-1 focus:ring-[#f1bd5b] transition-all"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowStudentPassword(!showStudentPassword)}
+                            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors p-1 cursor-pointer"
+                            aria-label={showStudentPassword ? 'Hide password' : 'Show password'}
+                          >
+                            {showStudentPassword ? (
+                              <EyeOff className="w-4 h-4 text-[#f1bd5b]" />
+                            ) : (
+                              <Eye className="w-4 h-4 text-slate-400" />
+                            )}
+                          </button>
+                        </div>
                       </div>
                     </>
                   )}
@@ -1060,37 +1075,28 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
                     <label className="block text-xs font-semibold text-slate-300 mb-1.5 text-left">
                       Admin Master Key / Password <span className="text-[#f1bd5b]">*</span>
                     </label>
-                    <input
-                      type="password"
-                      value={adminPassword}
-                      onChange={(e) => setAdminPassword(e.target.value)}
-                      placeholder="••••••••••••"
-                      required
-                      className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700/80 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-400 transition-all"
-                    />
-                  </div>
-
-                  {/* Demo Admin Quick-fill Helper */}
-                  <div className="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 flex items-center justify-between gap-3 text-left">
-                    <div className="text-xs">
-                      <div className="text-slate-300 font-semibold flex items-center gap-1.5">
-                        <Sparkles className="w-3.5 h-3.5 text-[#f1bd5b]" />
-                        <span>Administrator Master Credentials</span>
-                      </div>
-                      <div className="text-[11px] text-slate-400 mt-0.5">
-                        <span className="text-sky-300 font-mono">info@bncglobal.in</span> · key: <span className="text-[#f1bd5b] font-mono">Admin@elevate</span>
-                      </div>
+                    <div className="relative">
+                      <input
+                        type={showAdminPassword ? 'text' : 'password'}
+                        value={adminPassword}
+                        onChange={(e) => setAdminPassword(e.target.value)}
+                        placeholder="••••••••••••"
+                        required
+                        className="w-full px-4 py-3 pr-11 rounded-xl bg-slate-900 border border-slate-700/80 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-400 transition-all"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowAdminPassword(!showAdminPassword)}
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors p-1 cursor-pointer"
+                        aria-label={showAdminPassword ? 'Hide password' : 'Show password'}
+                      >
+                        {showAdminPassword ? (
+                          <EyeOff className="w-4 h-4 text-[#f1bd5b]" />
+                        ) : (
+                          <Eye className="w-4 h-4 text-slate-400" />
+                        )}
+                      </button>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setAdminEmail('info@bncglobal.in');
-                        setAdminPassword('Admin@elevate');
-                      }}
-                      className="px-3 py-1.5 rounded-lg bg-sky-950 hover:bg-sky-900 border border-sky-800/80 text-xs font-bold text-[#f1bd5b] cursor-pointer transition-colors whitespace-nowrap"
-                    >
-                      Fill Admin
-                    </button>
                   </div>
 
                   <button
