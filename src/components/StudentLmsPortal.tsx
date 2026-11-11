@@ -736,13 +736,17 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
 
               <div className="h-6 w-px bg-sky-900 hidden sm:block" />
 
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-black tracking-tight text-white flex items-center gap-1.5">
-                  <span className="text-[#f1bd5b]">BNC ELEVATE</span>
-                  <span className="text-slate-400 font-light text-xs">|</span>
-                  <span className="text-xs uppercase tracking-wider text-sky-300 font-bold">
-                    {portalMode === 'admin' ? 'Academic Administration' : 'LMS Student Portal'}
-                  </span>
+              <div className="flex items-center gap-3">
+                <div className="px-2 py-1 rounded-lg bg-white/95 shadow-xs inline-flex items-center">
+                  <img
+                    src="/bnc_elevate_logo_transparent.png"
+                    alt="BNC ELEVATE"
+                    className="h-5 sm:h-6 w-auto object-contain"
+                  />
+                </div>
+                <span className="text-slate-500 font-light text-xs hidden sm:inline">|</span>
+                <span className="text-xs uppercase tracking-wider text-sky-300 font-bold hidden sm:inline">
+                  {portalMode === 'admin' ? 'Academic Administration' : 'LMS Student Portal'}
                 </span>
               </div>
             </div>
