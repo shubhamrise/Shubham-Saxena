@@ -479,7 +479,7 @@ export const StudentLmsPortal: React.FC<StudentLmsPortalProps> = ({
         }
         showToast(`🛡️ Master Administrator access granted: Welcome ${newAdmin.name}!`);
       } else {
-        setAdminError('Invalid administrative credentials. Use info@bncglobal.in / Admin@elevate to access the controller.');
+        setAdminError('Invalid administrative credentials. Please verify your email and password.');
       }
     }, 600);
   };
@@ -1065,7 +1065,7 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
                       type="email"
                       value={adminEmail}
                       onChange={(e) => setAdminEmail(e.target.value)}
-                      placeholder="info@bncglobal.in"
+                      placeholder="admin@organization.com"
                       required
                       className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700/80 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-400 transition-all"
                     />

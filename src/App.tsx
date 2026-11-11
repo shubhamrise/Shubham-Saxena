@@ -3,6 +3,7 @@ import { Currency, EnrollmentOrder } from './types';
 import { Navbar } from './components/Navbar';
 import { HeroSection } from './components/HeroSection';
 import { FoundersSection } from './components/FoundersSection';
+import { FacultySection } from './components/FacultySection';
 import { ExamBlueprintSection } from './components/ExamBlueprintSection';
 import { EligibilityCalculator } from './components/EligibilityCalculator';
 import { PackagesSection } from './components/PackagesSection';
@@ -153,7 +154,10 @@ export default function App() {
           onOpenLms={() => setLmsOpen(true)}
         />
 
-        {/* 2. Executive Leadership & Mentorship: Meet the Founders */}
+        {/* 2. Meet Our Faculty & Academic Leadership (From Brochure Page 3) */}
+        <FacultySection onOpenInquiry={handleOpenInquiry} />
+
+        {/* Executive Co-Founders & Enterprise Track Record */}
         <FoundersSection />
 
         {/* 3. The 3-Part Exam Structure & Syllabus Blueprint */}
