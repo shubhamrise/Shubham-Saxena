@@ -45,16 +45,16 @@ export const Footer: React.FC<FooterProps> = ({ onOpenCheckout, onOpenInquiry, o
           {/* Col 1: Brand Info */}
           <div className="space-y-4 md:col-span-1">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-2xl bg-white shadow-md inline-block">
+              <a href="#" className="inline-block py-1 group" title="BNC ELEVATE">
                 <img
-                  src="/bnc_elevate_logo_transparent.png"
+                  src="/bnc_elevate_logo_dark_bg.png"
                   alt="BNC ELEVATE"
-                  className="h-14 sm:h-16 w-auto object-contain"
+                  className="h-12 sm:h-14 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
                   onError={(e) => {
-                    e.currentTarget.src = '/bnc-elevate-logo.png';
+                    e.currentTarget.src = '/bnc_elevate_logo_transparent.png';
                   }}
                 />
-              </div>
+              </a>
             </div>
             <p className="text-xs text-slate-400 leading-relaxed">
               Leading accounting, internal audit, and risk consulting firm providing elite professional certification training, AI tools masterclasses, and corporate governance solutions.
