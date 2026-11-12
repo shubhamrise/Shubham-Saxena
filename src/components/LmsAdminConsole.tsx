@@ -372,10 +372,11 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
   // New learner form fields
   const [newName, setNewName] = useState('');
   const [newEmail, setNewEmail] = useState('');
+  const [newPassword, setNewPassword] = useState('bnc2026');
   const [newPhone, setNewPhone] = useState('+91 ');
   const [newOrderId, setNewOrderId] = useState(() => {
     const highest = learners.reduce((max, l) => {
-      const num = parseInt(l.orderId, 10);
+      const num = parseInt(l.orderId || '0', 10);
       return !isNaN(num) && num > max ? num : max;
     }, 2026000);
     return String(highest + 1);
@@ -390,7 +391,8 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
     const matchesSearch =
       l.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       l.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      l.orderId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (l.orderId && l.orderId.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (l.password && l.password.toLowerCase().includes(searchTerm.toLowerCase())) ||
       l.packageName.toLowerCase().includes(searchTerm.toLowerCase());
 
     if (filterStatus === 'all') return matchesSearch;
@@ -436,9 +438,9 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
     const target = learners.find((l) => l.id === id);
     if (target) {
       if (target.status === 'active') {
-        onShowToast(`🔒 Access revoked for ${target.name} (#${target.orderId})`);
+        onShowToast(`🔒 Access revoked for ${target.name}`);
       } else {
-        onShowToast(`✓ Access granted for ${target.name} (#${target.orderId})`);
+        onShowToast(`✓ Access granted for ${target.name}`);
       }
     }
   };
@@ -446,14 +448,16 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
   // Add learner
   const handleAddLearner = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newName.trim() || !newEmail.trim() || !newOrderId.trim()) {
-      alert('Please provide student name, email, and Order ID.');
+    if (!newName.trim() || !newEmail.trim()) {
+      alert('Please provide student name and email.');
       return;
     }
 
-    // Check duplicate orderId or email
-    if (learners.some((l) => l.orderId.trim() === newOrderId.trim())) {
-      alert(`Order Reference ID #${newOrderId} is already assigned. Please use a unique sequence number.`);
+    const assignedOrderId = newOrderId.trim() || String(Date.now()).slice(-7);
+
+    // Check duplicate email
+    if (learners.some((l) => l.email.trim().toLowerCase() === newEmail.trim().toLowerCase())) {
+      alert(`Student email "${newEmail}" is already registered in the learner roster.`);
       return;
     }
 
@@ -461,8 +465,9 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
       id: `learner-${Date.now()}`,
       name: newName.trim(),
       email: newEmail.trim().toLowerCase(),
+      password: newPassword.trim() || 'bnc2026',
       phone: newPhone.trim(),
-      orderId: newOrderId.trim(),
+      orderId: assignedOrderId,
       packageName: newPackage,
       feeStatus: newFeeStatus,
       status: newStatus,
@@ -474,11 +479,12 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
     const updated = [newLearner, ...learners];
     onUpdateLearners(updated);
     setIsAddModalOpen(false);
-    onShowToast(`✓ Successfully enrolled ${newLearner.name} with ${newStatus.toUpperCase()} access!`);
+    onShowToast(`✓ Successfully authorized ${newLearner.name} with password "${newLearner.password}"!`);
 
     // Reset fields
     setNewName('');
     setNewEmail('');
+    setNewPassword('bnc2026');
     setNewPhone('+91 ');
     setNewNotes('');
   };
@@ -830,8 +836,8 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-[#061220] border-b border-sky-950 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                  <th className="py-4 px-6">Learner Credentials</th>
-                  <th className="py-4 px-6">Assigned Order ID</th>
+                  <th className="py-4 px-6">Learner Profile</th>
+                  <th className="py-4 px-6">Student Email & Password</th>
                   <th className="py-4 px-6">Program / Package</th>
                   <th className="py-4 px-6">Tuition Fee Clearance</th>
                   <th className="py-4 px-6 text-center">LMS Access Status</th>
@@ -856,7 +862,7 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
                         key={learner.id}
                         className="hover:bg-slate-900/50 transition-colors group"
                       >
-                        {/* Name & Email */}
+                        {/* Learner Profile */}
                         <td className="py-4 px-6">
                           <div className="flex items-center gap-3">
                             <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-sky-700 to-[#b58b42] flex items-center justify-center text-white font-extrabold text-xs shadow-md shrink-0">
@@ -871,22 +877,43 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
                               <div className="font-bold text-white group-hover:text-[#f1bd5b] transition-colors">
                                 {learner.name}
                               </div>
-                              <div className="text-[11px] text-slate-400">{learner.email}</div>
                               {learner.phone && (
-                                <div className="text-[10px] text-slate-500">{learner.phone}</div>
+                                <div className="text-[11px] text-slate-400">{learner.phone}</div>
                               )}
+                              <div className="text-[10px] text-slate-500">
+                                Enrolled: {learner.enrollmentDate}
+                              </div>
                             </div>
                           </div>
                         </td>
 
-                        {/* Order ID */}
+                        {/* Student Email & Password */}
                         <td className="py-4 px-6">
-                          <span className="font-mono font-bold text-sky-300 bg-sky-950/60 px-2 py-1 rounded-md border border-sky-800/50">
-                            #{learner.orderId}
-                          </span>
-                          <div className="text-[10px] text-slate-400 mt-1">
-                            {learner.enrollmentDate}
+                          <div className="font-semibold text-slate-200 text-xs">
+                            {learner.email}
                           </div>
+                          <div className="flex items-center gap-1.5 mt-1.5">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Pass:</span>
+                            <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-amber-950/60 text-amber-300 border border-amber-500/40">
+                              {learner.password || 'bnc2026'}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                navigator.clipboard.writeText(learner.password || 'bnc2026');
+                                onShowToast(`Copied password for ${learner.name}`);
+                              }}
+                              className="text-[10px] text-sky-400 hover:text-white font-semibold underline cursor-pointer ml-1"
+                              title="Copy student password"
+                            >
+                              Copy
+                            </button>
+                          </div>
+                          {learner.orderId && (
+                            <div className="text-[10px] text-slate-500 mt-1">
+                              Ref: #{learner.orderId}
+                            </div>
+                          )}
                         </td>
 
                         {/* Package */}
@@ -1443,16 +1470,19 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block font-semibold text-slate-300 mb-1">
-                    Sequential Order Reference ID *
+                    Student Access Password * <span className="text-amber-400 font-normal">(Login key)</span>
                   </label>
                   <input
                     type="text"
                     required
-                    value={newOrderId}
-                    onChange={(e) => setNewOrderId(e.target.value)}
-                    placeholder="e.g. 2026005"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white placeholder-slate-500 font-mono font-bold focus:outline-none focus:border-[#f1bd5b]"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="e.g. bnc2026"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-amber-300 font-mono font-bold placeholder-slate-500 focus:outline-none focus:border-[#f1bd5b]"
                   />
+                  <p className="text-[10px] text-slate-400 mt-1">
+                    Student will sign in using their email and this password.
+                  </p>
                 </div>
 
                 <div>
@@ -1469,6 +1499,19 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
                     <option>IAP Part 1 Student Fast-Track</option>
                   </select>
                 </div>
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-300 mb-1">
+                  Assigned Reference / Order ID <span className="text-slate-400 font-normal">(Optional internal tracking)</span>
+                </label>
+                <input
+                  type="text"
+                  value={newOrderId}
+                  onChange={(e) => setNewOrderId(e.target.value)}
+                  placeholder="e.g. 2026005"
+                  className="w-full px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sky-300 font-mono text-xs placeholder-slate-500 focus:outline-none focus:border-[#f1bd5b]"
+                />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -1556,15 +1599,46 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
             </div>
 
             <form onSubmit={handleSaveEdit} className="p-6 space-y-4 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-semibold text-slate-300 mb-1">Student Name</label>
+                  <input
+                    type="text"
+                    required
+                    value={editingLearner.name}
+                    onChange={(e) => setEditingLearner({ ...editingLearner, name: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white focus:outline-none focus:border-[#f1bd5b]"
+                  />
+                </div>
+                <div>
+                  <label className="block font-semibold text-slate-300 mb-1">Registered Email</label>
+                  <input
+                    type="email"
+                    required
+                    value={editingLearner.email}
+                    onChange={(e) => setEditingLearner({ ...editingLearner, email: e.target.value.toLowerCase() })}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white focus:outline-none focus:border-[#f1bd5b]"
+                  />
+                </div>
+              </div>
+
               <div>
-                <label className="block font-semibold text-slate-300 mb-1">Student Name</label>
+                <label className="block font-semibold text-slate-300 mb-1">
+                  Student Access Password <span className="text-[#f1bd5b]">*</span>
+                </label>
                 <input
                   type="text"
                   required
-                  value={editingLearner.name}
-                  onChange={(e) => setEditingLearner({ ...editingLearner, name: e.target.value })}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                  value={editingLearner.password || 'bnc2026'}
+                  onChange={(e) =>
+                    setEditingLearner({ ...editingLearner, password: e.target.value })
+                  }
+                  placeholder="e.g. bnc2026"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-amber-300 font-mono font-bold focus:outline-none focus:border-[#f1bd5b]"
                 />
+                <p className="text-[10px] text-slate-400 mt-1">
+                  Admin-managed access password. Student uses their email and this password to sign in.
+                </p>
               </div>
 
               <div>

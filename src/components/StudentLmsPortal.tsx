@@ -68,6 +68,7 @@ const INITIAL_MANAGED_LEARNERS: ManagedLearner[] = [
     id: 'lrn-1',
     name: 'Rohit Verma',
     email: 'rohit.verma@example.com',
+    password: 'bnc2026',
     phone: '+91 98234 11223',
     orderId: '2026000',
     packageName: 'Premium Plus with AI Audit',
@@ -81,6 +82,7 @@ const INITIAL_MANAGED_LEARNERS: ManagedLearner[] = [
     id: 'lrn-2',
     name: 'Priya Sharma',
     email: 'priya.sharma@example.com',
+    password: 'bnc2026',
     phone: '+91 98765 43210',
     orderId: '2026001',
     packageName: 'Premium Live Interactive',
@@ -94,6 +96,7 @@ const INITIAL_MANAGED_LEARNERS: ManagedLearner[] = [
     id: 'lrn-3',
     name: 'CA Aman Gupta',
     email: 'aman.gupta@example.com',
+    password: 'bnc2026',
     phone: '+91 99112 33445',
     orderId: '2026002',
     packageName: 'Premium Live Interactive',
@@ -107,6 +110,7 @@ const INITIAL_MANAGED_LEARNERS: ManagedLearner[] = [
     id: 'lrn-4',
     name: 'Ananya Iyer',
     email: 'ananya.iyer@example.com',
+    password: 'bnc2026',
     phone: '+91 98450 67890',
     orderId: '2026003',
     packageName: 'Self-Paced Pro Masterclass',
@@ -152,7 +156,13 @@ export const StudentLmsPortal: React.FC<StudentLmsPortalProps> = ({
   const [managedLearners, setManagedLearners] = useState<ManagedLearner[]>(() => {
     try {
       const saved = localStorage.getItem('bnc_lms_managed_students');
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed: ManagedLearner[] = JSON.parse(saved);
+        return parsed.map((l) => ({
+          ...l,
+          password: l.password || 'bnc2026'
+        }));
+      }
     } catch (e) {
       console.warn(e);
     }
@@ -171,9 +181,7 @@ export const StudentLmsPortal: React.FC<StudentLmsPortalProps> = ({
   // Login View Selection: Learner Login vs Academic Admin Login
   const [portalMode, setPortalMode] = useState<'learner' | 'admin'>('learner');
 
-  // Learner Login Form fields
-  const [authMethod, setAuthMethod] = useState<'order' | 'credentials'>('order');
-  const [inputOrderId, setInputOrderId] = useState('');
+  // Learner Login Form fields (Email & Password only, with password set by Admin)
   const [inputEmail, setInputEmail] = useState('');
   const [inputPassword, setInputPassword] = useState('');
   const [showStudentPassword, setShowStudentPassword] = useState(false);
@@ -361,34 +369,39 @@ export const StudentLmsPortal: React.FC<StudentLmsPortalProps> = ({
     setTimeout(() => {
       setIsVerifying(false);
 
-      const trimmedOrder = inputOrderId.trim().toLowerCase().replace(/^#/, '');
       const trimmedEmail = inputEmail.trim().toLowerCase();
+      const trimmedPassword = inputPassword.trim();
+
+      if (!trimmedEmail || !trimmedPassword) {
+        setAuthError('Please enter both your registered student email and password.');
+        return;
+      }
 
       // 1. Check in managed learners roster (Admin-controlled access)
-      const matchedLearner = managedLearners.find((l) => {
-        if (authMethod === 'order') {
-          const lOrder = l.orderId.toLowerCase().replace(/^#/, '');
-          return lOrder === trimmedOrder && l.email.toLowerCase() === trimmedEmail;
-        } else {
-          return (
-            l.email.toLowerCase() === trimmedEmail &&
-            (inputPassword === 'BNC@2026' || inputPassword === 'elevate2026' || inputPassword.length >= 6)
-          );
-        }
-      });
+      const matchedLearner = managedLearners.find(
+        (l) => l.email.trim().toLowerCase() === trimmedEmail
+      );
 
       if (matchedLearner) {
+        const expectedPass = matchedLearner.password?.trim() || 'bnc2026';
+        if (trimmedPassword !== expectedPass) {
+          setAuthError(
+            'Incorrect Student Password. Please enter the access password assigned to your email by BNC Academic Administration. If you need your password reset, contact info@bncglobal.in or call +91 63960 18626.'
+          );
+          return;
+        }
+
         // Enforce administrative access controls
         if (matchedLearner.status === 'revoked') {
           setAuthError(
-            `Access Denied: Portal access for ${matchedLearner.name} (#${matchedLearner.orderId}) has been suspended or revoked by Academic Administration. Status: ${matchedLearner.feeStatus}. Please contact Admissions at info@bncglobal.in or call +91 63960 18626 to resolve fee status.`
+            `Access Suspended: Portal access for ${matchedLearner.name} has been suspended or revoked by Academic Administration. Status: ${matchedLearner.feeStatus}. Please contact Admissions at info@bncglobal.in or call +91 63960 18626 to resolve fee status.`
           );
           return;
         }
 
         if (matchedLearner.status === 'pending') {
           setAuthError(
-            `Tuition Verification Pending: Enrollment records for ${matchedLearner.name} (#${matchedLearner.orderId}) are awaiting final academic fee clearance. Access will be unlocked automatically upon administrative approval.`
+            `Tuition Verification Pending: Enrollment records for ${matchedLearner.name} are awaiting final academic fee clearance. Access will be unlocked automatically upon administrative approval.`
           );
           return;
         }
@@ -397,7 +410,7 @@ export const StudentLmsPortal: React.FC<StudentLmsPortalProps> = ({
         const student: AuthenticatedStudent = {
           name: matchedLearner.name,
           email: matchedLearner.email,
-          orderId: matchedLearner.orderId,
+          orderId: matchedLearner.orderId || '2026000',
           packageName: matchedLearner.packageName,
           feeStatus: matchedLearner.feeStatus,
           enrollmentDate: matchedLearner.enrollmentDate,
@@ -411,21 +424,23 @@ export const StudentLmsPortal: React.FC<StudentLmsPortalProps> = ({
       try {
         const storedOrders = JSON.parse(localStorage.getItem('bnc_enrollment_requests') || '[]');
         if (Array.isArray(storedOrders) && storedOrders.length > 0) {
-          const matchedOrder = storedOrders.find((ord: any) => {
-            if (authMethod === 'order') {
-              const orderIdMatch = ord.orderId && String(ord.orderId).trim().toLowerCase().replace(/^#/, '') === trimmedOrder;
-              const emailMatch = ord.studentEmail && String(ord.studentEmail).trim().toLowerCase() === trimmedEmail;
-              return orderIdMatch && emailMatch;
-            } else {
-              return ord.studentEmail && String(ord.studentEmail).trim().toLowerCase() === trimmedEmail;
-            }
-          });
+          const matchedOrder = storedOrders.find(
+            (ord: any) => ord.studentEmail && String(ord.studentEmail).trim().toLowerCase() === trimmedEmail
+          );
 
           if (matchedOrder) {
+            const expectedOrderPass = matchedOrder.password?.trim() || 'bnc2026';
+            if (trimmedPassword !== expectedOrderPass && trimmedPassword !== 'bnc2026') {
+              setAuthError(
+                'Incorrect Student Password. Please enter the default access password (bnc2026) or the password assigned upon enrollment.'
+              );
+              return;
+            }
+
             const student: AuthenticatedStudent = {
               name: matchedOrder.studentName || 'Enrolled Candidate',
               email: matchedOrder.studentEmail || inputEmail,
-              orderId: matchedOrder.orderId || inputOrderId || '2026000',
+              orderId: matchedOrder.orderId || '2026000',
               packageName: matchedOrder.packageName || 'Premium Live Interactive',
               feeStatus: 'Fee Submission Confirmed & Verified',
               enrollmentDate: matchedOrder.createdAt || 'Recent Enrollment',
@@ -439,11 +454,11 @@ export const StudentLmsPortal: React.FC<StudentLmsPortalProps> = ({
         console.warn('Order lookup error:', err);
       }
 
-      // If no fee-paid match is found
+      // If no student record matches this email
       setAuthError(
-        'Access Restricted: No active fee-paid enrollment record found matching these credentials. Only candidates who have completed tuition submission are granted portal access. Please verify your Order Reference ID or enroll below.'
+        `Access Restricted: No registered learner found with email "${inputEmail}". Access to this portal is strictly managed by Academic Administration. If you have recently enrolled or need access credentials, please contact info@bncglobal.in or submit an enrollment below.`
       );
-    }, 600);
+    }, 500);
   };
 
   // Administrator Login Handler
@@ -672,7 +687,7 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
             setCurrentUser({
               name: learner.name,
               email: learner.email,
-              orderId: learner.orderId,
+              orderId: learner.orderId || '2026000',
               packageName: learner.packageName,
               feeStatus: learner.feeStatus,
               enrollmentDate: learner.enrollmentDate,
@@ -814,13 +829,13 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
               <div className="text-center max-w-2xl mx-auto mb-8">
                 <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#b58b42]/15 border border-[#b58b42]/35 text-xs font-bold text-[#f1bd5b] uppercase tracking-wider mb-4">
                   <ShieldCheck className="w-4 h-4 text-[#f1bd5b]" />
-                  <span>Enrolled Learners Only · Fee-Clearance Gated</span>
+                  <span>Enrolled Learners Only · Admin-Assigned Access</span>
                 </div>
                 <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white tracking-tight">
-                  Learner Portal Credential Verification
+                  Student LMS Portal Sign In
                 </h1>
                 <p className="mt-3 text-xs sm:text-sm text-slate-300 leading-relaxed">
-                  Access to BNC ELEVATE Video Masterclasses, Official Gleim CIA Test Bank & SmartAdapt™, and AI Audit Lab is strictly restricted to enrolled students with confirmed tuition status. Please authenticate with your Order Reference ID or registered credentials.
+                  Access to BNC ELEVATE Masterclasses, Official Gleim CIA Test Bank & SmartAdapt™, and AI Audit Lab is strictly restricted to enrolled students. Please enter your registered student email and the access password assigned by Academic Administration.
                 </p>
               </div>
 
@@ -829,38 +844,11 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
                 {/* Top Accent Rim */}
                 <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-sky-600 via-[#f1bd5b] to-sky-700" />
 
-                {/* Auth Method Tabs */}
-                <div className="flex items-center gap-2 p-1 bg-slate-900/90 rounded-xl border border-slate-800 mb-6 max-w-md mx-auto">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setAuthMethod('order');
-                      setAuthError(null);
-                    }}
-                    className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2 ${
-                      authMethod === 'order'
-                        ? 'bg-gradient-to-r from-sky-700 to-[#b58b42] text-white shadow-md'
-                        : 'text-slate-400 hover:text-white'
-                    }`}
-                  >
-                    <KeyRound className="w-3.5 h-3.5 text-[#f1bd5b]" />
-                    <span>Order Reference ID</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setAuthMethod('credentials');
-                      setAuthError(null);
-                    }}
-                    className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2 ${
-                      authMethod === 'credentials'
-                        ? 'bg-gradient-to-r from-sky-700 to-[#b58b42] text-white shadow-md'
-                        : 'text-slate-400 hover:text-white'
-                    }`}
-                  >
-                    <Lock className="w-3.5 h-3.5 text-sky-400" />
-                    <span>Email & Password</span>
-                  </button>
+                {/* Single Method Indicator */}
+                <div className="flex items-center justify-center gap-2 p-2.5 bg-slate-900/80 rounded-xl border border-sky-900/60 mb-6 max-w-md mx-auto text-xs text-slate-300">
+                  <Lock className="w-4 h-4 text-[#f1bd5b]" />
+                  <span className="font-semibold text-slate-200">Authorized Student Login:</span>
+                  <span className="text-sky-300">Registered Email & Password</span>
                 </div>
 
                 {/* Auth Error Banner if unverified or access revoked */}
@@ -876,9 +864,9 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
                           {authError}
                         </p>
                         <div className="pt-2 flex flex-wrap items-center gap-3 text-[11px] text-slate-300">
-                          <span>Need access support?</span>
+                          <span>Need password or enrollment support?</span>
                           <a
-                            href="mailto:info@bncglobal.in?subject=LMS%20Fee%20Verification%20Support"
+                            href="mailto:info@bncglobal.in?subject=LMS%20Student%20Password%20Support"
                             className="text-[#f1bd5b] hover:underline font-bold"
                           >
                             Email info@bncglobal.in
@@ -893,91 +881,54 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
                   </div>
                 )}
 
-                {/* Learner Form */}
+                {/* Learner Form: Email & Admin-Assigned Password */}
                 <form onSubmit={handleVerifyCredentials} className="space-y-4">
-                  {authMethod === 'order' ? (
-                    <>
-                      <div>
-                        <label className="block text-xs font-semibold text-slate-300 mb-1.5 text-left">
-                          Order Reference ID <span className="text-[#f1bd5b]">*</span>
-                        </label>
-                        <div className="relative">
-                          <input
-                            type="text"
-                            value={inputOrderId}
-                            onChange={(e) => setInputOrderId(e.target.value)}
-                            placeholder="e.g. 2026000 or #2026001"
-                            required
-                            className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700/80 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-[#f1bd5b] focus:ring-1 focus:ring-[#f1bd5b] transition-all"
-                          />
-                          <span className="absolute right-3.5 top-3.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                            Seq ID #
-                          </span>
-                        </div>
-                        <p className="text-[11px] text-slate-400 mt-1 text-left">
-                          Assigned upon tuition fee confirmation (sequence starting from #2026000).
-                        </p>
-                      </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 mb-1.5 text-left">
+                      Student Registered Email <span className="text-[#f1bd5b]">*</span>
+                    </label>
+                    <input
+                      type="email"
+                      value={inputEmail}
+                      onChange={(e) => setInputEmail(e.target.value)}
+                      placeholder="e.g. rohit.verma@example.com"
+                      required
+                      className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700/80 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-[#f1bd5b] focus:ring-1 focus:ring-[#f1bd5b] transition-all"
+                    />
+                  </div>
 
-                      <div>
-                        <label className="block text-xs font-semibold text-slate-300 mb-1.5 text-left">
-                          Registered Student Email <span className="text-[#f1bd5b]">*</span>
-                        </label>
-                        <input
-                          type="email"
-                          value={inputEmail}
-                          onChange={(e) => setInputEmail(e.target.value)}
-                          placeholder="e.g. rohit.verma@example.com"
-                          required
-                          className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700/80 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-[#f1bd5b] focus:ring-1 focus:ring-[#f1bd5b] transition-all"
-                        />
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div>
-                        <label className="block text-xs font-semibold text-slate-300 mb-1.5 text-left">
-                          Student Registered Email <span className="text-[#f1bd5b]">*</span>
-                        </label>
-                        <input
-                          type="email"
-                          value={inputEmail}
-                          onChange={(e) => setInputEmail(e.target.value)}
-                          placeholder="e.g. rohit.verma@example.com"
-                          required
-                          className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700/80 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-[#f1bd5b] focus:ring-1 focus:ring-[#f1bd5b] transition-all"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-semibold text-slate-300 mb-1.5 text-left">
-                          Student Password / Passcode <span className="text-[#f1bd5b]">*</span>
-                        </label>
-                        <div className="relative">
-                          <input
-                            type={showStudentPassword ? 'text' : 'password'}
-                            value={inputPassword}
-                            onChange={(e) => setInputPassword(e.target.value)}
-                            placeholder="••••••••"
-                            required
-                            className="w-full px-4 py-3 pr-11 rounded-xl bg-slate-900 border border-slate-700/80 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-[#f1bd5b] focus:ring-1 focus:ring-[#f1bd5b] transition-all"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowStudentPassword(!showStudentPassword)}
-                            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors p-1 cursor-pointer"
-                            aria-label={showStudentPassword ? 'Hide password' : 'Show password'}
-                          >
-                            {showStudentPassword ? (
-                              <EyeOff className="w-4 h-4 text-[#f1bd5b]" />
-                            ) : (
-                              <Eye className="w-4 h-4 text-slate-400" />
-                            )}
-                          </button>
-                        </div>
-                      </div>
-                    </>
-                  )}
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="block text-xs font-semibold text-slate-300 text-left">
+                        Student Access Password <span className="text-[#f1bd5b]">*</span>
+                      </label>
+                      <span className="text-[11px] text-slate-400">
+                        Assigned by Admin
+                      </span>
+                    </div>
+                    <div className="relative">
+                      <input
+                        type={showStudentPassword ? 'text' : 'password'}
+                        value={inputPassword}
+                        onChange={(e) => setInputPassword(e.target.value)}
+                        placeholder="Enter password assigned by administrator"
+                        required
+                        className="w-full px-4 py-3 pr-11 rounded-xl bg-slate-900 border border-slate-700/80 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-[#f1bd5b] focus:ring-1 focus:ring-[#f1bd5b] transition-all"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowStudentPassword(!showStudentPassword)}
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors p-1 cursor-pointer"
+                        aria-label={showStudentPassword ? 'Hide password' : 'Show password'}
+                      >
+                        {showStudentPassword ? (
+                          <EyeOff className="w-4 h-4 text-[#f1bd5b]" />
+                        ) : (
+                          <Eye className="w-4 h-4 text-slate-400" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
 
                   <button
                     type="submit"
@@ -987,12 +938,12 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
                     {isVerifying ? (
                       <>
                         <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        <span>Verifying Academic Access Clearance...</span>
+                        <span>Verifying Credentials with Administration...</span>
                       </>
                     ) : (
                       <>
                         <ShieldCheck className="w-4 h-4 text-[#f1bd5b]" />
-                        <span>Verify Fee Clearance & Access LMS</span>
+                        <span>Sign In to Student LMS Dashboard</span>
                       </>
                     )}
                   </button>
@@ -1003,10 +954,10 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
                   <div className="mt-6 p-4 rounded-2xl bg-gradient-to-r from-sky-950/60 to-slate-900/80 border border-sky-800/50 flex flex-col sm:flex-row items-center justify-between gap-3 text-left">
                     <div>
                       <div className="text-xs font-bold text-white">
-                        Haven't submitted tuition fees yet?
+                        Haven't enrolled or received access yet?
                       </div>
                       <div className="text-[11px] text-slate-400">
-                        Enroll and submit fees to get your sequential Order ID (#2026000 sequence) and instant portal access.
+                        Enroll in a CIA package to have an academic account created and your student password dispatched.
                       </div>
                     </div>
                     <button
@@ -1014,7 +965,7 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
                       onClick={() => onOpenCheckout()}
                       className="px-4 py-2 rounded-xl bg-gradient-to-r from-sky-700 to-[#b58b42] hover:from-sky-800 hover:to-[#9e7735] text-white text-xs font-bold whitespace-nowrap cursor-pointer transition-all shadow-md"
                     >
-                      Enroll & Submit Fees →
+                      Enroll & Get Access →
                     </button>
                   </div>
                 )}
@@ -1222,7 +1173,7 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
 
             <div className="space-y-3 bg-slate-900/90 rounded-2xl p-4 border border-slate-800 text-xs">
               <div className="flex justify-between py-1.5 border-b border-slate-800">
-                <span className="text-slate-400">Order Reference ID:</span>
+                <span className="text-slate-400">Student Enrollment ID:</span>
                 <span className="font-mono font-bold text-sky-300">#{currentUser.orderId}</span>
               </div>
               <div className="flex justify-between py-1.5 border-b border-slate-800">

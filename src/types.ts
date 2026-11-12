@@ -84,7 +84,8 @@ export interface ManagedLearner {
   id: string;
   name: string;
   email: string;
-  orderId: string;
+  password?: string;
+  orderId?: string;
   packageName: string;
   feeStatus: string;
   status: 'active' | 'revoked' | 'pending';
