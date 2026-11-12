@@ -820,7 +820,7 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
                   Learner Portal Credential Verification
                 </h1>
                 <p className="mt-3 text-xs sm:text-sm text-slate-300 leading-relaxed">
-                  Access to BNC ELEVATE Video Masterclasses, 5,000+ IIA Test Bank, and AI Audit Lab is strictly restricted to enrolled students with confirmed tuition status. Please authenticate with your Order Reference ID or registered credentials.
+                  Access to BNC ELEVATE Video Masterclasses, Official Gleim CIA Test Bank & SmartAdapt™, and AI Audit Lab is strictly restricted to enrolled students with confirmed tuition status. Please authenticate with your Order Reference ID or registered credentials.
                 </p>
               </div>
 
@@ -1134,8 +1134,8 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
             </div>
             <div className="p-3.5 rounded-2xl bg-[#091626]/80 border border-sky-950/80 text-left">
               <HelpCircle className="w-5 h-5 text-sky-400 mb-1.5" />
-              <div className="text-xs font-bold text-white">5,000+ IIA MCQs</div>
-              <div className="text-[10px] text-slate-400">150-min Pearson VUE timed simulator</div>
+              <div className="text-xs font-bold text-white">Gleim Mega Test Bank</div>
+              <div className="text-[10px] text-slate-400">SmartAdapt™ AI adaptive simulator</div>
             </div>
             <div className="p-3.5 rounded-2xl bg-[#091626]/80 border border-sky-950/80 text-left">
               <Cpu className="w-5 h-5 text-purple-400 mb-1.5" />
@@ -1397,7 +1397,7 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
               }`}
             >
               <HelpCircle className="w-4 h-4 text-[#f1bd5b]" />
-              <span>5,000+ MCQ Simulator</span>
+              <span>Gleim Test Bank Simulator</span>
             </button>
 
             <button
@@ -1733,7 +1733,7 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
         )}
 
         {/* ================================================================= */}
-        {/* TAB 2: BNC 5,000+ MCQ SIMULATOR (PEARSON VUE TESTING ENGINE)     */}
+        {/* TAB 2: OFFICIAL GLEIM CIA EXAM SIMULATOR (SMARTADAPT™ ENGINE)    */}
         {/* ================================================================= */}
         {activeTab === 'testbank' && (
           <div className="space-y-6">
@@ -1741,10 +1741,10 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
             <div className="p-5 rounded-3xl bg-slate-900 border border-slate-800 flex flex-wrap items-center justify-between gap-4">
               <div>
                 <span className="px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-[#f1bd5b] text-[10px] font-bold uppercase tracking-wider">
-                  PEARSON VUE REAL EXAM SIMULATOR
+                  PEARSON VUE REAL EXAM SIMULATOR · GLEIM SMARTADAPT™
                 </span>
                 <h3 className="text-lg font-black text-white mt-1">
-                  BNC CIA Practice Bank · Question {currentQuestionIndex + 1} of {testBankQuestions.length}
+                  Official Gleim CIA Mega Test Bank · Question {currentQuestionIndex + 1} of {testBankQuestions.length}
                 </h3>
               </div>
 
@@ -2219,7 +2219,7 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
               <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 text-left space-y-2">
                 <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Practice MCQs Solved</div>
                 <div className="text-3xl sm:text-4xl font-extrabold text-sky-400 tracking-tight tabular-nums">
-                  480 <span className="text-sm font-normal text-slate-400">/ 5,000+</span>
+                  480 <span className="text-sm font-normal text-slate-400">/ Gleim Mega Bank</span>
                 </div>
                 <p className="text-xs text-slate-400">
                   Average accuracy: <strong className="text-white">82% on first attempt</strong>

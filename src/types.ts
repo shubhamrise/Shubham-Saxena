@@ -8,7 +8,11 @@ export interface PackagePlan {
   isPopular?: boolean;
   priceINR: number;
   priceUSD: number;
+  originalPriceINR?: number;
+  originalPriceUSD?: number;
+  offerNote?: string;
   installmentINR: number;
+  featuresHeader?: string;
   features: string[];
   deliverables: {
     hours: string;

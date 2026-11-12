@@ -97,8 +97,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
   const basePrice = currency === 'INR' ? currentPkg.priceINR : currentPkg.priceUSD;
   const booksCost = printedBooks && activePackageId === 'basic' ? (currency === 'INR' ? 4500 : 55) : 0;
-  const mentorCost = oneOnOneMentoring ? (currency === 'INR' ? 8000 : 100) : 0;
-  const aiLabCost = aiAuditLab && activePackageId !== 'premium-plus' ? (currency === 'INR' ? 12000 : 150) : 0;
+  const mentorCost = oneOnOneMentoring && activePackageId !== 'elite' ? (currency === 'INR' ? 8000 : 100) : 0;
+  const aiLabCost = aiAuditLab && activePackageId !== 'premium-plus' && activePackageId !== 'elite' ? (currency === 'INR' ? 12000 : 150) : 0;
   const subtotal = basePrice + booksCost + mentorCost + aiLabCost;
 
   const discountAmount = couponApplied ? Math.round(subtotal * (couponDiscountPercent / 100)) : 0;
@@ -310,7 +310,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                 <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider mb-2">
                   Select Training Tier
                 </label>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2.5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 pt-2.5">
                   {PACKAGES.map((pkg) => {
                     const isSelected = activePackageId === pkg.id;
                     return (
@@ -329,18 +329,27 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                           </span>
                         )}
                         <h4 className="font-bold text-slate-900 text-base mb-1">{pkg.name}</h4>
-                        <div className="text-xs font-bold text-sky-900 bg-sky-50 px-2.5 py-1 rounded-lg inline-block mb-2 border border-sky-100">
+                        <div className="text-xs font-bold text-sky-900 bg-sky-50 px-2 py-0.5 rounded-lg inline-block mb-1 border border-sky-100">
                           {pkg.deliverables.mode}
                         </div>
-                        <p className="text-xs text-slate-600 line-clamp-2">{pkg.tagline}</p>
-                        <div className="mt-3 pt-3 border-t border-sky-100 text-[11px] text-slate-700 space-y-1">
+                        <div className="flex items-baseline gap-1.5 mb-2">
+                          <span className="font-black text-slate-900 text-sm">
+                            {currency === 'INR' ? `₹${pkg.priceINR.toLocaleString('en-IN')}` : `$${pkg.priceUSD.toLocaleString('en-US')}`}
+                          </span>
+                          {pkg.originalPriceINR && (
+                            <span className="text-[10px] text-slate-400 line-through">
+                              {currency === 'INR' ? `₹${pkg.originalPriceINR.toLocaleString('en-IN')}` : `$${pkg.originalPriceUSD?.toLocaleString('en-US')}`}
+                            </span>
+                          )}
+                        </div>
+                        <div className="pt-2 border-t border-sky-100 text-[11px] text-slate-700 space-y-1">
                           <div className="flex items-center gap-1.5">
                             <Check className="w-3.5 h-3.5 text-[#b58b42] shrink-0" />
-                            <span className="font-semibold text-slate-800">{pkg.deliverables.hours}</span>
+                            <span className="font-semibold text-slate-800 text-[10px]">{pkg.deliverables.hours}</span>
                           </div>
                           <div className="flex items-center gap-1.5">
                             <Check className="w-3.5 h-3.5 text-[#b58b42] shrink-0" />
-                            <span className="font-semibold text-slate-800">{pkg.deliverables.lmsAccess} LMS</span>
+                            <span className="font-semibold text-slate-800 text-[10px]">{pkg.deliverables.lmsAccess}</span>
                           </div>
                         </div>
                       </div>

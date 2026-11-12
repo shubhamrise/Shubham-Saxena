@@ -54,8 +54,9 @@ export const IiaFeeCalculator: React.FC = () => {
         </div>
 
         {/* Interactive Estimator Card in Light Mode */}
-        <div className="card-reflection mb-14 p-6 sm:p-8 rounded-3xl bg-white border border-sky-100 shadow-sm max-w-4xl mx-auto">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-sky-50">
+        <div className="relative mb-14 p-6 sm:p-8 rounded-3xl bg-white border border-sky-100 shadow-xl max-w-4xl mx-auto overflow-hidden">
+          <div className="card-reflection-layer rounded-3xl z-0" />
+          <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-sky-50">
             <div>
               <span className="text-xs font-bold text-[#b58b42] uppercase tracking-wider">
                 Interactive Fee Estimator

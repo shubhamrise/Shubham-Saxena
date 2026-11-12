@@ -108,9 +108,12 @@ export default function App() {
       {/* Global Corporate Architectural Backdrop Layer - Slightly dark, modern, premium, stylish */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
         <img
-          src="/hero-bg.jpg"
-          alt="BNC Global Architectural Background"
-          className="w-full h-full object-cover object-center opacity-40 filter contrast-125 brightness-75 saturate-110"
+          src="/assets/aistudio/bnc__2__1f4b4d76.png"
+          alt="BNC Corporate Audit Team"
+          className="w-full h-full object-cover object-center opacity-35 filter contrast-120 brightness-80 saturate-105"
+          onError={(e) => {
+            e.currentTarget.src = '/hero-bg-team.png';
+          }}
         />
         {/* Slightly dark modern executive navy vignette & specular grading */}
         <div className="absolute inset-0 bg-gradient-to-b from-[#071322]/85 via-[#0b1d33]/80 to-[#06101c]/90"></div>

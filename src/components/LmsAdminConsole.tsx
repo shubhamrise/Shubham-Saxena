@@ -727,7 +727,7 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
               Learner Access & Enrollment Controller
             </h1>
             <p className="text-xs sm:text-sm text-slate-300 mt-1 max-w-2xl leading-relaxed">
-              Grant or revoke individual student access to video masterclasses, 5,000+ IIA test banks, and AI audit tools in real-time. Students with <strong className="text-rose-400">Revoked</strong> status cannot log in until administrative clearance.
+              Grant or revoke individual student access to video masterclasses, official Gleim CIA test banks & SmartAdapt™, and AI audit tools in real-time. Students with <strong className="text-rose-400">Revoked</strong> status cannot log in until administrative clearance.
             </p>
           </div>
 

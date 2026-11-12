@@ -139,7 +139,7 @@ export const InteractiveQuizModal: React.FC<InteractiveQuizModalProps> = ({
 
               <div className="p-4 rounded-2xl bg-sky-50/40 border border-sky-100 max-w-md mx-auto text-left text-xs space-y-1.5 text-slate-600">
                 <div className="font-bold text-slate-900">How BNC Global prepares you for 100%:</div>
-                <p>• 5,000+ realistic practice questions with detailed psychometric rationale</p>
+                <p>• Official Gleim Mega Test Bank practice questions with detailed SmartAdapt™ rationale</p>
                 <p>• Section-wise mock tests simulating Pearson VUE timing and interface</p>
                 <p>• Live doubt solving directly with veteran audit faculty</p>
               </div>

@@ -111,18 +111,22 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
   return (
     <section className="relative overflow-hidden pt-8 pb-16 lg:py-16 border-b border-sky-950">
-      {/* High-Resolution Corporate Architectural Background Image - Slightly dark, modern, premium, stylish */}
+      {/* User-Provided High-Resolution Corporate Team Atrium Background - First Page */}
       <div className="absolute inset-0 pointer-events-none">
         <img
-          src="/hero-bg.jpg"
-          alt="BNC Corporate Architecture"
-          className="w-full h-full object-cover object-center opacity-45 filter contrast-130 brightness-75 saturate-110"
+          src="/assets/aistudio/bnc__2__1f4b4d76.png"
+          alt="BNC Corporate Audit Team in Executive Atrium"
+          className="w-full h-full object-cover object-center sm:object-[center_35%] opacity-45 sm:opacity-55 filter contrast-115 brightness-90 saturate-105"
+          onError={(e) => {
+            e.currentTarget.src = '/first-page-bg.png';
+          }}
         />
-        {/* Slightly dark executive navy & gold atmospheric vignette */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#071322]/85 via-[#0a1c32]/75 to-[#071322]/90"></div>
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(2,132,199,0.22)_0%,_transparent_65%)]"></div>
-        {/* Modern stylish grid pattern */}
-        <div className="absolute inset-0 bg-[radial-gradient(#38bdf8_1px,transparent_1px)] [background-size:28px_28px] opacity-[0.09]"></div>
+        {/* Atmospheric executive navy & gold vignette highlighting the background team */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#071322]/80 via-[#071322]/65 to-[#071322]/95"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-[#071322]/85 via-transparent to-[#071322]/85"></div>
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(2,132,199,0.18)_0%,_transparent_65%)]"></div>
+        {/* Subtle stylish grid pattern */}
+        <div className="absolute inset-0 bg-[radial-gradient(#38bdf8_1px,transparent_1px)] [background-size:28px_28px] opacity-[0.05]"></div>
       </div>
 
       {/* Background Ambient Lighting & Specular Atmospheric Glows with brand tones */}
@@ -156,7 +160,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
           {/* Master Program Subtext */}
           <p className="text-sm sm:text-base text-slate-300 font-normal leading-relaxed max-w-3xl mx-auto">
-            Complete exam preparation featuring 100+ hours of live weekend coaching, proprietary BNC 5,000+ MCQ test banks, modern AI audit workflow training, and dedicated placement advisory.
+            Complete exam preparation featuring 100+ hours of live weekend coaching, official Gleim CIA study materials & SmartAdapt™ adaptive test bank, modern AI audit workflow training, and dedicated placement advisory.
           </p>
         </div>
 
@@ -212,11 +216,21 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 </div>
               </div>
 
-              <div className="card-reflection p-4 rounded-2xl bg-slate-900/80 backdrop-blur-md border border-slate-700/80 shadow-lg hover:border-sky-400 transition-all">
-                <div className="text-2xl sm:text-3xl font-extrabold text-sky-400 tracking-tight mb-0.5 tabular-nums">5,000+</div>
-                <div className="text-[11px] font-bold text-white uppercase tracking-wider mb-1">Practice MCQs & Books</div>
-                <div className="text-[11px] text-slate-300 leading-relaxed">
-                  Comprehensive BNC CIA Books & 5,000+ practice questions delivered to your doorstep.
+              <div className="card-reflection p-4 rounded-2xl bg-slate-900/80 backdrop-blur-md border border-slate-700/80 shadow-lg hover:border-sky-400 transition-all flex flex-col justify-between">
+                <div>
+                  <div className="h-8 sm:h-9 flex items-center mb-1">
+                    <div className="bg-white/95 px-2.5 py-1 rounded-lg shadow-sm border border-white/30 inline-flex items-center">
+                      <img
+                        src="/assets/aistudio/image_b9fe5a35.png"
+                        alt="Gleim Exam Prep"
+                        className="h-4.5 sm:h-5 w-auto object-contain"
+                      />
+                    </div>
+                  </div>
+                  <div className="text-[11px] font-bold text-white uppercase tracking-wider mb-1">Official Gleim Study Material</div>
+                  <div className="text-[11px] text-slate-300 leading-relaxed">
+                    Official Gleim CIA textbooks, SmartAdapt™ adaptive technology & Mega Test Bank provided.
+                  </div>
                 </div>
               </div>
 
@@ -393,10 +407,12 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                         onChange={(e) => setEnquiryProgram(e.target.value)}
                         className="w-full px-3 py-2.5 rounded-xl bg-sky-50/40 border border-sky-100 text-slate-900 text-xs focus:outline-none focus:border-sky-700 focus:bg-white focus:ring-2 focus:ring-sky-200 transition-all"
                       >
-                        <option>Full 3-Part Live Accelerator</option>
-                        <option>Premium Plus with AI Audit Lab</option>
-                        <option>Self-Paced Recorded Prep</option>
-                        <option>CA/CPA CIA Challenge Exam</option>
+                        <option>1. Basic Self-Paced</option>
+                        <option>2. Premium (Self-Study + 20h Doubts & Placement)</option>
+                        <option>3. Premium Live (Weekend Live Interactive)</option>
+                        <option>4. Premium Plus (Live + AI Audit Lab)</option>
+                        <option>5. Elite (Big 4 Referrals & Executive Placement)</option>
+                        <option>CA/CPA CIA Challenge Exam Track</option>
                         <option>IAP Part 1 Student Fast-Track</option>
                       </select>
                     </div>
