@@ -46,14 +46,13 @@ export const Footer: React.FC<FooterProps> = ({ onOpenCheckout, onOpenInquiry, o
           <div className="space-y-4 md:col-span-1">
             <div className="flex items-center gap-3">
               <a href="#" className="inline-block py-1 group" title="BNC ELEVATE">
-                <img
-                  src="/bnc_elevate_logo_dark_bg.png"
-                  alt="BNC ELEVATE"
-                  className="h-12 sm:h-14 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
-                  onError={(e) => {
-                    e.currentTarget.src = '/bnc_elevate_logo_transparent.png';
-                  }}
-                />
+                <div className="px-3 py-1.5 rounded-xl bg-white shadow-md inline-flex items-center">
+                  <img
+                    src="/assets/aistudio/bnc_elevate_logo_transparent__1__4c50f8bb.png"
+                    alt="BNC ELEVATE"
+                    className="h-10 sm:h-12 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
+                  />
+                </div>
               </a>
             </div>
             <p className="text-xs text-slate-400 leading-relaxed">

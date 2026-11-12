@@ -131,12 +131,9 @@ export const Navbar: React.FC<NavbarProps> = ({
             <div className="flex items-center shrink-0">
               <a href="#" className="inline-block group py-1" title="BNC ELEVATE - CIA Portal">
                 <img
-                  src="/bnc_elevate_logo_transparent.png"
+                  src="/assets/aistudio/bnc_elevate_logo_transparent__1__4c50f8bb.png"
                   alt="BNC ELEVATE"
                   className="h-12 sm:h-14 md:h-16 lg:h-18 w-auto max-h-[72px] object-contain transition-transform duration-300 group-hover:scale-105 drop-shadow-xs"
-                  onError={(e) => {
-                    e.currentTarget.src = '/bnc-elevate-logo.png';
-                  }}
                 />
               </a>
             </div>

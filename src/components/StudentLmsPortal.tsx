@@ -739,7 +739,7 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
               <div className="flex items-center gap-3">
                 <div className="px-2 py-1 rounded-lg bg-white/95 shadow-xs inline-flex items-center">
                   <img
-                    src="/bnc_elevate_logo_transparent.png"
+                    src="/assets/aistudio/bnc_elevate_logo_transparent__1__4c50f8bb.png"
                     alt="BNC ELEVATE"
                     className="h-5 sm:h-6 w-auto object-contain"
                   />
