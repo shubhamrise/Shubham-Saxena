@@ -32,7 +32,9 @@ import {
   Layers,
   FileText,
   FileQuestion,
-  Video
+  Video,
+  Sun,
+  Moon
 } from 'lucide-react';
 import {
   triggerFormSubmitActivation,
@@ -105,6 +107,23 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
   doubts,
   onUpdateDoubts,
 }) => {
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    try {
+      const saved = localStorage.getItem('bnc_admin_theme');
+      if (saved === 'dark' || saved === 'light') return saved;
+    } catch {}
+    return 'light';
+  });
+
+  const toggleTheme = () => {
+    const next = theme === 'light' ? 'dark' : 'light';
+    setTheme(next);
+    try {
+      localStorage.setItem('bnc_admin_theme', next);
+    } catch {}
+    onShowToast(`Admin Console switched to ${next === 'light' ? 'Executive Light' : 'Dark'} mode`);
+  };
+
   const [consoleTab, setConsoleTab] = useState<AdminConsoleTab>('learners');
   const [searchTerm, setSearchTerm] = useState('');
   const [leadSearchTerm, setLeadSearchTerm] = useState('');
@@ -555,40 +574,66 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-[#071322] text-slate-100 flex flex-col font-sans relative">
-      {/* Background Ambience */}
+    <div className={`min-h-screen flex flex-col font-sans relative transition-colors duration-200 ${
+      theme === 'light' ? 'bg-[#f8fafc]/50 text-slate-900' : 'bg-[#071322] text-slate-100'
+    }`}>
+      {/* Background Ambience - Prominently Visible in Light Theme */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
         <img
           src="/hero-bg.jpg"
           alt="BNC Architectural Backdrop"
-          className="w-full h-full object-cover object-center opacity-30 filter contrast-125 brightness-75 saturate-110"
+          className={`w-full h-full object-cover object-center filter contrast-125 ${
+            theme === 'light' ? 'opacity-45 brightness-100 saturate-125' : 'opacity-30 brightness-75 saturate-110'
+          }`}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-[#071322]/95 via-[#0b1d33]/90 to-[#06101c]/95" />
+        {theme === 'light' ? (
+          <>
+            <div className="absolute inset-0 bg-gradient-to-b from-white/70 via-[#f8fafc]/55 to-[#f1f5f9]/70" />
+            <div className="absolute inset-0 bg-[radial-gradient(#102a4e_1px,transparent_1px)] [background-size:28px_28px] opacity-[0.08]" />
+          </>
+        ) : (
+          <>
+            <div className="absolute inset-0 bg-gradient-to-b from-[#071322]/95 via-[#0b1d33]/90 to-[#06101c]/95" />
+            <div className="absolute inset-0 bg-[radial-gradient(#38bdf8_1px,transparent_1px)] [background-size:32px_32px] opacity-[0.06]" />
+          </>
+        )}
       </div>
 
       {/* Top Admin Header Bar */}
-      <header className="relative z-10 bg-[#07172b]/95 backdrop-blur-md border-b border-sky-950 px-4 sm:px-6 lg:px-8 py-3.5 shadow-md">
+      <header className={`relative z-10 backdrop-blur-md border-b px-4 sm:px-6 lg:px-8 py-3.5 shadow-xs transition-colors ${
+        theme === 'light'
+          ? 'bg-white/95 border-slate-200'
+          : 'bg-[#07172b]/95 border-sky-950 shadow-md'
+      }`}>
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <button
               onClick={onBackToWebsite}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-sky-950/80 hover:bg-sky-900 border border-sky-800/60 text-xs font-semibold text-slate-200 transition-colors cursor-pointer"
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-colors cursor-pointer ${
+                theme === 'light'
+                  ? 'bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-700'
+                  : 'bg-sky-950/80 hover:bg-sky-900 border-sky-800/60 text-slate-200'
+              }`}
               title="Return to Public Website"
             >
-              <ArrowLeft className="w-3.5 h-3.5 text-[#f1bd5b]" />
+              <ArrowLeft className="w-3.5 h-3.5 text-[#b58b42]" />
               <span>Public Website</span>
             </button>
 
-            <div className="h-6 w-px bg-sky-900 hidden sm:block" />
+            <div className={`h-6 w-px hidden sm:block ${theme === 'light' ? 'bg-slate-200' : 'bg-sky-900'}`} />
 
             <div className="flex items-center gap-2">
-              <span className="p-1 rounded bg-[#b58b42]/20 border border-[#b58b42]/40 text-[#f1bd5b]">
+              <span className={`p-1 rounded border ${
+                theme === 'light'
+                  ? 'bg-amber-50 border-amber-200 text-[#b58b42]'
+                  : 'bg-[#b58b42]/20 border-[#b58b42]/40 text-[#f1bd5b]'
+              }`}>
                 <ShieldCheck className="w-4 h-4" />
               </span>
               <div>
-                <span className="text-sm font-black text-white">BNC ELEVATE</span>
-                <span className="mx-2 text-slate-500 font-light">|</span>
-                <span className="text-xs uppercase tracking-wider text-[#f1bd5b] font-bold">
+                <span className={`text-sm font-black ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>BNC ELEVATE</span>
+                <span className={`mx-2 font-light ${theme === 'light' ? 'text-slate-400' : 'text-slate-500'}`}>|</span>
+                <span className="text-xs uppercase tracking-wider text-[#b58b42] font-bold">
                   Academic Admin Console
                 </span>
               </div>
@@ -596,15 +641,32 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900/80 border border-slate-700/80 text-xs">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-slate-300 font-medium">Logged in:</span>
-              <span className="text-white font-bold">{adminUser.name}</span>
+            <div className={`hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs ${
+              theme === 'light'
+                ? 'bg-slate-100 border-slate-200 text-slate-700'
+                : 'bg-slate-900/80 border-slate-700/80 text-slate-300'
+            }`}>
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className={theme === 'light' ? 'text-slate-500 font-medium' : 'text-slate-300 font-medium'}>Logged in:</span>
+              <span className={theme === 'light' ? 'text-slate-900 font-bold' : 'text-white font-bold'}>{adminUser.name}</span>
             </div>
+
+            {/* Theme Toggle Button */}
+            <button
+              onClick={toggleTheme}
+              className={`p-2 rounded-xl transition-all cursor-pointer border flex items-center justify-center ${
+                theme === 'light'
+                  ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300 shadow-xs'
+                  : 'bg-slate-800 hover:bg-slate-700 text-amber-300 border-slate-700 shadow-xs'
+              }`}
+              title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
+            >
+              {theme === 'light' ? <Moon className="w-4 h-4 text-slate-700" /> : <Sun className="w-4 h-4 text-amber-400" />}
+            </button>
 
             <button
               onClick={() => onSwitchToStudentView()}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-sky-800 to-sky-700 hover:from-sky-700 hover:to-sky-600 text-white text-xs font-bold shadow-md cursor-pointer transition-all border border-sky-600/40"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-[#102a4e] via-[#163a6b] to-[#b58b42] hover:opacity-95 text-white text-xs font-bold shadow-xs cursor-pointer transition-all border border-sky-900/20"
               title="Preview LMS Curriculum as Student"
             >
               <BookOpen className="w-3.5 h-3.5 text-[#f1bd5b]" />
@@ -613,7 +675,11 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
 
             <button
               onClick={onLogoutAdmin}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800/90 hover:bg-rose-950 text-slate-300 hover:text-rose-200 text-xs font-semibold border border-slate-700 hover:border-rose-500/50 transition-all cursor-pointer"
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
+                theme === 'light'
+                  ? 'bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-rose-700 border-slate-300 hover:border-rose-300'
+                  : 'bg-slate-800/90 hover:bg-rose-950 text-slate-300 hover:text-rose-200 border-slate-700 hover:border-rose-500/50'
+              }`}
               title="Log out of Admin Console"
             >
               <LogOut className="w-3.5 h-3.5" />
@@ -627,17 +693,23 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
       <main className="relative z-10 flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         
         {/* Console Tab Switcher: Full LMS Administration */}
-        <div className="flex items-center gap-1.5 p-1.5 bg-slate-900/90 rounded-2xl border border-sky-800/80 w-full overflow-x-auto shadow-xl scrollbar-none">
+        <div className={`flex items-center gap-1.5 p-1.5 rounded-2xl border w-full overflow-x-auto shadow-xs scrollbar-none transition-colors ${
+          theme === 'light'
+            ? 'bg-white border-slate-200'
+            : 'bg-slate-900/90 border-sky-800/80 shadow-xl'
+        }`}>
           <button
             type="button"
             onClick={() => setConsoleTab('learners')}
             className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap shrink-0 ${
               consoleTab === 'learners'
-                ? 'bg-gradient-to-r from-sky-700 via-sky-800 to-[#b58b42] text-white shadow-lg'
+                ? 'bg-gradient-to-r from-[#102a4e] via-[#163a6b] to-[#b58b42] text-white shadow-xs font-bold'
+                : theme === 'light'
+                ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                 : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
             }`}
           >
-            <UserCheck className="w-4 h-4 text-[#f1bd5b]" />
+            <UserCheck className="w-4 h-4 text-[#b58b42]" />
             <span>Learners & Access ({learners.length})</span>
           </button>
 
@@ -646,11 +718,13 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
             onClick={() => setConsoleTab('curriculum')}
             className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap shrink-0 ${
               consoleTab === 'curriculum'
-                ? 'bg-gradient-to-r from-sky-700 via-sky-800 to-[#b58b42] text-white shadow-lg'
+                ? 'bg-gradient-to-r from-[#102a4e] via-[#163a6b] to-[#b58b42] text-white shadow-xs font-bold'
+                : theme === 'light'
+                ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                 : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
             }`}
           >
-            <BookOpen className="w-4 h-4 text-sky-400" />
+            <BookOpen className="w-4 h-4 text-sky-600" />
             <span>Curriculum Lessons ({totalLessonsCount})</span>
           </button>
 
@@ -659,11 +733,13 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
             onClick={() => setConsoleTab('testbank')}
             className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap shrink-0 ${
               consoleTab === 'testbank'
-                ? 'bg-gradient-to-r from-sky-700 via-sky-800 to-[#b58b42] text-white shadow-lg'
+                ? 'bg-gradient-to-r from-[#102a4e] via-[#163a6b] to-[#b58b42] text-white shadow-xs font-bold'
+                : theme === 'light'
+                ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                 : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
             }`}
           >
-            <FileQuestion className="w-4 h-4 text-amber-400" />
+            <FileQuestion className="w-4 h-4 text-[#b58b42]" />
             <span>MCQ Test Banks ({testBankState.length})</span>
           </button>
 
@@ -672,11 +748,13 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
             onClick={() => setConsoleTab('liveclasses')}
             className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap shrink-0 ${
               consoleTab === 'liveclasses'
-                ? 'bg-gradient-to-r from-sky-700 via-sky-800 to-[#b58b42] text-white shadow-lg'
+                ? 'bg-gradient-to-r from-[#102a4e] via-[#163a6b] to-[#b58b42] text-white shadow-xs font-bold'
+                : theme === 'light'
+                ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                 : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
             }`}
           >
-            <Calendar className="w-4 h-4 text-emerald-400" />
+            <Calendar className="w-4 h-4 text-emerald-600" />
             <span>Live Masterclasses ({liveClassesState.length})</span>
           </button>
 
@@ -685,11 +763,13 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
             onClick={() => setConsoleTab('resources')}
             className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap shrink-0 ${
               consoleTab === 'resources'
-                ? 'bg-gradient-to-r from-sky-700 via-sky-800 to-[#b58b42] text-white shadow-lg'
+                ? 'bg-gradient-to-r from-[#102a4e] via-[#163a6b] to-[#b58b42] text-white shadow-xs font-bold'
+                : theme === 'light'
+                ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                 : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
             }`}
           >
-            <FileText className="w-4 h-4 text-teal-400" />
+            <FileText className="w-4 h-4 text-teal-600" />
             <span>Study Downloads ({resourcesState.length})</span>
           </button>
 
@@ -698,11 +778,13 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
             onClick={() => setConsoleTab('doubts')}
             className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap shrink-0 ${
               consoleTab === 'doubts'
-                ? 'bg-gradient-to-r from-sky-700 via-sky-800 to-[#b58b42] text-white shadow-lg'
+                ? 'bg-gradient-to-r from-[#102a4e] via-[#163a6b] to-[#b58b42] text-white shadow-xs font-bold'
+                : theme === 'light'
+                ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                 : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
             }`}
           >
-            <MessageSquare className="w-4 h-4 text-purple-400" />
+            <MessageSquare className="w-4 h-4 text-purple-600" />
             <span>Student Doubts ({doubtsState.filter((d) => !d.reply).length} pending)</span>
           </button>
 
@@ -711,11 +793,13 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
             onClick={() => setConsoleTab('leads')}
             className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap shrink-0 ${
               consoleTab === 'leads'
-                ? 'bg-gradient-to-r from-sky-700 via-sky-800 to-[#b58b42] text-white shadow-lg'
+                ? 'bg-gradient-to-r from-[#102a4e] via-[#163a6b] to-[#b58b42] text-white shadow-xs font-bold'
+                : theme === 'light'
+                ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                 : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
             }`}
           >
-            <Mail className="w-4 h-4 text-sky-400" />
+            <Mail className="w-4 h-4 text-sky-600" />
             <span>Enquiries & Leads ({leads.length})</span>
           </button>
         </div>
@@ -723,303 +807,389 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
         {consoleTab === 'learners' && (
           <>
             {/* Banner */}
-            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-6 rounded-3xl bg-gradient-to-r from-[#0b1d33] via-[#091b30] to-[#122338] border border-sky-800/60 shadow-xl">
+            <div className={`flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-6 rounded-3xl border shadow-xs transition-colors ${
+              theme === 'light'
+                ? 'bg-gradient-to-r from-slate-50 via-sky-50/40 to-slate-50 border-slate-200'
+                : 'bg-gradient-to-r from-[#0b1d33] via-[#091b30] to-[#122338] border-sky-800/60 shadow-xl'
+            }`}>
               <div>
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#b58b42]/20 text-[#f1bd5b] border border-[#b58b42]/40 text-[10px] font-bold uppercase tracking-wider mb-2">
-                  <Sparkles className="w-3.5 h-3.5" />
+                <div className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border text-[10px] font-bold uppercase tracking-wider mb-2 ${
+                  theme === 'light'
+                    ? 'bg-amber-50 text-[#b58b42] border-amber-200'
+                    : 'bg-[#b58b42]/20 text-[#f1bd5b] border-[#b58b42]/40'
+                }`}>
+                  <Sparkles className="w-3.5 h-3.5 text-[#b58b42]" />
                   <span>Access Authorization & Fee Clearance Management</span>
                 </div>
-            <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight">
-              Learner Access & Enrollment Controller
-            </h1>
-            <p className="text-xs sm:text-sm text-slate-300 mt-1 max-w-2xl leading-relaxed">
-              Grant or revoke individual student access to video masterclasses, official Gleim CIA test banks & SmartAdapt™, and AI audit tools in real-time. Students with <strong className="text-rose-400">Revoked</strong> status cannot log in until administrative clearance.
-            </p>
-          </div>
+                <h1 className={`text-xl sm:text-2xl font-black tracking-tight ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>
+                  Learner Access & Enrollment Controller
+                </h1>
+                <p className={`text-xs sm:text-sm mt-1 max-w-2xl leading-relaxed ${theme === 'light' ? 'text-slate-600' : 'text-slate-300'}`}>
+                  Grant or revoke individual student access to video masterclasses, official Gleim CIA test banks & SmartAdapt™, and AI audit tools in real-time. Students with <strong className="text-rose-600 font-bold">Revoked</strong> status cannot log in until administrative clearance.
+                </p>
+              </div>
 
-          <div className="flex items-center gap-2.5 shrink-0">
-            <button
-              onClick={handleSyncFromCheckout}
-              className="px-4 py-2.5 rounded-xl bg-slate-800/90 hover:bg-slate-700 text-slate-200 text-xs font-bold flex items-center gap-2 border border-slate-700 transition-all cursor-pointer shadow-sm"
-              title="Sync latest enrollment orders from checkout"
-            >
-              <FileSpreadsheet className="w-4 h-4 text-sky-400" />
-              <span>Sync Web Orders</span>
-            </button>
+              <div className="flex items-center gap-2.5 shrink-0">
+                <button
+                  onClick={handleSyncFromCheckout}
+                  className={`px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 border transition-all cursor-pointer shadow-xs ${
+                    theme === 'light'
+                      ? 'bg-white hover:bg-slate-100 text-slate-800 border-slate-300'
+                      : 'bg-slate-800/90 hover:bg-slate-700 text-slate-200 border-slate-700'
+                  }`}
+                  title="Sync latest enrollment orders from checkout"
+                >
+                  <FileSpreadsheet className="w-4 h-4 text-sky-600" />
+                  <span>Sync Web Orders</span>
+                </button>
 
-            <button
-              onClick={() => setIsAddModalOpen(true)}
-              className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-sky-700 to-[#b58b42] hover:from-sky-800 hover:to-[#9e7735] text-white text-xs font-bold flex items-center gap-2 shadow-lg transition-all cursor-pointer"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Grant New Learner Access</span>
-            </button>
-          </div>
-        </div>
-
-        {/* 4 KPI Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="p-5 rounded-2xl bg-[#091729]/95 border border-sky-900/60 shadow-lg">
-            <div className="flex items-center justify-between text-slate-400 text-xs font-bold uppercase">
-              <span>Total Learners</span>
-              <BookOpen className="w-4 h-4 text-sky-400" />
+                <button
+                  onClick={() => setIsAddModalOpen(true)}
+                  className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#102a4e] to-[#b58b42] hover:opacity-95 text-white text-xs font-bold flex items-center gap-2 shadow-sm transition-all cursor-pointer"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Grant New Learner Access</span>
+                </button>
+              </div>
             </div>
-            <div className="text-2xl sm:text-3xl font-black text-white mt-2">{totalCount}</div>
-            <div className="text-[11px] text-slate-400 mt-1">Enrolled candidate accounts</div>
-          </div>
 
-          <div className="p-5 rounded-2xl bg-emerald-950/40 border border-emerald-500/40 shadow-lg">
-            <div className="flex items-center justify-between text-emerald-400 text-xs font-bold uppercase">
-              <span>Access Granted</span>
-              <UserCheck className="w-4 h-4 text-emerald-400" />
+            {/* 4 KPI Cards */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className={`p-5 rounded-2xl border shadow-xs ${
+                theme === 'light'
+                  ? 'bg-white border-slate-200 text-slate-900'
+                  : 'bg-[#091729]/95 border-sky-900/60 shadow-lg text-white'
+              }`}>
+                <div className={`flex items-center justify-between text-xs font-bold uppercase ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>
+                  <span>Total Learners</span>
+                  <BookOpen className="w-4 h-4 text-sky-600" />
+                </div>
+                <div className={`text-2xl sm:text-3xl font-black mt-2 ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>{totalCount}</div>
+                <div className={`text-[11px] mt-1 ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>Enrolled candidate accounts</div>
+              </div>
+
+              <div className={`p-5 rounded-2xl border shadow-xs ${
+                theme === 'light'
+                  ? 'bg-emerald-50/70 border-emerald-200'
+                  : 'bg-emerald-950/40 border-emerald-500/40 shadow-lg'
+              }`}>
+                <div className={`flex items-center justify-between text-xs font-bold uppercase ${theme === 'light' ? 'text-emerald-800' : 'text-emerald-400'}`}>
+                  <span>Access Granted</span>
+                  <UserCheck className="w-4 h-4 text-emerald-600" />
+                </div>
+                <div className={`text-2xl sm:text-3xl font-black mt-2 ${theme === 'light' ? 'text-emerald-700' : 'text-emerald-300'}`}>{activeCount}</div>
+                <div className={`text-[11px] mt-1 ${theme === 'light' ? 'text-emerald-700/80' : 'text-emerald-300/80'}`}>Active paid learners authorized</div>
+              </div>
+
+              <div className={`p-5 rounded-2xl border shadow-xs ${
+                theme === 'light'
+                  ? 'bg-rose-50/70 border-rose-200'
+                  : 'bg-rose-950/40 border-rose-500/40 shadow-lg'
+              }`}>
+                <div className={`flex items-center justify-between text-xs font-bold uppercase ${theme === 'light' ? 'text-rose-800' : 'text-rose-400'}`}>
+                  <span>Access Revoked</span>
+                  <UserX className="w-4 h-4 text-rose-600" />
+                </div>
+                <div className={`text-2xl sm:text-3xl font-black mt-2 ${theme === 'light' ? 'text-rose-700' : 'text-rose-300'}`}>{revokedCount}</div>
+                <div className={`text-[11px] mt-1 ${theme === 'light' ? 'text-rose-700/80' : 'text-rose-300/80'}`}>Suspended / fee pending accounts</div>
+              </div>
+
+              <div className={`p-5 rounded-2xl border shadow-xs ${
+                theme === 'light'
+                  ? 'bg-amber-50/70 border-amber-200'
+                  : 'bg-amber-950/40 border-amber-500/40 shadow-lg'
+              }`}>
+                <div className={`flex items-center justify-between text-xs font-bold uppercase ${theme === 'light' ? 'text-amber-800' : 'text-[#f1bd5b]'}`}>
+                  <span>Under Clearance</span>
+                  <Clock className="w-4 h-4 text-[#b58b42]" />
+                </div>
+                <div className={`text-2xl sm:text-3xl font-black mt-2 ${theme === 'light' ? 'text-amber-800' : 'text-[#f1bd5b]'}`}>{pendingCount}</div>
+                <div className={`text-[11px] mt-1 ${theme === 'light' ? 'text-amber-800/80' : 'text-[#f1bd5b]/80'}`}>Pending finance approval</div>
+              </div>
             </div>
-            <div className="text-2xl sm:text-3xl font-black text-emerald-300 mt-2">{activeCount}</div>
-            <div className="text-[11px] text-emerald-300/80 mt-1">Active paid learners authorized</div>
-          </div>
 
-          <div className="p-5 rounded-2xl bg-rose-950/40 border border-rose-500/40 shadow-lg">
-            <div className="flex items-center justify-between text-rose-400 text-xs font-bold uppercase">
-              <span>Access Revoked</span>
-              <UserX className="w-4 h-4 text-rose-400" />
+            {/* Filter & Search Bar */}
+            <div className={`flex flex-col sm:flex-row items-center justify-between gap-3 p-4 rounded-2xl border shadow-xs transition-colors ${
+              theme === 'light'
+                ? 'bg-white border-slate-200'
+                : 'bg-[#091729]/90 border-sky-900/60 shadow-md'
+            }`}>
+              <div className="relative w-full sm:w-80">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Search by student name, email, or order ID..."
+                  className={`w-full pl-10 pr-4 py-2 rounded-xl text-xs focus:outline-none transition-all border ${
+                    theme === 'light'
+                      ? 'bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-400 focus:border-sky-600 focus:ring-1 focus:ring-sky-600'
+                      : 'bg-slate-900/90 border-slate-700/80 text-white placeholder-slate-500 focus:border-[#f1bd5b]'
+                  }`}
+                />
+              </div>
+
+              <div className="flex items-center gap-1.5 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
+                <span className={`text-xs font-semibold mr-1 flex items-center gap-1 ${theme === 'light' ? 'text-slate-600' : 'text-slate-400'}`}>
+                  <Filter className="w-3.5 h-3.5" />
+                  <span>Status:</span>
+                </span>
+                {(['all', 'active', 'revoked', 'pending'] as const).map((st) => (
+                  <button
+                    key={st}
+                    onClick={() => setFilterStatus(st)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold capitalize transition-all cursor-pointer ${
+                      filterStatus === st
+                        ? 'bg-gradient-to-r from-[#102a4e] to-[#b58b42] text-white shadow-xs'
+                        : theme === 'light'
+                        ? 'bg-slate-100 text-slate-700 hover:text-slate-900 hover:bg-slate-200 border border-slate-200'
+                        : 'bg-slate-800/80 text-slate-300 hover:text-white hover:bg-slate-700'
+                    }`}
+                  >
+                    {st}
+                  </button>
+                ))}
+              </div>
             </div>
-            <div className="text-2xl sm:text-3xl font-black text-rose-300 mt-2">{revokedCount}</div>
-            <div className="text-[11px] text-rose-300/80 mt-1">Suspended / fee pending accounts</div>
-          </div>
 
-          <div className="p-5 rounded-2xl bg-amber-950/40 border border-amber-500/40 shadow-lg">
-            <div className="flex items-center justify-between text-[#f1bd5b] text-xs font-bold uppercase">
-              <span>Under Clearance</span>
-              <Clock className="w-4 h-4 text-[#f1bd5b]" />
-            </div>
-            <div className="text-2xl sm:text-3xl font-black text-[#f1bd5b] mt-2">{pendingCount}</div>
-            <div className="text-[11px] text-[#f1bd5b]/80 mt-1">Pending finance approval</div>
-          </div>
-        </div>
-
-        {/* Filter & Search Bar */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 rounded-2xl bg-[#091729]/90 border border-sky-900/60 shadow-md">
-          <div className="relative w-full sm:w-80">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search by student name, email, or order ID..."
-              className="w-full pl-10 pr-4 py-2 rounded-xl bg-slate-900/90 border border-slate-700/80 text-white placeholder-slate-500 text-xs focus:outline-none focus:border-[#f1bd5b] transition-all"
-            />
-          </div>
-
-          <div className="flex items-center gap-1.5 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
-            <span className="text-xs text-slate-400 font-semibold mr-1 flex items-center gap-1">
-              <Filter className="w-3.5 h-3.5" />
-              <span>Status:</span>
-            </span>
-            {(['all', 'active', 'revoked', 'pending'] as const).map((st) => (
-              <button
-                key={st}
-                onClick={() => setFilterStatus(st)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold capitalize transition-all cursor-pointer ${
-                  filterStatus === st
-                    ? 'bg-[#b58b42] text-white shadow-xs'
-                    : 'bg-slate-800/80 text-slate-300 hover:text-white hover:bg-slate-700'
-                }`}
-              >
-                {st}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Roster Table */}
-        <div className="bg-[#091729]/95 border border-sky-900/60 rounded-3xl overflow-hidden shadow-2xl">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-[#061220] border-b border-sky-950 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                  <th className="py-4 px-6">Learner Profile</th>
-                  <th className="py-4 px-6">Student Email & Password</th>
-                  <th className="py-4 px-6">Program / Package</th>
-                  <th className="py-4 px-6">Tuition Fee Clearance</th>
-                  <th className="py-4 px-6 text-center">LMS Access Status</th>
-                  <th className="py-4 px-6 text-right">Access Controls</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-sky-950/60 text-xs">
-                {filteredLearners.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="py-12 text-center text-slate-400">
-                      No learners match the current search or filter criteria.
-                    </td>
-                  </tr>
-                ) : (
-                  filteredLearners.map((learner) => {
-                    const isActive = learner.status === 'active';
-                    const isRevoked = learner.status === 'revoked';
-                    const isPending = learner.status === 'pending';
-
-                    return (
-                      <tr
-                        key={learner.id}
-                        className="hover:bg-slate-900/50 transition-colors group"
-                      >
-                        {/* Learner Profile */}
-                        <td className="py-4 px-6">
-                          <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-sky-700 to-[#b58b42] flex items-center justify-center text-white font-extrabold text-xs shadow-md shrink-0">
-                              {learner.name
-                                .split(' ')
-                                .map((n) => n[0])
-                                .join('')
-                                .substring(0, 2)
-                                .toUpperCase()}
-                            </div>
-                            <div>
-                              <div className="font-bold text-white group-hover:text-[#f1bd5b] transition-colors">
-                                {learner.name}
-                              </div>
-                              {learner.phone && (
-                                <div className="text-[11px] text-slate-400">{learner.phone}</div>
-                              )}
-                              <div className="text-[10px] text-slate-500">
-                                Enrolled: {learner.enrollmentDate}
-                              </div>
-                            </div>
-                          </div>
-                        </td>
-
-                        {/* Student Email & Password */}
-                        <td className="py-4 px-6">
-                          <div className="font-semibold text-slate-200 text-xs">
-                            {learner.email}
-                          </div>
-                          <div className="flex items-center gap-1.5 mt-1.5">
-                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Pass:</span>
-                            <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-amber-950/60 text-amber-300 border border-amber-500/40">
-                              {learner.password || 'bnc2026'}
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                navigator.clipboard.writeText(learner.password || 'bnc2026');
-                                onShowToast(`Copied password for ${learner.name}`);
-                              }}
-                              className="text-[10px] text-sky-400 hover:text-white font-semibold underline cursor-pointer ml-1"
-                              title="Copy student password"
-                            >
-                              Copy
-                            </button>
-                          </div>
-                          {learner.orderId && (
-                            <div className="text-[10px] text-slate-500 mt-1">
-                              Ref: #{learner.orderId}
-                            </div>
-                          )}
-                        </td>
-
-                        {/* Package */}
-                        <td className="py-4 px-6">
-                          <div className="font-semibold text-slate-200">{learner.packageName}</div>
-                          <div className="text-[10px] text-slate-400">{learner.accessDuration}</div>
-                        </td>
-
-                        {/* Fee Status */}
-                        <td className="py-4 px-6">
-                          <div
-                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold ${
-                              isActive
-                                ? 'bg-emerald-950/60 text-emerald-300 border border-emerald-500/30'
-                                : isPending
-                                ? 'bg-amber-950/60 text-amber-300 border border-amber-500/30'
-                                : 'bg-rose-950/60 text-rose-300 border border-rose-500/30'
-                            }`}
-                          >
-                            {isActive ? (
-                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                            ) : isPending ? (
-                              <Clock className="w-3.5 h-3.5 text-amber-400" />
-                            ) : (
-                              <AlertTriangle className="w-3.5 h-3.5 text-rose-400" />
-                            )}
-                            <span>{learner.feeStatus}</span>
-                          </div>
-                        </td>
-
-                        {/* Status Badge */}
-                        <td className="py-4 px-6 text-center">
-                          {isActive ? (
-                            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
-                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                              <span>Active Access</span>
-                            </span>
-                          ) : isRevoked ? (
-                            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40">
-                              <UserX className="w-3 h-3 text-rose-400" />
-                              <span>Access Revoked</span>
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-bold bg-amber-500/20 text-[#f1bd5b] border border-amber-500/40">
-                              <Clock className="w-3 h-3 text-[#f1bd5b]" />
-                              <span>Pending Clearance</span>
-                            </span>
-                          )}
-                        </td>
-
-                        {/* Actions */}
-                        <td className="py-4 px-6 text-right space-x-2 whitespace-nowrap">
-                          {/* Toggle Grant / Revoke */}
-                          <button
-                            type="button"
-                            onClick={() => handleToggleAccess(learner.id)}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                              isActive
-                                ? 'bg-rose-950/80 hover:bg-rose-900 text-rose-200 border border-rose-700/60 shadow-xs'
-                                : 'bg-emerald-950/80 hover:bg-emerald-900 text-emerald-200 border border-emerald-700/60 shadow-xs'
-                            }`}
-                            title={isActive ? 'Click to revoke LMS access' : 'Click to grant LMS access'}
-                          >
-                            {isActive ? 'Revoke Access' : 'Grant Access'}
-                          </button>
-
-                          {/* Login As Student (Preview) */}
-                          <button
-                            type="button"
-                            onClick={() => onSwitchToStudentView(learner)}
-                            className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors cursor-pointer"
-                            title="Preview LMS as this student"
-                          >
-                            <BookOpen className="w-4 h-4 text-sky-400" />
-                          </button>
-
-                          {/* Edit Details */}
-                          <button
-                            type="button"
-                            onClick={() => setEditingLearner(learner)}
-                            className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors cursor-pointer"
-                            title="Edit student package & notes"
-                          >
-                            <Edit3 className="w-4 h-4 text-[#f1bd5b]" />
-                          </button>
-
-                          {/* Delete */}
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteLearner(learner.id, learner.name)}
-                            className="p-1.5 rounded-lg bg-slate-800 hover:bg-rose-950 text-slate-400 hover:text-rose-400 transition-colors cursor-pointer"
-                            title="Remove from roster"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+            {/* Roster Table */}
+            <div className={`border rounded-3xl overflow-hidden shadow-xs transition-colors ${
+              theme === 'light'
+                ? 'bg-white border-slate-200'
+                : 'bg-[#091729]/95 border-sky-900/60 shadow-2xl'
+            }`}>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className={`border-b text-[11px] font-bold uppercase tracking-wider ${
+                      theme === 'light'
+                        ? 'bg-slate-50 border-slate-200 text-slate-600'
+                        : 'bg-[#061220] border-sky-950 text-slate-400'
+                    }`}>
+                      <th className="py-4 px-6">Learner Profile</th>
+                      <th className="py-4 px-6">Student Email & Password</th>
+                      <th className="py-4 px-6">Program / Package</th>
+                      <th className="py-4 px-6">Tuition Fee Clearance</th>
+                      <th className="py-4 px-6 text-center">LMS Access Status</th>
+                      <th className="py-4 px-6 text-right">Access Controls</th>
+                    </tr>
+                  </thead>
+                  <tbody className={`divide-y text-xs ${
+                    theme === 'light' ? 'divide-slate-100 text-slate-700' : 'divide-sky-950/60 text-slate-300'
+                  }`}>
+                    {filteredLearners.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className={`py-12 text-center ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>
+                          No learners match the current search or filter criteria.
                         </td>
                       </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </>
-    )}
+                    ) : (
+                      filteredLearners.map((learner) => {
+                        const isActive = learner.status === 'active';
+                        const isRevoked = learner.status === 'revoked';
+                        const isPending = learner.status === 'pending';
+
+                        return (
+                          <tr
+                            key={learner.id}
+                            className={`transition-colors group ${
+                              theme === 'light' ? 'hover:bg-slate-50/80' : 'hover:bg-slate-900/50'
+                            }`}
+                          >
+                            {/* Learner Profile */}
+                            <td className="py-4 px-6">
+                              <div className="flex items-center gap-3">
+                                <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#102a4e] to-[#b58b42] flex items-center justify-center text-white font-extrabold text-xs shadow-xs shrink-0">
+                                  {learner.name
+                                    .split(' ')
+                                    .map((n) => n[0])
+                                    .join('')
+                                    .substring(0, 2)
+                                    .toUpperCase()}
+                                </div>
+                                <div>
+                                  <div className={`font-bold transition-colors ${
+                                    theme === 'light' ? 'text-slate-900 group-hover:text-[#b58b42]' : 'text-white group-hover:text-[#f1bd5b]'
+                                  }`}>
+                                    {learner.name}
+                                  </div>
+                                  {learner.phone && (
+                                    <div className={`text-[11px] ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>{learner.phone}</div>
+                                  )}
+                                  <div className={`text-[10px] ${theme === 'light' ? 'text-slate-400' : 'text-slate-500'}`}>
+                                    Enrolled: {learner.enrollmentDate}
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+
+                            {/* Student Email & Password */}
+                            <td className="py-4 px-6">
+                              <div className={`font-semibold text-xs ${theme === 'light' ? 'text-slate-800' : 'text-slate-200'}`}>
+                                {learner.email}
+                              </div>
+                              <div className="flex items-center gap-1.5 mt-1.5">
+                                <span className={`text-[10px] font-bold uppercase tracking-wide ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>Pass:</span>
+                                <span className={`font-mono text-xs font-bold px-2 py-0.5 rounded border ${
+                                  theme === 'light'
+                                    ? 'bg-amber-50 text-amber-900 border-amber-300'
+                                    : 'bg-amber-950/60 text-amber-300 border-amber-500/40'
+                                }`}>
+                                  {learner.password || 'bnc2026'}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    navigator.clipboard.writeText(learner.password || 'bnc2026');
+                                    onShowToast(`Copied password for ${learner.name}`);
+                                  }}
+                                  className={`text-[10px] font-semibold underline cursor-pointer ml-1 ${
+                                    theme === 'light' ? 'text-sky-700 hover:text-sky-900' : 'text-sky-400 hover:text-white'
+                                  }`}
+                                  title="Copy student password"
+                                >
+                                  Copy
+                                </button>
+                              </div>
+                              {learner.orderId && (
+                                <div className={`text-[10px] mt-1 ${theme === 'light' ? 'text-slate-400' : 'text-slate-500'}`}>
+                                  Ref: #{learner.orderId}
+                                </div>
+                              )}
+                            </td>
+
+                            {/* Package */}
+                            <td className="py-4 px-6">
+                              <div className={`font-semibold ${theme === 'light' ? 'text-slate-800' : 'text-slate-200'}`}>{learner.packageName}</div>
+                              <div className={`text-[10px] ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>{learner.accessDuration}</div>
+                            </td>
+
+                            {/* Fee Status */}
+                            <td className="py-4 px-6">
+                              <div
+                                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold border ${
+                                  isActive
+                                    ? theme === 'light' ? 'bg-emerald-50 text-emerald-800 border-emerald-200' : 'bg-emerald-950/60 text-emerald-300 border border-emerald-500/30'
+                                    : isPending
+                                    ? theme === 'light' ? 'bg-amber-50 text-amber-800 border-amber-200' : 'bg-amber-950/60 text-amber-300 border border-amber-500/30'
+                                    : theme === 'light' ? 'bg-rose-50 text-rose-800 border-rose-200' : 'bg-rose-950/60 text-rose-300 border border-rose-500/30'
+                                }`}
+                              >
+                                {isActive ? (
+                                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                                ) : isPending ? (
+                                  <Clock className="w-3.5 h-3.5 text-amber-600" />
+                                ) : (
+                                  <AlertTriangle className="w-3.5 h-3.5 text-rose-600" />
+                                )}
+                                <span>{learner.feeStatus}</span>
+                              </div>
+                            </td>
+
+                            {/* Status Badge */}
+                            <td className="py-4 px-6 text-center">
+                              {isActive ? (
+                                <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-bold border ${
+                                  theme === 'light'
+                                    ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                                    : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                                }`}>
+                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                  <span>Active Access</span>
+                                </span>
+                              ) : isRevoked ? (
+                                <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-bold border ${
+                                  theme === 'light'
+                                    ? 'bg-rose-50 text-rose-800 border-rose-200'
+                                    : 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                                }`}>
+                                  <UserX className="w-3 h-3 text-rose-600" />
+                                  <span>Access Revoked</span>
+                                </span>
+                              ) : (
+                                <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-bold border ${
+                                  theme === 'light'
+                                    ? 'bg-amber-50 text-amber-800 border-amber-200'
+                                    : 'bg-amber-500/20 text-[#f1bd5b] border-amber-500/40'
+                                }`}>
+                                  <Clock className="w-3 h-3 text-[#b58b42]" />
+                                  <span>Pending Clearance</span>
+                                </span>
+                              )}
+                            </td>
+
+                            {/* Actions */}
+                            <td className="py-4 px-6 text-right space-x-2 whitespace-nowrap">
+                              {/* Toggle Grant / Revoke */}
+                              <button
+                                type="button"
+                                onClick={() => handleToggleAccess(learner.id)}
+                                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer border ${
+                                  isActive
+                                    ? theme === 'light'
+                                      ? 'bg-rose-50 hover:bg-rose-100 text-rose-800 border-rose-200 shadow-xs'
+                                      : 'bg-rose-950/80 hover:bg-rose-900 text-rose-200 border-rose-700/60 shadow-xs'
+                                    : theme === 'light'
+                                    ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border-emerald-200 shadow-xs'
+                                    : 'bg-emerald-950/80 hover:bg-emerald-900 text-emerald-200 border-emerald-700/60 shadow-xs'
+                                }`}
+                                title={isActive ? 'Click to revoke LMS access' : 'Click to grant LMS access'}
+                              >
+                                {isActive ? 'Revoke Access' : 'Grant Access'}
+                              </button>
+
+                              {/* Login As Student (Preview) */}
+                              <button
+                                type="button"
+                                onClick={() => onSwitchToStudentView(learner)}
+                                className={`p-1.5 rounded-lg border transition-colors cursor-pointer ${
+                                  theme === 'light'
+                                    ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
+                                    : 'bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border-transparent'
+                                }`}
+                                title="Preview LMS as this student"
+                              >
+                                <BookOpen className="w-4 h-4 text-sky-600" />
+                              </button>
+
+                              {/* Edit Details */}
+                              <button
+                                type="button"
+                                onClick={() => setEditingLearner(learner)}
+                                className={`p-1.5 rounded-lg border transition-colors cursor-pointer ${
+                                  theme === 'light'
+                                    ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
+                                    : 'bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border-transparent'
+                                }`}
+                                title="Edit student package & notes"
+                              >
+                                <Edit3 className="w-4 h-4 text-[#b58b42]" />
+                              </button>
+
+                              {/* Delete */}
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteLearner(learner.id, learner.name)}
+                                className={`p-1.5 rounded-lg border transition-colors cursor-pointer ${
+                                  theme === 'light'
+                                    ? 'bg-slate-100 hover:bg-rose-50 text-slate-500 hover:text-rose-700 border-slate-200'
+                                    : 'bg-slate-800 hover:bg-rose-950 text-slate-400 hover:text-rose-400 border-transparent'
+                                }`}
+                                title="Remove from roster"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </>
+        )}
 
     {consoleTab === 'curriculum' && (
       <CurriculumEditor

@@ -18,7 +18,7 @@ export const PACKAGES: PackagePlan[] = [
       'End-to-end guidance for IIA membership and CCMS registration',
       'Official Gleim CIA study materials and structured video lectures',
       '18 months unrestricted LMS portal access',
-      'BNC CIA Test Bank of MCQs ($499 value)',
+      'Official Gleim CIA Test Bank with 4,000+ Exam-Style MCQs',
       'Chapter-wise quizzes and 2 full mock exams per part',
       'Practical work experience validation guidance for IIA certification'
     ],

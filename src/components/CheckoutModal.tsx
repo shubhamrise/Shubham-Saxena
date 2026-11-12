@@ -329,18 +329,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                           </span>
                         )}
                         <h4 className="font-bold text-slate-900 text-base mb-1">{pkg.name}</h4>
-                        <div className="text-xs font-bold text-sky-900 bg-sky-50 px-2 py-0.5 rounded-lg inline-block mb-1 border border-sky-100">
+                        <div className="text-xs font-bold text-sky-900 bg-sky-50 px-2 py-0.5 rounded-lg inline-block mb-2 border border-sky-100">
                           {pkg.deliverables.mode}
-                        </div>
-                        <div className="flex items-baseline gap-1.5 mb-2">
-                          <span className="font-black text-slate-900 text-sm">
-                            {currency === 'INR' ? `₹${pkg.priceINR.toLocaleString('en-IN')}` : `$${pkg.priceUSD.toLocaleString('en-US')}`}
-                          </span>
-                          {pkg.originalPriceINR && (
-                            <span className="text-[10px] text-slate-400 line-through">
-                              {currency === 'INR' ? `₹${pkg.originalPriceINR.toLocaleString('en-IN')}` : `$${pkg.originalPriceUSD?.toLocaleString('en-US')}`}
-                            </span>
-                          )}
                         </div>
                         <div className="pt-2 border-t border-sky-100 text-[11px] text-slate-700 space-y-1">
                           <div className="flex items-center gap-1.5">

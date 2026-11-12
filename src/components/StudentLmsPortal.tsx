@@ -47,7 +47,9 @@ import {
   Shield,
   BadgeAlert,
   Eye,
-  EyeOff
+  EyeOff,
+  Sun,
+  Moon
 } from 'lucide-react';
 import { LmsAdminConsole } from './LmsAdminConsole';
 import { ManagedLearner, LmsAdminUser, LiveClassItem, StudentDoubtItem } from '../types';
@@ -176,6 +178,27 @@ export const StudentLmsPortal: React.FC<StudentLmsPortalProps> = ({
     } catch (e) {
       console.warn(e);
     }
+  };
+
+  // LMS Theme: default to 'light' as requested
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    try {
+      const saved = localStorage.getItem('bnc_lms_theme');
+      return (saved as 'light' | 'dark') || 'light';
+    } catch {
+      return 'light';
+    }
+  });
+
+  const toggleTheme = () => {
+    const next = theme === 'light' ? 'dark' : 'light';
+    setTheme(next);
+    try {
+      localStorage.setItem('bnc_lms_theme', next);
+    } catch (e) {
+      console.warn(e);
+    }
+    showToast(`Switched to ${next === 'light' ? 'Light' : 'Dark'} Mode`);
   };
 
   // Login View Selection: Learner Login vs Academic Admin Login
@@ -716,16 +739,29 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
   // If student is not yet authenticated, render the Dual-Mode Verification & Login Screen
   if (!currentUser) {
     return (
-      <div className="min-h-screen bg-[#071322] text-slate-100 flex flex-col font-sans relative selection:bg-[#b58b42] selection:text-white">
-        {/* Architectural Backdrop Layer */}
+      <div className={`min-h-screen ${theme === 'light' ? 'bg-[#f8fafc]/50 text-slate-800' : 'bg-[#071322] text-slate-100'} flex flex-col font-sans relative selection:bg-[#b58b42] selection:text-white transition-colors duration-200`}>
+        {/* Architectural Backdrop Layer - Prominently Visible in Light Theme */}
         <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
           <img
             src="/hero-bg.jpg"
             alt="BNC Architectural Backdrop"
-            className="w-full h-full object-cover object-center opacity-30 filter contrast-125 brightness-75 saturate-110"
+            className={`w-full h-full object-cover object-center filter contrast-125 ${
+              theme === 'light'
+                ? 'opacity-45 brightness-100 saturate-125'
+                : 'opacity-30 brightness-75 saturate-110'
+            }`}
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#071322]/90 via-[#0b1d33]/85 to-[#06101c]/95" />
-          <div className="absolute inset-0 bg-[radial-gradient(#38bdf8_1px,transparent_1px)] [background-size:32px_32px] opacity-[0.06]" />
+          {theme === 'light' ? (
+            <>
+              <div className="absolute inset-0 bg-gradient-to-b from-white/70 via-[#f8fafc]/55 to-[#f1f5f9]/70" />
+              <div className="absolute inset-0 bg-[radial-gradient(#102a4e_1px,transparent_1px)] [background-size:28px_28px] opacity-[0.08]" />
+            </>
+          ) : (
+            <>
+              <div className="absolute inset-0 bg-gradient-to-b from-[#071322]/90 via-[#0b1d33]/85 to-[#06101c]/95" />
+              <div className="absolute inset-0 bg-[radial-gradient(#38bdf8_1px,transparent_1px)] [background-size:32px_32px] opacity-[0.06]" />
+            </>
+          )}
         </div>
 
         {/* Toast Notification */}
@@ -737,46 +773,65 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
         )}
 
         {/* Top Header Bar */}
-        <header className="relative z-10 bg-[#07172b]/90 backdrop-blur-md border-b border-sky-950 px-4 sm:px-6 lg:px-8 py-3.5 shadow-md">
+        <header className={`relative z-10 ${theme === 'light' ? 'bg-white/95 border-slate-200/90 shadow-xs' : 'bg-[#07172b]/90 border-sky-950 shadow-md'} backdrop-blur-md border-b px-4 sm:px-6 lg:px-8 py-3.5`}>
           <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
             <div className="flex items-center gap-4">
               <button
                 onClick={onBackToWebsite}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-sky-950/80 hover:bg-sky-900 border border-sky-800/60 text-xs font-semibold text-slate-200 transition-colors cursor-pointer"
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+                  theme === 'light'
+                    ? 'bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700'
+                    : 'bg-sky-950/80 hover:bg-sky-900 border border-sky-800/60 text-slate-200'
+                }`}
                 title="Return to BNC ELEVATE Public Home"
               >
-                <ArrowLeft className="w-3.5 h-3.5 text-[#f1bd5b]" />
+                <ArrowLeft className="w-3.5 h-3.5 text-[#b58b42]" />
                 <span>Back to Website</span>
               </button>
 
-              <div className="h-6 w-px bg-sky-900 hidden sm:block" />
+              <div className={`h-6 w-px ${theme === 'light' ? 'bg-slate-200' : 'bg-sky-900'} hidden sm:block`} />
 
               <div className="flex items-center gap-3">
-                <div className="px-2 py-1 rounded-lg bg-white/95 shadow-xs inline-flex items-center">
+                <div className="px-2 py-1 rounded-lg bg-white shadow-xs inline-flex items-center border border-slate-200/60">
                   <img
                     src="/assets/aistudio/bnc_elevate_logo_transparent__1__4c50f8bb.png"
                     alt="BNC ELEVATE"
                     className="h-5 sm:h-6 w-auto object-contain"
                   />
                 </div>
-                <span className="text-slate-500 font-light text-xs hidden sm:inline">|</span>
-                <span className="text-xs uppercase tracking-wider text-sky-300 font-bold hidden sm:inline">
+                <span className={`${theme === 'light' ? 'text-slate-400' : 'text-slate-500'} font-light text-xs hidden sm:inline`}>|</span>
+                <span className={`text-xs uppercase tracking-wider ${theme === 'light' ? 'text-[#102a4e] font-extrabold' : 'text-sky-300 font-bold'} hidden sm:inline`}>
                   {portalMode === 'admin' ? 'Academic Administration' : 'LMS Student Portal'}
                 </span>
               </div>
             </div>
 
-            <div className="flex items-center gap-4 text-xs">
-              <div className="hidden sm:flex items-center gap-2 text-slate-400">
-                <span>Admissions Desk:</span>
-                <a href="mailto:info@bncglobal.in" className="text-sky-300 hover:text-white font-medium underline">
+            <div className="flex items-center gap-3 text-xs">
+              <div className={`hidden md:flex items-center gap-2 ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>
+                <span>Admissions:</span>
+                <a href="mailto:info@bncglobal.in" className="text-sky-600 hover:text-sky-800 font-semibold underline">
                   info@bncglobal.in
                 </a>
                 <span>·</span>
-                <a href="tel:+916396018626" className="text-slate-200 font-semibold hover:text-[#f1bd5b]">
+                <a href="tel:+916396018626" className={`${theme === 'light' ? 'text-slate-800' : 'text-slate-200'} font-bold hover:text-[#b58b42]`}>
                   +91 63960 18626
                 </a>
               </div>
+
+              {/* Theme Toggle Button */}
+              <button
+                type="button"
+                onClick={toggleTheme}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${
+                  theme === 'light'
+                    ? 'bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-700'
+                    : 'bg-slate-900 hover:bg-slate-800 border-slate-700 text-amber-300'
+                }`}
+                title={theme === 'light' ? 'Switch to Dark Theme' : 'Switch to Light Theme'}
+              >
+                {theme === 'light' ? <Moon className="w-3.5 h-3.5 text-slate-700" /> : <Sun className="w-3.5 h-3.5 text-amber-300" />}
+                <span className="hidden sm:inline">{theme === 'light' ? 'Dark' : 'Light'}</span>
+              </button>
             </div>
           </div>
         </header>
@@ -786,7 +841,7 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
           
           {/* Dual Role Selector: Learner vs Academic Admin */}
           <div className="flex items-center justify-center mb-6">
-            <div className="p-1 bg-slate-900/90 rounded-2xl border border-sky-800/60 inline-flex shadow-xl">
+            <div className={`p-1 ${theme === 'light' ? 'bg-slate-200/80 border-slate-300' : 'bg-slate-900/90 border-sky-800/60'} rounded-2xl border inline-flex shadow-sm`}>
               <button
                 type="button"
                 onClick={() => {
@@ -796,7 +851,9 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
                 }}
                 className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
                   portalMode === 'learner'
-                    ? 'bg-gradient-to-r from-sky-700 via-sky-800 to-[#b58b42] text-white shadow-lg shadow-sky-950/60'
+                    ? 'bg-gradient-to-r from-[#102a4e] via-[#163a6b] to-[#b58b42] text-white shadow-md'
+                    : theme === 'light'
+                    ? 'text-slate-600 hover:text-slate-900'
                     : 'text-slate-400 hover:text-white'
                 }`}
               >
@@ -812,7 +869,9 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
                 }}
                 className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
                   portalMode === 'admin'
-                    ? 'bg-gradient-to-r from-sky-700 via-sky-800 to-[#b58b42] text-white shadow-lg shadow-sky-950/60'
+                    ? 'bg-gradient-to-r from-[#102a4e] via-[#163a6b] to-[#b58b42] text-white shadow-md'
+                    : theme === 'light'
+                    ? 'text-slate-600 hover:text-slate-900'
                     : 'text-slate-400 hover:text-white'
                 }`}
               >
@@ -827,52 +886,52 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
             <>
               {/* Header Shield & Description */}
               <div className="text-center max-w-2xl mx-auto mb-8">
-                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#b58b42]/15 border border-[#b58b42]/35 text-xs font-bold text-[#f1bd5b] uppercase tracking-wider mb-4">
-                  <ShieldCheck className="w-4 h-4 text-[#f1bd5b]" />
+                <div className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full ${theme === 'light' ? 'bg-amber-50 border border-amber-200 text-[#8d6928]' : 'bg-[#b58b42]/15 border border-[#b58b42]/35 text-[#f1bd5b]'} text-xs font-bold uppercase tracking-wider mb-4`}>
+                  <ShieldCheck className="w-4 h-4 text-[#b58b42]" />
                   <span>Enrolled Learners Only · Admin-Assigned Access</span>
                 </div>
-                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white tracking-tight">
+                <h1 className={`text-2xl sm:text-3xl lg:text-4xl font-extrabold ${theme === 'light' ? 'text-slate-900' : 'text-white'} tracking-tight`}>
                   Student LMS Portal Sign In
                 </h1>
-                <p className="mt-3 text-xs sm:text-sm text-slate-300 leading-relaxed">
+                <p className={`mt-3 text-xs sm:text-sm ${theme === 'light' ? 'text-slate-600' : 'text-slate-300'} leading-relaxed`}>
                   Access to BNC ELEVATE Masterclasses, Official Gleim CIA Test Bank & SmartAdapt™, and AI Audit Lab is strictly restricted to enrolled students. Please enter your registered student email and the access password assigned by Academic Administration.
                 </p>
               </div>
 
               {/* Learner Verification Box */}
-              <div className="bg-[#0a1829]/95 backdrop-blur-xl border border-sky-900/60 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
+              <div className={`${theme === 'light' ? 'bg-white border-slate-200/90 shadow-xl shadow-slate-200/60' : 'bg-[#0a1829]/95 border-sky-900/60 shadow-2xl'} backdrop-blur-xl border rounded-3xl p-6 sm:p-8 relative overflow-hidden transition-colors`}>
                 {/* Top Accent Rim */}
-                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-sky-600 via-[#f1bd5b] to-sky-700" />
+                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-sky-600 via-[#b58b42] to-amber-500" />
 
                 {/* Single Method Indicator */}
-                <div className="flex items-center justify-center gap-2 p-2.5 bg-slate-900/80 rounded-xl border border-sky-900/60 mb-6 max-w-md mx-auto text-xs text-slate-300">
-                  <Lock className="w-4 h-4 text-[#f1bd5b]" />
-                  <span className="font-semibold text-slate-200">Authorized Student Login:</span>
-                  <span className="text-sky-300">Registered Email & Password</span>
+                <div className={`flex items-center justify-center gap-2 p-2.5 ${theme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-700' : 'bg-slate-900/80 border-sky-900/60 text-slate-300'} rounded-xl border mb-6 max-w-md mx-auto text-xs`}>
+                  <Lock className="w-4 h-4 text-[#b58b42]" />
+                  <span className={`font-semibold ${theme === 'light' ? 'text-slate-800' : 'text-slate-200'}`}>Authorized Student Login:</span>
+                  <span className={`${theme === 'light' ? 'text-[#102a4e] font-bold' : 'text-sky-300'}`}>Registered Email & Password</span>
                 </div>
 
                 {/* Auth Error Banner if unverified or access revoked */}
                 {authError && (
-                  <div className="mb-6 p-4 rounded-2xl bg-rose-950/70 border border-rose-500/40 text-left animate-in fade-in duration-200">
+                  <div className={`mb-6 p-4 rounded-2xl ${theme === 'light' ? 'bg-rose-50 border-rose-200 text-rose-900' : 'bg-rose-950/70 border-rose-500/40 text-slate-200'} border text-left animate-in fade-in duration-200`}>
                     <div className="flex items-start gap-3">
-                      <ShieldAlert className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
+                      <ShieldAlert className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
                       <div className="space-y-1">
-                        <div className="text-xs font-bold text-rose-200 uppercase tracking-wide">
+                        <div className="text-xs font-bold text-rose-700 uppercase tracking-wide">
                           Access Denied · Authorization Required
                         </div>
-                        <p className="text-xs text-rose-300 leading-relaxed">
+                        <p className={`text-xs ${theme === 'light' ? 'text-rose-800' : 'text-rose-300'} leading-relaxed`}>
                           {authError}
                         </p>
-                        <div className="pt-2 flex flex-wrap items-center gap-3 text-[11px] text-slate-300">
-                          <span>Need password or enrollment support?</span>
+                        <div className="pt-2 flex flex-wrap items-center gap-3 text-[11px]">
+                          <span className={theme === 'light' ? 'text-slate-600' : 'text-slate-300'}>Need password or enrollment support?</span>
                           <a
                             href="mailto:info@bncglobal.in?subject=LMS%20Student%20Password%20Support"
-                            className="text-[#f1bd5b] hover:underline font-bold"
+                            className="text-[#b58b42] hover:underline font-bold"
                           >
                             Email info@bncglobal.in
                           </a>
                           <span>·</span>
-                          <a href="tel:+916396018626" className="text-sky-300 hover:underline font-bold">
+                          <a href="tel:+916396018626" className="text-sky-700 hover:underline font-bold">
                             Call +91 63960 18626
                           </a>
                         </div>
@@ -884,8 +943,8 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
                 {/* Learner Form: Email & Admin-Assigned Password */}
                 <form onSubmit={handleVerifyCredentials} className="space-y-4">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-300 mb-1.5 text-left">
-                      Student Registered Email <span className="text-[#f1bd5b]">*</span>
+                    <label className={`block text-xs font-semibold ${theme === 'light' ? 'text-slate-700' : 'text-slate-300'} mb-1.5 text-left`}>
+                      Student Registered Email <span className="text-[#b58b42]">*</span>
                     </label>
                     <input
                       type="email"
@@ -893,16 +952,20 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
                       onChange={(e) => setInputEmail(e.target.value)}
                       placeholder="e.g. rohit.verma@example.com"
                       required
-                      className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700/80 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-[#f1bd5b] focus:ring-1 focus:ring-[#f1bd5b] transition-all"
+                      className={`w-full px-4 py-3 rounded-xl border text-sm transition-all focus:outline-none focus:ring-1 focus:ring-[#b58b42] focus:border-[#b58b42] ${
+                        theme === 'light'
+                          ? 'bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-400 focus:bg-white'
+                          : 'bg-slate-900 border-slate-700/80 text-white placeholder-slate-500'
+                      }`}
                     />
                   </div>
 
                   <div>
                     <div className="flex items-center justify-between mb-1.5">
-                      <label className="block text-xs font-semibold text-slate-300 text-left">
-                        Student Access Password <span className="text-[#f1bd5b]">*</span>
+                      <label className={`block text-xs font-semibold ${theme === 'light' ? 'text-slate-700' : 'text-slate-300'} text-left`}>
+                        Student Access Password <span className="text-[#b58b42]">*</span>
                       </label>
-                      <span className="text-[11px] text-slate-400">
+                      <span className={`text-[11px] ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>
                         Assigned by Admin
                       </span>
                     </div>
@@ -913,18 +976,24 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
                         onChange={(e) => setInputPassword(e.target.value)}
                         placeholder="Enter password assigned by administrator"
                         required
-                        className="w-full px-4 py-3 pr-11 rounded-xl bg-slate-900 border border-slate-700/80 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-[#f1bd5b] focus:ring-1 focus:ring-[#f1bd5b] transition-all"
+                        className={`w-full px-4 py-3 pr-11 rounded-xl border text-sm transition-all focus:outline-none focus:ring-1 focus:ring-[#b58b42] focus:border-[#b58b42] ${
+                          theme === 'light'
+                            ? 'bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-400 focus:bg-white'
+                            : 'bg-slate-900 border-slate-700/80 text-white placeholder-slate-500'
+                        }`}
                       />
                       <button
                         type="button"
                         onClick={() => setShowStudentPassword(!showStudentPassword)}
-                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors p-1 cursor-pointer"
+                        className={`absolute right-3.5 top-1/2 -translate-y-1/2 p-1 cursor-pointer transition-colors ${
+                          theme === 'light' ? 'text-slate-400 hover:text-slate-700' : 'text-slate-400 hover:text-slate-200'
+                        }`}
                         aria-label={showStudentPassword ? 'Hide password' : 'Show password'}
                       >
                         {showStudentPassword ? (
-                          <EyeOff className="w-4 h-4 text-[#f1bd5b]" />
+                          <EyeOff className="w-4 h-4 text-[#b58b42]" />
                         ) : (
-                          <Eye className="w-4 h-4 text-slate-400" />
+                          <Eye className="w-4 h-4" />
                         )}
                       </button>
                     </div>
@@ -933,7 +1002,7 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
                   <button
                     type="submit"
                     disabled={isVerifying}
-                    className="w-full mt-4 py-3.5 px-6 rounded-xl bg-gradient-to-r from-sky-700 via-sky-800 to-[#b58b42] hover:from-sky-800 hover:to-[#9e7735] text-white font-bold text-sm tracking-wide shadow-lg shadow-sky-950/60 transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-60"
+                    className="w-full mt-4 py-3.5 px-6 rounded-xl bg-gradient-to-r from-[#102a4e] via-[#163a6b] to-[#b58b42] hover:opacity-95 text-white font-bold text-sm tracking-wide shadow-md transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-60"
                   >
                     {isVerifying ? (
                       <>
@@ -951,19 +1020,23 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
 
                 {/* Need to submit fees prompt */}
                 {onOpenCheckout && (
-                  <div className="mt-6 p-4 rounded-2xl bg-gradient-to-r from-sky-950/60 to-slate-900/80 border border-sky-800/50 flex flex-col sm:flex-row items-center justify-between gap-3 text-left">
+                  <div className={`mt-6 p-4 rounded-2xl border flex flex-col sm:flex-row items-center justify-between gap-3 text-left ${
+                    theme === 'light'
+                      ? 'bg-slate-50 border-slate-200 text-slate-800'
+                      : 'bg-gradient-to-r from-sky-950/60 to-slate-900/80 border-sky-800/50'
+                  }`}>
                     <div>
-                      <div className="text-xs font-bold text-white">
+                      <div className={`text-xs font-bold ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>
                         Haven't enrolled or received access yet?
                       </div>
-                      <div className="text-[11px] text-slate-400">
+                      <div className={`text-[11px] ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>
                         Enroll in a CIA package to have an academic account created and your student password dispatched.
                       </div>
                     </div>
                     <button
                       type="button"
                       onClick={() => onOpenCheckout()}
-                      className="px-4 py-2 rounded-xl bg-gradient-to-r from-sky-700 to-[#b58b42] hover:from-sky-800 hover:to-[#9e7735] text-white text-xs font-bold whitespace-nowrap cursor-pointer transition-all shadow-md"
+                      className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#102a4e] to-[#b58b42] hover:opacity-90 text-white text-xs font-bold whitespace-nowrap cursor-pointer transition-all shadow-sm"
                     >
                       Enroll & Get Access →
                     </button>
@@ -976,33 +1049,35 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
             <>
               {/* Admin Header */}
               <div className="text-center max-w-2xl mx-auto mb-8">
-                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-sky-500/15 border border-sky-500/35 text-xs font-bold text-sky-300 uppercase tracking-wider mb-4">
-                  <ShieldAlert className="w-4 h-4 text-sky-400" />
+                <div className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full ${
+                  theme === 'light' ? 'bg-sky-50 border border-sky-200 text-sky-800' : 'bg-sky-500/15 border border-sky-500/35 text-sky-300'
+                } text-xs font-bold uppercase tracking-wider mb-4`}>
+                  <ShieldAlert className="w-4 h-4 text-sky-500" />
                   <span>Academic Administration · Access Controller</span>
                 </div>
-                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white tracking-tight">
+                <h1 className={`text-2xl sm:text-3xl lg:text-4xl font-extrabold ${theme === 'light' ? 'text-slate-900' : 'text-white'} tracking-tight`}>
                   Academic Administrator Login
                 </h1>
-                <p className="mt-3 text-xs sm:text-sm text-slate-300 leading-relaxed">
+                <p className={`mt-3 text-xs sm:text-sm ${theme === 'light' ? 'text-slate-600' : 'text-slate-300'} leading-relaxed`}>
                   Manage student roster, verify fee clearance records, grant or revoke learner LMS access with one click, and audit enrollment activity.
                 </p>
               </div>
 
               {/* Admin Box */}
-              <div className="bg-[#0a1829]/95 backdrop-blur-xl border border-sky-800/60 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
+              <div className={`${theme === 'light' ? 'bg-white border-slate-200 shadow-xl shadow-slate-200/50' : 'bg-[#0a1829]/95 border-sky-800/60 shadow-2xl'} backdrop-blur-xl border rounded-3xl p-6 sm:p-8 relative overflow-hidden transition-colors`}>
                 {/* Top Accent Rim */}
-                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-sky-500 via-[#f1bd5b] to-amber-500" />
+                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-sky-500 via-[#b58b42] to-amber-500" />
 
                 {/* Admin Error Banner */}
                 {adminError && (
-                  <div className="mb-6 p-4 rounded-2xl bg-rose-950/70 border border-rose-500/40 text-left animate-in fade-in duration-200">
+                  <div className={`mb-6 p-4 rounded-2xl ${theme === 'light' ? 'bg-rose-50 border-rose-200 text-rose-900' : 'bg-rose-950/70 border-rose-500/40 text-rose-200'} border text-left animate-in fade-in duration-200`}>
                     <div className="flex items-start gap-3">
-                      <ShieldAlert className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
+                      <ShieldAlert className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
                       <div className="space-y-1">
-                        <div className="text-xs font-bold text-rose-200 uppercase tracking-wide">
+                        <div className="text-xs font-bold text-rose-700 uppercase tracking-wide">
                           Authentication Failed
                         </div>
-                        <p className="text-xs text-rose-300 leading-relaxed">
+                        <p className={`text-xs ${theme === 'light' ? 'text-rose-800' : 'text-rose-300'} leading-relaxed`}>
                           {adminError}
                         </p>
                       </div>
@@ -1013,8 +1088,8 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
                 {/* Admin Login Form */}
                 <form onSubmit={handleAdminLogin} className="space-y-4">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-300 mb-1.5 text-left">
-                      Administrator Email <span className="text-[#f1bd5b]">*</span>
+                    <label className={`block text-xs font-semibold ${theme === 'light' ? 'text-slate-700' : 'text-slate-300'} mb-1.5 text-left`}>
+                      Administrator Email <span className="text-[#b58b42]">*</span>
                     </label>
                     <input
                       type="email"
@@ -1022,13 +1097,17 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
                       onChange={(e) => setAdminEmail(e.target.value)}
                       placeholder="admin@organization.com"
                       required
-                      className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700/80 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-400 transition-all"
+                      className={`w-full px-4 py-3 rounded-xl border text-sm transition-all focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 ${
+                        theme === 'light'
+                          ? 'bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-400 focus:bg-white'
+                          : 'bg-slate-900 border-slate-700/80 text-white placeholder-slate-500'
+                      }`}
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-slate-300 mb-1.5 text-left">
-                      Admin Master Key / Password <span className="text-[#f1bd5b]">*</span>
+                    <label className={`block text-xs font-semibold ${theme === 'light' ? 'text-slate-700' : 'text-slate-300'} mb-1.5 text-left`}>
+                      Admin Master Key / Password <span className="text-[#b58b42]">*</span>
                     </label>
                     <div className="relative">
                       <input
@@ -1037,18 +1116,24 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
                         onChange={(e) => setAdminPassword(e.target.value)}
                         placeholder="••••••••••••"
                         required
-                        className="w-full px-4 py-3 pr-11 rounded-xl bg-slate-900 border border-slate-700/80 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-400 transition-all"
+                        className={`w-full px-4 py-3 pr-11 rounded-xl border text-sm transition-all focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 ${
+                          theme === 'light'
+                            ? 'bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-400 focus:bg-white'
+                            : 'bg-slate-900 border-slate-700/80 text-white placeholder-slate-500'
+                        }`}
                       />
                       <button
                         type="button"
                         onClick={() => setShowAdminPassword(!showAdminPassword)}
-                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors p-1 cursor-pointer"
+                        className={`absolute right-3.5 top-1/2 -translate-y-1/2 p-1 cursor-pointer transition-colors ${
+                          theme === 'light' ? 'text-slate-400 hover:text-slate-700' : 'text-slate-400 hover:text-slate-200'
+                        }`}
                         aria-label={showAdminPassword ? 'Hide password' : 'Show password'}
                       >
                         {showAdminPassword ? (
-                          <EyeOff className="w-4 h-4 text-[#f1bd5b]" />
+                          <EyeOff className="w-4 h-4 text-[#b58b42]" />
                         ) : (
-                          <Eye className="w-4 h-4 text-slate-400" />
+                          <Eye className="w-4 h-4" />
                         )}
                       </button>
                     </div>
@@ -1057,7 +1142,7 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
                   <button
                     type="submit"
                     disabled={isAdminSubmitting}
-                    className="w-full mt-2 py-3.5 px-6 rounded-xl bg-gradient-to-r from-sky-600 via-sky-700 to-amber-600 hover:from-sky-700 hover:to-amber-700 text-white font-bold text-sm tracking-wide shadow-lg shadow-sky-950/60 transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-60"
+                    className="w-full mt-2 py-3.5 px-6 rounded-xl bg-gradient-to-r from-sky-700 via-sky-800 to-[#b58b42] hover:opacity-95 text-white font-bold text-sm tracking-wide shadow-md transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-60"
                   >
                     {isAdminSubmitting ? (
                       <>
@@ -1078,25 +1163,33 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
 
           {/* Platform Capability Teasers */}
           <div className="mt-10 grid grid-cols-2 md:grid-cols-4 gap-3">
-            <div className="p-3.5 rounded-2xl bg-[#091626]/80 border border-sky-950/80 text-left">
-              <Video className="w-5 h-5 text-[#f1bd5b] mb-1.5" />
-              <div className="text-xs font-bold text-white">100–120+ Hrs Video</div>
-              <div className="text-[10px] text-slate-400">Parts 1, 2, 3 with timestamped notes</div>
+            <div className={`p-3.5 rounded-2xl border text-left ${
+              theme === 'light' ? 'bg-white border-slate-200/90 shadow-xs' : 'bg-[#091626]/80 border-sky-950/80'
+            }`}>
+              <Video className="w-5 h-5 text-[#b58b42] mb-1.5" />
+              <div className={`text-xs font-bold ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>100–120+ Hrs Video</div>
+              <div className={`text-[10px] ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>Parts 1, 2, 3 with timestamped notes</div>
             </div>
-            <div className="p-3.5 rounded-2xl bg-[#091626]/80 border border-sky-950/80 text-left">
-              <HelpCircle className="w-5 h-5 text-sky-400 mb-1.5" />
-              <div className="text-xs font-bold text-white">Gleim Mega Test Bank</div>
-              <div className="text-[10px] text-slate-400">SmartAdapt™ AI adaptive simulator</div>
+            <div className={`p-3.5 rounded-2xl border text-left ${
+              theme === 'light' ? 'bg-white border-slate-200/90 shadow-xs' : 'bg-[#091626]/80 border-sky-950/80'
+            }`}>
+              <HelpCircle className="w-5 h-5 text-sky-600 mb-1.5" />
+              <div className={`text-xs font-bold ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>Gleim Mega Test Bank</div>
+              <div className={`text-[10px] ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>SmartAdapt™ AI adaptive simulator</div>
             </div>
-            <div className="p-3.5 rounded-2xl bg-[#091626]/80 border border-sky-950/80 text-left">
-              <Cpu className="w-5 h-5 text-purple-400 mb-1.5" />
-              <div className="text-xs font-bold text-white">AI Audit Lab</div>
-              <div className="text-[10px] text-slate-400">RCM generator & Benford anomaly scripts</div>
+            <div className={`p-3.5 rounded-2xl border text-left ${
+              theme === 'light' ? 'bg-white border-slate-200/90 shadow-xs' : 'bg-[#091626]/80 border-sky-950/80'
+            }`}>
+              <Cpu className="w-5 h-5 text-purple-600 mb-1.5" />
+              <div className={`text-xs font-bold ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>AI Audit Lab</div>
+              <div className={`text-[10px] ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>RCM generator & Benford anomaly scripts</div>
             </div>
-            <div className="p-3.5 rounded-2xl bg-[#091626]/80 border border-sky-950/80 text-left">
-              <MessageSquare className="w-5 h-5 text-emerald-400 mb-1.5" />
-              <div className="text-xs font-bold text-white">Faculty Clinic</div>
-              <div className="text-[10px] text-slate-400">Direct doubts to CA Gurvinder Pal Singh</div>
+            <div className={`p-3.5 rounded-2xl border text-left ${
+              theme === 'light' ? 'bg-white border-slate-200/90 shadow-xs' : 'bg-[#091626]/80 border-sky-950/80'
+            }`}>
+              <MessageSquare className="w-5 h-5 text-emerald-600 mb-1.5" />
+              <div className={`text-xs font-bold ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>Faculty Clinic</div>
+              <div className={`text-[10px] ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>Direct doubts to CA Gurvinder Pal Singh</div>
             </div>
           </div>
         </main>
@@ -1108,7 +1201,30 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
   const currentMcq = testBankQuestions[currentQuestionIndex] || testBankQuestions[0];
 
   return (
-    <div className="min-h-screen bg-[#071322] text-slate-100 flex flex-col font-sans">
+    <div className={`min-h-screen ${theme === 'light' ? 'bg-[#f8fafc]/50 text-slate-800' : 'bg-[#071322] text-slate-100'} flex flex-col font-sans transition-colors duration-200 relative`}>
+      {/* Architectural Backdrop Layer - Prominently Visible Across All Student LMS Sections */}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+        <img
+          src="/hero-bg.jpg"
+          alt="BNC Architectural Backdrop"
+          className={`w-full h-full object-cover object-center filter contrast-125 ${
+            theme === 'light'
+              ? 'opacity-45 brightness-100 saturate-125'
+              : 'opacity-30 brightness-75 saturate-110'
+          }`}
+        />
+        {theme === 'light' ? (
+          <>
+            <div className="absolute inset-0 bg-gradient-to-b from-white/70 via-[#f8fafc]/55 to-[#f1f5f9]/70" />
+            <div className="absolute inset-0 bg-[radial-gradient(#102a4e_1px,transparent_1px)] [background-size:28px_28px] opacity-[0.08]" />
+          </>
+        ) : (
+          <>
+            <div className="absolute inset-0 bg-gradient-to-b from-[#071322]/90 via-[#0b1d33]/85 to-[#06101c]/95" />
+            <div className="absolute inset-0 bg-[radial-gradient(#38bdf8_1px,transparent_1px)] [background-size:32px_32px] opacity-[0.06]" />
+          </>
+        )}
+      </div>
       {/* Master Admin Preview Floating Header */}
       {adminUser && (
         <div className="bg-gradient-to-r from-amber-600 via-sky-800 to-slate-900 text-white px-4 py-2.5 flex flex-wrap items-center justify-between gap-3 text-xs font-bold border-b border-amber-400/40 sticky top-0 z-50 shadow-lg">
@@ -1139,11 +1255,11 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
       {showProfileModal && currentUser && (
         <div
           onClick={() => setShowProfileModal(false)}
-          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200"
+          className={`fixed inset-0 z-50 ${theme === 'light' ? 'bg-slate-900/50' : 'bg-black/80'} backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200`}
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="bg-[#0b1a2e] border border-sky-800/60 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl relative"
+            className={`${theme === 'light' ? 'bg-white border-slate-200 shadow-2xl text-slate-900' : 'bg-[#0b1a2e] border-sky-800/60 shadow-2xl text-white'} border rounded-3xl p-6 sm:p-8 max-w-lg w-full relative`}
           >
             <button
               type="button"
@@ -1153,7 +1269,11 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
                 setShowProfileModal(false);
               }}
               aria-label="Close dossier modal"
-              className="absolute top-5 right-5 w-9 h-9 rounded-full flex items-center justify-center text-slate-400 hover:text-white bg-slate-800/80 hover:bg-rose-950 border border-slate-700/80 transition-all cursor-pointer"
+              className={`absolute top-5 right-5 w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer ${
+                theme === 'light'
+                  ? 'text-slate-500 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 border border-slate-200'
+                  : 'text-slate-400 hover:text-white bg-slate-800/80 hover:bg-rose-950 border border-slate-700/80'
+              }`}
             >
               <X className="w-5 h-5 pointer-events-none" />
             </button>
@@ -1163,41 +1283,41 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
                 {currentUser.name.split(' ').map((n) => n[0]).join('').substring(0, 2).toUpperCase()}
               </div>
               <div>
-                <h3 className="text-lg font-black text-white">{currentUser.name}</h3>
-                <div className="text-xs text-[#f1bd5b] font-medium flex items-center gap-1.5">
-                  <ShieldCheck className="w-3.5 h-3.5 text-[#f1bd5b]" />
+                <h3 className={`text-lg font-black ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>{currentUser.name}</h3>
+                <div className={`text-xs ${theme === 'light' ? 'text-[#8d6928]' : 'text-[#f1bd5b]'} font-semibold flex items-center gap-1.5`}>
+                  <ShieldCheck className="w-3.5 h-3.5 text-[#b58b42]" />
                   <span>Verified Enrolled Student Dossier</span>
                 </div>
               </div>
             </div>
 
-            <div className="space-y-3 bg-slate-900/90 rounded-2xl p-4 border border-slate-800 text-xs">
-              <div className="flex justify-between py-1.5 border-b border-slate-800">
-                <span className="text-slate-400">Student Enrollment ID:</span>
-                <span className="font-mono font-bold text-sky-300">#{currentUser.orderId}</span>
+            <div className={`space-y-3 ${theme === 'light' ? 'bg-slate-50 border-slate-200' : 'bg-slate-900/90 border-slate-800'} rounded-2xl p-4 border text-xs`}>
+              <div className={`flex justify-between py-1.5 border-b ${theme === 'light' ? 'border-slate-200' : 'border-slate-800'}`}>
+                <span className={theme === 'light' ? 'text-slate-500' : 'text-slate-400'}>Student Enrollment ID:</span>
+                <span className={`font-mono font-bold ${theme === 'light' ? 'text-sky-700' : 'text-sky-300'}`}>#{currentUser.orderId}</span>
               </div>
-              <div className="flex justify-between py-1.5 border-b border-slate-800">
-                <span className="text-slate-400">Registered Email:</span>
-                <span className="font-medium text-white">{currentUser.email}</span>
+              <div className={`flex justify-between py-1.5 border-b ${theme === 'light' ? 'border-slate-200' : 'border-slate-800'}`}>
+                <span className={theme === 'light' ? 'text-slate-500' : 'text-slate-400'}>Registered Email:</span>
+                <span className={`font-medium ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>{currentUser.email}</span>
               </div>
-              <div className="flex justify-between py-1.5 border-b border-slate-800">
-                <span className="text-slate-400">Enrolled Program:</span>
-                <span className="font-bold text-[#f1bd5b]">{currentUser.packageName}</span>
+              <div className={`flex justify-between py-1.5 border-b ${theme === 'light' ? 'border-slate-200' : 'border-slate-800'}`}>
+                <span className={theme === 'light' ? 'text-slate-500' : 'text-slate-400'}>Enrolled Program:</span>
+                <span className={`font-bold ${theme === 'light' ? 'text-[#8d6928]' : 'text-[#f1bd5b]'}`}>{currentUser.packageName}</span>
               </div>
-              <div className="flex justify-between py-1.5 border-b border-slate-800">
-                <span className="text-slate-400">Tuition Fee Status:</span>
-                <span className="inline-flex items-center gap-1 font-bold text-emerald-400">
+              <div className={`flex justify-between py-1.5 border-b ${theme === 'light' ? 'border-slate-200' : 'border-slate-800'}`}>
+                <span className={theme === 'light' ? 'text-slate-500' : 'text-slate-400'}>Tuition Fee Status:</span>
+                <span className="inline-flex items-center gap-1 font-bold text-emerald-600">
                   <CheckCircle2 className="w-3.5 h-3.5" />
                   {currentUser.feeStatus}
                 </span>
               </div>
-              <div className="flex justify-between py-1.5 border-b border-slate-800">
-                <span className="text-slate-400">Enrollment Date:</span>
-                <span className="font-medium text-slate-200">{currentUser.enrollmentDate}</span>
+              <div className={`flex justify-between py-1.5 border-b ${theme === 'light' ? 'border-slate-200' : 'border-slate-800'}`}>
+                <span className={theme === 'light' ? 'text-slate-500' : 'text-slate-400'}>Enrollment Date:</span>
+                <span className={`font-medium ${theme === 'light' ? 'text-slate-800' : 'text-slate-200'}`}>{currentUser.enrollmentDate}</span>
               </div>
               <div className="flex justify-between py-1.5">
-                <span className="text-slate-400">Access Validity:</span>
-                <span className="font-medium text-sky-300">{currentUser.accessDuration}</span>
+                <span className={theme === 'light' ? 'text-slate-500' : 'text-slate-400'}>Access Validity:</span>
+                <span className={`font-medium ${theme === 'light' ? 'text-sky-700' : 'text-sky-300'}`}>{currentUser.accessDuration}</span>
               </div>
             </div>
 
@@ -1207,16 +1327,20 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
                 onClick={() => {
                   showToast('Official Fee Payment Verification Receipt downloaded!');
                 }}
-                className="flex-1 py-2.5 px-4 rounded-xl bg-sky-950 hover:bg-sky-900 border border-sky-800/60 text-xs font-semibold text-slate-200 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                className={`flex-1 py-2.5 px-4 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                  theme === 'light'
+                    ? 'bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-800'
+                    : 'bg-sky-950 hover:bg-sky-900 border border-sky-800/60 text-slate-200'
+                }`}
               >
-                <Download className="w-3.5 h-3.5 text-[#f1bd5b]" />
+                <Download className="w-3.5 h-3.5 text-[#b58b42]" />
                 <span>Download Fee Receipt</span>
               </button>
 
               <button
                 type="button"
                 onClick={handleLogout}
-                className="py-2.5 px-4 rounded-xl bg-rose-950/60 hover:bg-rose-900/80 border border-rose-800/60 text-xs font-semibold text-rose-300 hover:text-white transition-all flex items-center gap-1.5 cursor-pointer"
+                className="py-2.5 px-4 rounded-xl bg-rose-50 hover:bg-rose-100 border border-rose-200 text-xs font-semibold text-rose-700 transition-all flex items-center gap-1.5 cursor-pointer"
               >
                 <LogOut className="w-3.5 h-3.5" />
                 <span>Log Out</span>
@@ -1235,41 +1359,47 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
       )}
 
       {/* Top LMS Header Bar */}
-      <header className="sticky top-0 z-40 bg-[#07172b] border-b border-sky-950 px-4 sm:px-6 lg:px-8 py-3.5 shadow-md">
+      <header className={`sticky top-0 z-40 ${theme === 'light' ? 'bg-white/90 border-slate-200/90 shadow-xs' : 'bg-[#07172b]/95 border-sky-950 shadow-md'} backdrop-blur-md border-b px-4 sm:px-6 lg:px-8 py-3.5`}>
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
           {/* Brand & Mode */}
           <div className="flex items-center gap-4 shrink-0">
             <button
               onClick={onBackToWebsite}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-sky-950/80 hover:bg-sky-900 border border-sky-800/60 text-xs font-semibold text-slate-200 transition-colors cursor-pointer"
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+                theme === 'light'
+                  ? 'bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700'
+                  : 'bg-sky-950/80 hover:bg-sky-900 border border-sky-800/60 text-slate-200'
+              }`}
               title="Return to BNC ELEVATE Public Home"
             >
-              <ArrowLeft className="w-3.5 h-3.5 text-[#f1bd5b]" />
+              <ArrowLeft className="w-3.5 h-3.5 text-[#b58b42]" />
               <span className="hidden sm:inline">Back to Public Site</span>
             </button>
 
-            <div className="h-6 w-px bg-sky-900 hidden sm:block" />
+            <div className={`h-6 w-px ${theme === 'light' ? 'bg-slate-200' : 'bg-sky-900'} hidden sm:block`} />
 
             <div className="flex items-center gap-2.5">
-              <span className="text-sm font-black tracking-tight text-white flex items-center gap-1.5">
-                <span className="text-[#f1bd5b]">BNC ELEVATE</span>
-                <span className="text-slate-400 font-light text-xs">|</span>
-                <span className="text-xs uppercase tracking-wider text-sky-300 font-bold">LMS Student Portal</span>
+              <span className="text-sm font-black tracking-tight flex items-center gap-1.5">
+                <span className="text-[#b58b42]">BNC ELEVATE</span>
+                <span className={`${theme === 'light' ? 'text-slate-300' : 'text-slate-500'} font-light text-xs`}>|</span>
+                <span className={`text-xs uppercase tracking-wider ${theme === 'light' ? 'text-[#102a4e] font-extrabold' : 'text-sky-300 font-bold'}`}>LMS Student Portal</span>
               </span>
             </div>
           </div>
 
           {/* Quick Metrics & Dynamic User Badge */}
-          <div className="flex items-center gap-4 shrink-0">
+          <div className="flex items-center gap-3 shrink-0">
             {/* Overall Course Progress Meter */}
-            <div className="hidden md:flex items-center gap-3 px-3 py-1.5 rounded-xl bg-sky-950/60 border border-sky-900/60">
+            <div className={`hidden md:flex items-center gap-3 px-3 py-1.5 rounded-xl border ${
+              theme === 'light' ? 'bg-slate-50 border-slate-200' : 'bg-sky-950/60 border-sky-900/60'
+            }`}>
               <div className="text-right">
-                <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Course Progress</div>
-                <div className="text-xs font-black text-[#f1bd5b]">{completionPercentage}% ({completedLessons.length}/{totalLessonsCount} Lessons)</div>
+                <div className={`text-[10px] ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'} uppercase font-bold tracking-wider`}>Course Progress</div>
+                <div className={`text-xs font-black ${theme === 'light' ? 'text-[#8d6928]' : 'text-[#f1bd5b]'}`}>{completionPercentage}% ({completedLessons.length}/{totalLessonsCount} Lessons)</div>
               </div>
-              <div className="w-16 h-2 rounded-full bg-slate-800 overflow-hidden">
+              <div className={`w-16 h-2 rounded-full ${theme === 'light' ? 'bg-slate-200' : 'bg-slate-800'} overflow-hidden`}>
                 <div
-                  className="h-full bg-gradient-to-r from-sky-500 to-[#f1bd5b] transition-all duration-500"
+                  className="h-full bg-gradient-to-r from-sky-500 to-[#b58b42] transition-all duration-500"
                   style={{ width: `${completionPercentage}%` }}
                 />
               </div>
@@ -1292,18 +1422,37 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
                 </button>
               )}
 
+              {/* Theme Toggle */}
+              <button
+                type="button"
+                onClick={toggleTheme}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${
+                  theme === 'light'
+                    ? 'bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-700'
+                    : 'bg-slate-900 hover:bg-slate-800 border-slate-700 text-amber-300'
+                }`}
+                title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
+              >
+                {theme === 'light' ? <Moon className="w-3.5 h-3.5 text-slate-700" /> : <Sun className="w-3.5 h-3.5 text-amber-300" />}
+                <span className="hidden sm:inline">{theme === 'light' ? 'Dark' : 'Light'}</span>
+              </button>
+
               <button
                 type="button"
                 onClick={() => setShowProfileModal(true)}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800/90 border border-slate-800 hover:border-[#b58b42]/60 text-left cursor-pointer transition-all"
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-left cursor-pointer transition-all ${
+                  theme === 'light'
+                    ? 'bg-slate-50 hover:bg-slate-100 border-slate-200 hover:border-[#b58b42]'
+                    : 'bg-slate-900 hover:bg-slate-800/90 border-slate-800 hover:border-[#b58b42]/60'
+                }`}
                 title="View Student Dossier & Fee Verification Slip"
               >
                 <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-sky-700 to-[#b58b42] flex items-center justify-center font-black text-xs text-white">
                   {currentUser.name.split(' ').map((n) => n[0]).join('').substring(0, 2).toUpperCase()}
                 </div>
                 <div className="text-left hidden lg:block">
-                  <div className="text-xs font-bold text-white leading-none">{currentUser.name}</div>
-                  <div className="text-[10px] text-[#f1bd5b] font-medium mt-0.5">
+                  <div className={`text-xs font-bold leading-none ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>{currentUser.name}</div>
+                  <div className={`text-[10px] font-semibold mt-0.5 ${theme === 'light' ? 'text-[#8d6928]' : 'text-[#f1bd5b]'}`}>
                     Order #{currentUser.orderId} · {currentUser.feeStatus.includes('Paid') ? 'Fee Paid' : 'Active'}
                   </div>
                 </div>
@@ -1312,7 +1461,11 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
               <button
                 type="button"
                 onClick={handleLogout}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-rose-950/40 hover:bg-rose-900/60 border border-rose-800/40 text-xs font-semibold text-rose-300 hover:text-white transition-all cursor-pointer"
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${
+                  theme === 'light'
+                    ? 'bg-rose-50 hover:bg-rose-100 border-rose-200 text-rose-700'
+                    : 'bg-rose-950/40 hover:bg-rose-900/60 border-rose-800/40 text-rose-300 hover:text-white'
+                }`}
                 title="Log Out of Student LMS"
               >
                 <LogOut className="w-3.5 h-3.5" />
@@ -1324,18 +1477,20 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
       </header>
 
       {/* LMS Primary Navigation Sub-Bar */}
-      <div className="bg-[#0b1b30] border-b border-sky-950/80 px-4 sm:px-6 lg:px-8 py-2">
+      <div className={`${theme === 'light' ? 'bg-white/85 backdrop-blur-md border-slate-200/90 shadow-xs' : 'bg-[#0b1b30]/95 backdrop-blur-md border-sky-950/80'} border-b px-4 sm:px-6 lg:px-8 py-2 relative z-30`}>
         <div className="max-w-7xl mx-auto flex items-center justify-between overflow-x-auto gap-2 text-xs font-semibold scrollbar-none">
           <div className="flex items-center gap-1">
             <button
               onClick={() => setActiveTab('curriculum')}
               className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all cursor-pointer whitespace-nowrap ${
                 activeTab === 'curriculum'
-                  ? 'bg-gradient-to-r from-sky-700 via-sky-800 to-[#b58b42] text-white shadow-md'
+                  ? 'bg-gradient-to-r from-[#102a4e] via-[#163a6b] to-[#b58b42] text-white shadow-sm font-bold'
+                  : theme === 'light'
+                  ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                   : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
               }`}
             >
-              <Video className="w-4 h-4 text-[#f1bd5b]" />
+              <Video className="w-4 h-4 text-[#b58b42]" />
               <span>Video Masterclasses ({totalLessonsCount})</span>
             </button>
 
@@ -1343,11 +1498,13 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
               onClick={() => setActiveTab('testbank')}
               className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all cursor-pointer whitespace-nowrap ${
                 activeTab === 'testbank'
-                  ? 'bg-gradient-to-r from-sky-700 via-sky-800 to-[#b58b42] text-white shadow-md'
+                  ? 'bg-gradient-to-r from-[#102a4e] via-[#163a6b] to-[#b58b42] text-white shadow-sm font-bold'
+                  : theme === 'light'
+                  ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                   : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
               }`}
             >
-              <HelpCircle className="w-4 h-4 text-[#f1bd5b]" />
+              <HelpCircle className="w-4 h-4 text-[#b58b42]" />
               <span>Gleim Test Bank Simulator</span>
             </button>
 
@@ -1355,11 +1512,13 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
               onClick={() => setActiveTab('live')}
               className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all cursor-pointer whitespace-nowrap ${
                 activeTab === 'live'
-                  ? 'bg-gradient-to-r from-sky-700 via-sky-800 to-[#b58b42] text-white shadow-md'
+                  ? 'bg-gradient-to-r from-[#102a4e] via-[#163a6b] to-[#b58b42] text-white shadow-sm font-bold'
+                  : theme === 'light'
+                  ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                   : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
               }`}
             >
-              <Calendar className="w-4 h-4 text-[#f1bd5b]" />
+              <Calendar className="w-4 h-4 text-[#b58b42]" />
               <span>Live Schedule & Faculty Doubt Desk</span>
             </button>
 
@@ -1367,11 +1526,13 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
               onClick={() => setActiveTab('resources')}
               className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all cursor-pointer whitespace-nowrap ${
                 activeTab === 'resources'
-                  ? 'bg-gradient-to-r from-sky-700 via-sky-800 to-[#b58b42] text-white shadow-md'
+                  ? 'bg-gradient-to-r from-[#102a4e] via-[#163a6b] to-[#b58b42] text-white shadow-sm font-bold'
+                  : theme === 'light'
+                  ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                   : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
               }`}
             >
-              <Download className="w-4 h-4 text-[#f1bd5b]" />
+              <Download className="w-4 h-4 text-[#b58b42]" />
               <span>Study Notes & Handouts</span>
             </button>
 
@@ -1379,11 +1540,13 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
               onClick={() => setActiveTab('ailab')}
               className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all cursor-pointer whitespace-nowrap ${
                 activeTab === 'ailab'
-                  ? 'bg-gradient-to-r from-indigo-700 to-[#b58b42] text-white shadow-md ring-1 ring-amber-400/30'
+                  ? 'bg-gradient-to-r from-[#102a4e] via-[#163a6b] to-[#b58b42] text-white shadow-sm font-bold ring-1 ring-amber-400/30'
+                  : theme === 'light'
+                  ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                   : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
               }`}
             >
-              <Sparkles className="w-4 h-4 text-amber-300" />
+              <Sparkles className="w-4 h-4 text-amber-500" />
               <span>AI Audit Lab Sandbox</span>
             </button>
 
@@ -1391,11 +1554,13 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
               onClick={() => setActiveTab('readiness')}
               className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all cursor-pointer whitespace-nowrap ${
                 activeTab === 'readiness'
-                  ? 'bg-gradient-to-r from-sky-700 via-sky-800 to-[#b58b42] text-white shadow-md'
+                  ? 'bg-gradient-to-r from-[#102a4e] via-[#163a6b] to-[#b58b42] text-white shadow-sm font-bold'
+                  : theme === 'light'
+                  ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                   : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
               }`}
             >
-              <BarChart3 className="w-4 h-4 text-[#f1bd5b]" />
+              <BarChart3 className="w-4 h-4 text-[#b58b42]" />
               <span>Exam Readiness Index</span>
             </button>
           </div>
@@ -1403,7 +1568,7 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
       </div>
 
       {/* Main LMS Content Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
+      <main className="relative z-10 flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
         {/* ================================================================= */}
         {/* TAB 1: CURRICULUM & HD LECTURE PLAYER                              */}
         {/* ================================================================= */}
@@ -1513,13 +1678,17 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
               </div>
 
               {/* Lesson Action Controls */}
-              <div className="flex flex-wrap items-center justify-between gap-4 p-5 rounded-2xl bg-slate-900/90 border border-slate-800">
+              <div className={`flex flex-wrap items-center justify-between gap-4 p-5 rounded-2xl border ${
+                theme === 'light' ? 'bg-white border-slate-200 shadow-xs' : 'bg-slate-900/90 border-slate-800'
+              }`}>
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => toggleLessonCompleted(activeLesson.id)}
                     className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs transition-all cursor-pointer ${
                       completedLessons.includes(activeLesson.id)
-                        ? 'bg-emerald-700 text-white shadow-md'
+                        ? 'bg-emerald-600 text-white shadow-sm'
+                        : theme === 'light'
+                        ? 'bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300'
                         : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700'
                     }`}
                   >
@@ -1529,28 +1698,34 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
 
                   <button
                     onClick={() => showToast(`Downloaded: ${activeLesson.handoutName}`)}
-                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-sky-950 hover:bg-sky-900 border border-sky-800/60 text-sky-200 text-xs font-semibold transition-all cursor-pointer"
+                    className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer border ${
+                      theme === 'light'
+                        ? 'bg-sky-50 hover:bg-sky-100 border-sky-200 text-sky-900'
+                        : 'bg-sky-950 hover:bg-sky-900 border-sky-800/60 text-sky-200'
+                    }`}
                   >
-                    <Download className="w-4 h-4 text-[#f1bd5b]" />
+                    <Download className="w-4 h-4 text-[#b58b42]" />
                     <span>Download Handout ({activeLesson.handoutSize})</span>
                   </button>
                 </div>
 
-                <div className="text-xs text-slate-400">
-                  Lead Instructor: <strong className="text-white">{activeLesson.instructor}</strong>
+                <div className={`text-xs ${theme === 'light' ? 'text-slate-600' : 'text-slate-400'}`}>
+                  Lead Instructor: <strong className={theme === 'light' ? 'text-slate-900 font-bold' : 'text-white'}>{activeLesson.instructor}</strong>
                 </div>
               </div>
 
               {/* Key Takeaways & Exam Traps */}
-              <div className="p-6 rounded-3xl bg-slate-900/80 border border-slate-800 text-xs space-y-4">
-                <div className="flex items-center gap-2 font-bold text-sm text-white">
-                  <Award className="w-4 h-4 text-[#f1bd5b]" />
+              <div className={`p-6 rounded-3xl border text-xs space-y-4 ${
+                theme === 'light' ? 'bg-white border-slate-200 shadow-xs' : 'bg-slate-900/80 border-slate-800'
+              }`}>
+                <div className={`flex items-center gap-2 font-bold text-sm ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>
+                  <Award className="w-4 h-4 text-[#b58b42]" />
                   <span>Key Examination Insights & IIA Question Traps:</span>
                 </div>
-                <ul className="space-y-2 text-slate-300">
+                <ul className={`space-y-2 ${theme === 'light' ? 'text-slate-700' : 'text-slate-300'}`}>
                   {activeLesson.keyTakeaways.map((point, idx) => (
                     <li key={idx} className="flex items-start gap-2.5">
-                      <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#f1bd5b] mt-1.5 shrink-0" />
+                      <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#b58b42] mt-1.5 shrink-0" />
                       <span>{point}</span>
                     </li>
                   ))}
@@ -1558,14 +1733,16 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
               </div>
 
               {/* Student Private Lecture Notes Box */}
-              <div className="p-6 rounded-3xl bg-slate-900/80 border border-slate-800 space-y-3">
+              <div className={`p-6 rounded-3xl border space-y-3 ${
+                theme === 'light' ? 'bg-white border-slate-200 shadow-xs' : 'bg-slate-900/80 border-slate-800'
+              }`}>
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 font-bold text-sm text-white">
-                    <FileText className="w-4 h-4 text-sky-400" />
+                  <div className={`flex items-center gap-2 font-bold text-sm ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>
+                    <FileText className="w-4 h-4 text-sky-600" />
                     <span>My Private Timestamped Lecture Notes:</span>
                   </div>
                   {noteSavedFeedback && (
-                    <span className="text-emerald-400 text-xs font-bold flex items-center gap-1">
+                    <span className="text-emerald-600 text-xs font-bold flex items-center gap-1">
                       <Check className="w-3.5 h-3.5" /> Saved!
                     </span>
                   )}
@@ -1576,13 +1753,17 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
                   value={studentNote}
                   onChange={(e) => setStudentNote(e.target.value)}
                   placeholder="Record your personal notes, mnemonic acronyms, or question flags for this lecture..."
-                  className="w-full p-3.5 rounded-xl bg-slate-950 border border-slate-700 text-slate-100 placeholder-slate-500 text-xs sm:text-sm focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition-all resize-y"
+                  className={`w-full p-3.5 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-1 transition-all resize-y border ${
+                    theme === 'light'
+                      ? 'bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-400 focus:border-sky-600 focus:ring-sky-600'
+                      : 'bg-slate-950 border-slate-700 text-slate-100 placeholder-slate-500 focus:border-sky-500 focus:ring-sky-500'
+                  }`}
                 />
 
                 <div className="flex justify-end">
                   <button
                     onClick={handleSaveNote}
-                    className="px-5 py-2 rounded-xl bg-[#b58b42] hover:bg-[#9e7735] text-white font-bold text-xs transition-colors cursor-pointer shadow-md"
+                    className="px-5 py-2 rounded-xl bg-gradient-to-r from-[#102a4e] to-[#b58b42] hover:opacity-95 text-white font-bold text-xs transition-opacity cursor-pointer shadow-sm"
                   >
                     Save Notes to Student Dossier
                   </button>
@@ -1593,14 +1774,18 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
             {/* Right (4 Cols): Curriculum Directory & Syllabus Browser */}
             <div className="lg:col-span-4 space-y-6">
               {/* Part Filter Bar */}
-              <div className="p-1 rounded-2xl bg-slate-900 border border-slate-800 flex flex-wrap gap-1">
+              <div className={`p-1 rounded-2xl border flex flex-wrap gap-1 ${
+                theme === 'light' ? 'bg-white border-slate-200 shadow-xs' : 'bg-slate-900 border-slate-800'
+              }`}>
                 {(['all', 'part-1', 'part-2', 'part-3', 'ai-lab'] as const).map((p) => (
                   <button
                     key={p}
                     onClick={() => setSelectedPart(p)}
                     className={`flex-1 py-2 px-2 text-[11px] font-bold rounded-xl transition-all cursor-pointer whitespace-nowrap ${
                       selectedPart === p
-                        ? 'bg-sky-800 text-white shadow-xs'
+                        ? 'bg-gradient-to-r from-[#102a4e] to-[#163a6b] text-white shadow-xs'
+                        : theme === 'light'
+                        ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                         : 'text-slate-400 hover:text-white'
                     }`}
                   >
@@ -1620,12 +1805,19 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
               {/* Modules Accordion List */}
               <div className="space-y-4 max-h-[850px] overflow-y-auto pr-1">
                 {filteredModules.map((mod) => (
-                  <div key={mod.id} className="rounded-2xl bg-slate-900/90 border border-slate-800 p-4 space-y-3">
-                    <div className="border-b border-slate-800 pb-2">
-                      <div className="text-[10px] font-bold text-[#f1bd5b] uppercase tracking-wider">
+                  <div
+                    key={mod.id}
+                    className={`rounded-2xl border p-4 space-y-3 ${
+                      theme === 'light' ? 'bg-white border-slate-200 shadow-xs' : 'bg-slate-900/90 border-slate-800'
+                    }`}
+                  >
+                    <div className={`border-b pb-2 ${theme === 'light' ? 'border-slate-100' : 'border-slate-800'}`}>
+                      <div className="text-[10px] font-bold text-[#b58b42] uppercase tracking-wider">
                         {mod.partId.toUpperCase()} · MODULE {mod.moduleNumber}
                       </div>
-                      <h4 className="text-xs sm:text-sm font-bold text-white mt-0.5 leading-snug">
+                      <h4 className={`text-xs sm:text-sm font-bold mt-0.5 leading-snug ${
+                        theme === 'light' ? 'text-slate-900' : 'text-white'
+                      }`}>
                         {mod.title}
                       </h4>
                     </div>
@@ -1645,31 +1837,43 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
                             }}
                             className={`p-3 rounded-xl border text-left cursor-pointer transition-all flex items-start justify-between gap-3 ${
                               isCurrent
-                                ? 'bg-sky-950/90 border-sky-600 shadow-md ring-1 ring-sky-500/40'
+                                ? theme === 'light'
+                                  ? 'bg-sky-50 border-sky-400 shadow-xs ring-1 ring-sky-300'
+                                  : 'bg-sky-950/90 border-sky-600 shadow-md ring-1 ring-sky-500/40'
+                                : theme === 'light'
+                                ? 'bg-slate-50/70 border-slate-200 hover:border-slate-300 hover:bg-slate-100'
                                 : 'bg-slate-950/60 border-slate-800 hover:border-slate-700'
                             }`}
                           >
                             <div className="space-y-1">
                               <div className="flex items-center gap-2">
-                                <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${isCurrent ? 'bg-sky-800 text-white' : 'bg-slate-800 text-slate-400'}`}>
+                                <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${
+                                  isCurrent
+                                    ? theme === 'light' ? 'bg-sky-200 text-sky-900 font-bold' : 'bg-sky-800 text-white'
+                                    : theme === 'light' ? 'bg-slate-200 text-slate-700' : 'bg-slate-800 text-slate-400'
+                                }`}>
                                   {lesson.duration}
                                 </span>
                                 {isCompleted && (
-                                  <span className="text-emerald-400 text-[10px] font-bold flex items-center gap-0.5">
+                                  <span className="text-emerald-600 text-[10px] font-bold flex items-center gap-0.5">
                                     <CheckCircle2 className="w-3 h-3" /> Done
                                   </span>
                                 )}
                               </div>
-                              <div className={`text-xs font-bold leading-snug ${isCurrent ? 'text-white' : 'text-slate-300'}`}>
+                              <div className={`text-xs font-bold leading-snug ${
+                                isCurrent
+                                  ? theme === 'light' ? 'text-sky-950' : 'text-white'
+                                  : theme === 'light' ? 'text-slate-800' : 'text-slate-300'
+                              }`}>
                                 {lesson.title}
                               </div>
                             </div>
 
                             <div className="shrink-0 pt-1">
                               {isCurrent ? (
-                                <Play className="w-4 h-4 text-[#f1bd5b] fill-[#f1bd5b]" />
+                                <Play className="w-4 h-4 text-[#b58b42] fill-[#b58b42]" />
                               ) : (
-                                <ChevronRight className="w-4 h-4 text-slate-600" />
+                                <ChevronRight className={`w-4 h-4 ${theme === 'light' ? 'text-slate-400' : 'text-slate-600'}`} />
                               )}
                             </div>
                           </div>
@@ -1689,21 +1893,25 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
         {activeTab === 'testbank' && (
           <div className="space-y-6">
             {/* Exam Simulation Top HUD */}
-            <div className="p-5 rounded-3xl bg-slate-900 border border-slate-800 flex flex-wrap items-center justify-between gap-4">
+            <div className={`p-5 rounded-3xl border flex flex-wrap items-center justify-between gap-4 ${
+              theme === 'light' ? 'bg-white border-slate-200 shadow-xs' : 'bg-slate-900 border-slate-800'
+            }`}>
               <div>
-                <span className="px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-[#f1bd5b] text-[10px] font-bold uppercase tracking-wider">
+                <span className="px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-[#b58b42] text-[10px] font-bold uppercase tracking-wider">
                   PEARSON VUE REAL EXAM SIMULATOR · GLEIM SMARTADAPT™
                 </span>
-                <h3 className="text-lg font-black text-white mt-1">
+                <h3 className={`text-lg font-black mt-1 ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>
                   Official Gleim CIA Mega Test Bank · Question {currentQuestionIndex + 1} of {testBankQuestions.length}
                 </h3>
               </div>
 
               {/* Timer & Controls */}
               <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-700 font-mono text-xs">
-                  <Clock className="w-4 h-4 text-[#f1bd5b]" />
-                  <span className="font-bold text-white">Time Remaining: {formatTimer(examTimerSeconds)}</span>
+                <div className={`flex items-center gap-2 px-3.5 py-2 rounded-xl font-mono text-xs border ${
+                  theme === 'light' ? 'bg-slate-100 border-slate-300 text-slate-800' : 'bg-slate-950 border-slate-700 text-white'
+                }`}>
+                  <Clock className="w-4 h-4 text-[#b58b42]" />
+                  <span className="font-bold">Time Remaining: {formatTimer(examTimerSeconds)}</span>
                 </div>
 
                 <button
@@ -1720,6 +1928,8 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
                   className={`px-3 py-2 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
                     flaggedQuestions.includes(currentMcq.id)
                       ? 'bg-amber-600 text-white'
+                      : theme === 'light'
+                      ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300'
                       : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
                   }`}
                 >
@@ -1729,17 +1939,25 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
             </div>
 
             {/* Question Screen */}
-            <div className="p-8 rounded-3xl bg-slate-900/90 border border-slate-800 space-y-6">
+            <div className={`p-8 rounded-3xl border space-y-6 ${
+              theme === 'light' ? 'bg-white border-slate-200 shadow-xs' : 'bg-slate-900/90 border-slate-800'
+            }`}>
               {/* Question Header & Meta */}
-              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-4 text-xs text-slate-400">
-                <span className="font-semibold text-sky-400">{currentMcq.domain}</span>
-                <span className="font-mono text-[11px] bg-slate-800 px-2.5 py-0.5 rounded text-slate-300">
+              <div className={`flex flex-wrap items-center justify-between gap-2 border-b pb-4 text-xs ${
+                theme === 'light' ? 'border-slate-100 text-slate-500' : 'border-slate-800 text-slate-400'
+              }`}>
+                <span className="font-semibold text-sky-700">{currentMcq.domain}</span>
+                <span className={`font-mono text-[11px] px-2.5 py-0.5 rounded ${
+                  theme === 'light' ? 'bg-slate-100 text-slate-700 border border-slate-200' : 'bg-slate-800 text-slate-300'
+                }`}>
                   Standard Ref: {currentMcq.iiaStandardReference}
                 </span>
               </div>
 
               {/* Question Text */}
-              <div className="text-base sm:text-lg font-semibold text-white leading-relaxed">
+              <div className={`text-base sm:text-lg font-semibold leading-relaxed ${
+                theme === 'light' ? 'text-slate-900' : 'text-white'
+              }`}>
                 {currentMcq.question}
               </div>
 
@@ -1749,14 +1967,23 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
                   const isSelected = selectedAnswer === idx;
                   const isCorrect = idx === currentMcq.correctIndex;
 
-                  let optionStyle = 'bg-slate-950/70 border-slate-800 hover:border-slate-700 text-slate-200';
+                  let optionStyle = theme === 'light'
+                    ? 'bg-slate-50 border-slate-200 hover:border-sky-300 hover:bg-sky-50/40 text-slate-800'
+                    : 'bg-slate-950/70 border-slate-800 hover:border-slate-700 text-slate-200';
+
                   if (isSelected && !isAnswerSubmitted) {
-                    optionStyle = 'bg-sky-950/90 border-sky-500 text-white shadow-md ring-1 ring-sky-500';
+                    optionStyle = theme === 'light'
+                      ? 'bg-sky-50 border-sky-500 text-sky-950 shadow-xs ring-1 ring-sky-500 font-semibold'
+                      : 'bg-sky-950/90 border-sky-500 text-white shadow-md ring-1 ring-sky-500';
                   } else if (isAnswerSubmitted) {
                     if (isCorrect) {
-                      optionStyle = 'bg-emerald-950/90 border-emerald-500 text-emerald-200 ring-1 ring-emerald-500';
+                      optionStyle = theme === 'light'
+                        ? 'bg-emerald-50 border-emerald-500 text-emerald-950 ring-1 ring-emerald-500 font-semibold'
+                        : 'bg-emerald-950/90 border-emerald-500 text-emerald-200 ring-1 ring-emerald-500';
                     } else if (isSelected && !isCorrect) {
-                      optionStyle = 'bg-rose-950/90 border-rose-500 text-rose-200';
+                      optionStyle = theme === 'light'
+                        ? 'bg-rose-50 border-rose-400 text-rose-950 font-medium'
+                        : 'bg-rose-950/90 border-rose-500 text-rose-200';
                     }
                   }
 
@@ -1770,7 +1997,9 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
                       }}
                       className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-start gap-3.5 ${optionStyle}`}
                     >
-                      <span className="w-6 h-6 rounded-full bg-slate-800 flex items-center justify-center text-xs font-bold text-white shrink-0 mt-0.5">
+                      <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 mt-0.5 ${
+                        theme === 'light' ? 'bg-slate-200 text-slate-800' : 'bg-slate-800 text-white'
+                      }`}>
                         {String.fromCharCode(65 + idx)}
                       </span>
                       <span className="text-xs sm:text-sm leading-relaxed">{opt}</span>
@@ -1781,19 +2010,27 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
 
               {/* Detailed Rationale & IIA Explanations (Shown upon submit) */}
               {isAnswerSubmitted && (
-                <div className="p-6 rounded-2xl bg-slate-950 border border-slate-800 space-y-3 animate-in fade-in duration-300">
-                  <div className="flex items-center gap-2 font-bold text-sm text-white">
-                    <Sparkles className="w-4 h-4 text-[#f1bd5b]" />
+                <div className={`p-6 rounded-2xl border space-y-3 animate-in fade-in duration-300 ${
+                  theme === 'light'
+                    ? 'bg-amber-50/60 border-amber-200 text-slate-800'
+                    : 'bg-slate-950 border-slate-800 text-slate-300'
+                }`}>
+                  <div className={`flex items-center gap-2 font-bold text-sm ${
+                    theme === 'light' ? 'text-amber-900' : 'text-white'
+                  }`}>
+                    <Sparkles className="w-4 h-4 text-[#b58b42]" />
                     <span>Psychometric Analysis & IIA Standard Rationale:</span>
                   </div>
-                  <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                  <p className="text-xs sm:text-sm leading-relaxed">
                     {currentMcq.rationale}
                   </p>
                 </div>
               )}
 
               {/* Footer Question Nav Action Buttons */}
-              <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-slate-800">
+              <div className={`flex flex-wrap items-center justify-between gap-4 pt-4 border-t ${
+                theme === 'light' ? 'border-slate-100' : 'border-slate-800'
+              }`}>
                 <button
                   disabled={currentQuestionIndex === 0}
                   onClick={() => {
@@ -1801,7 +2038,11 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
                     setSelectedAnswer(null);
                     setIsAnswerSubmitted(false);
                   }}
-                  className="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 disabled:opacity-40 text-xs font-bold transition-colors cursor-pointer"
+                  className={`px-5 py-2.5 rounded-xl disabled:opacity-40 text-xs font-bold transition-colors cursor-pointer ${
+                    theme === 'light'
+                      ? 'bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300'
+                      : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
+                  }`}
                 >
                   ← Previous Question
                 </button>
@@ -1853,13 +2094,17 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             {/* Left Column (7 Cols): Upcoming Live Cohort Zoom Schedules */}
             <div className="lg:col-span-7 space-y-6">
-              <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-4">
+              <div className={`p-6 rounded-3xl border space-y-4 ${
+                theme === 'light' ? 'bg-white border-slate-200 shadow-xs' : 'bg-slate-900 border-slate-800'
+              }`}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Calendar className="w-5 h-5 text-[#f1bd5b]" />
-                    <h3 className="text-base font-bold text-white">Upcoming Live Weekend Cohort Sessions</h3>
+                    <Calendar className="w-5 h-5 text-[#b58b42]" />
+                    <h3 className={`text-base font-bold ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>Upcoming Live Weekend Cohort Sessions</h3>
                   </div>
-                  <span className="text-[11px] text-emerald-400 font-bold bg-emerald-950/70 border border-emerald-800 px-2.5 py-0.5 rounded-full">
+                  <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border ${
+                    theme === 'light' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-emerald-950/70 text-emerald-400 border-emerald-800'
+                  }`}>
                     Live Room Open
                   </span>
                 </div>
@@ -1868,38 +2113,49 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
                   {liveClasses.map((session) => (
                     <div
                       key={session.id}
-                      className="p-5 rounded-2xl bg-slate-950/80 border border-slate-800 hover:border-sky-600 transition-all space-y-3"
+                      className={`p-5 rounded-2xl border transition-all space-y-3 ${
+                        theme === 'light'
+                          ? 'bg-slate-50/70 border-slate-200 hover:border-sky-400 hover:bg-slate-50'
+                          : 'bg-slate-950/80 border-slate-800 hover:border-sky-600'
+                      }`}
                     >
                       <div className="flex flex-wrap items-center justify-between gap-2">
-                        <span className="text-xs font-bold text-[#f1bd5b] bg-amber-500/10 px-2.5 py-0.5 rounded-md border border-amber-500/20">
+                        <span className="text-xs font-bold text-[#b58b42] bg-amber-500/10 px-2.5 py-0.5 rounded-md border border-amber-500/20">
                           {session.date} · {session.time}
                         </span>
-                        <span className="text-[11px] text-slate-400">
-                          Meeting ID: <strong className="text-slate-200 font-mono">{session.meetingId}</strong>
+                        <span className={`text-[11px] ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>
+                          Meeting ID: <strong className={`font-mono ${theme === 'light' ? 'text-slate-900' : 'text-slate-200'}`}>{session.meetingId}</strong>
                         </span>
                       </div>
 
-                      <h4 className="text-sm font-bold text-white leading-snug">
+                      <h4 className={`text-sm font-bold leading-snug ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>
                         {session.title}
                       </h4>
 
-                      <div className="text-xs text-slate-400">
-                        Conducted by: <strong className="text-slate-200">{session.instructor}</strong>
+                      <div className={`text-xs ${theme === 'light' ? 'text-slate-600' : 'text-slate-400'}`}>
+                        Conducted by: <strong className={theme === 'light' ? 'text-slate-900' : 'text-slate-200'}>{session.instructor}</strong>
                       </div>
 
                       <div className="flex flex-wrap gap-1.5 pt-1">
                         {session.topics.map((t, i) => (
-                          <span key={i} className="text-[10px] text-slate-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
+                          <span
+                            key={i}
+                            className={`text-[10px] px-2 py-0.5 rounded border ${
+                              theme === 'light'
+                                ? 'bg-white text-slate-700 border-slate-200'
+                                : 'bg-slate-900 text-slate-400 border-slate-800'
+                            }`}
+                          >
                             • {t}
                           </span>
                         ))}
                       </div>
 
                       <div className="pt-2 flex items-center justify-between">
-                        <span className="text-[11px] text-slate-500 font-mono">Passcode: {session.passcode}</span>
+                        <span className={`text-[11px] font-mono ${theme === 'light' ? 'text-slate-500' : 'text-slate-500'}`}>Passcode: {session.passcode}</span>
                         <button
                           onClick={() => showToast(`Connecting to secure student live stream for ${session.title}...`)}
-                          className="px-4 py-2 rounded-xl bg-gradient-to-r from-sky-700 via-sky-800 to-[#b58b42] hover:from-sky-800 hover:to-[#9e7735] text-white text-xs font-bold transition-all cursor-pointer shadow-md flex items-center gap-1.5"
+                          className="px-4 py-2 rounded-xl bg-gradient-to-r from-sky-700 via-sky-800 to-[#b58b42] hover:from-sky-800 hover:to-[#9e7735] text-white text-xs font-bold transition-all cursor-pointer shadow-sm flex items-center gap-1.5"
                         >
                           <ExternalLink className="w-3.5 h-3.5" />
                           <span>Join Live Classroom</span>
@@ -1913,12 +2169,14 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
 
             {/* Right Column (5 Cols): Ask Faculty a Doubt & Q&A Thread */}
             <div className="lg:col-span-5 space-y-6">
-              <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-4">
+              <div className={`p-6 rounded-3xl border space-y-4 ${
+                theme === 'light' ? 'bg-white border-slate-200 shadow-xs' : 'bg-slate-900 border-slate-800'
+              }`}>
                 <div className="flex items-center gap-2">
-                  <MessageSquare className="w-5 h-5 text-sky-400" />
-                  <h3 className="text-base font-bold text-white">Ask Faculty a Doubt</h3>
+                  <MessageSquare className="w-5 h-5 text-sky-600" />
+                  <h3 className={`text-base font-bold ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>Ask Faculty a Doubt</h3>
                 </div>
-                <p className="text-xs text-slate-400 leading-relaxed">
+                <p className={`text-xs leading-relaxed ${theme === 'light' ? 'text-slate-600' : 'text-slate-400'}`}>
                   Questions are reviewed directly by CA Gurvinder Pal Singh and the BNC senior faculty panel within 4 hours.
                 </p>
 
@@ -1929,11 +2187,15 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
                     value={doubtText}
                     onChange={(e) => setDoubtText(e.target.value)}
                     placeholder="Type your exam scenario or concept question here..."
-                    className="w-full p-3 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 transition-all resize-y"
+                    className={`w-full p-3 rounded-xl border text-xs transition-all resize-y ${
+                      theme === 'light'
+                        ? 'bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-sky-600'
+                        : 'bg-slate-950 border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-sky-500'
+                    }`}
                   />
                   <button
                     type="submit"
-                    className="w-full py-2.5 rounded-xl bg-[#b58b42] hover:bg-[#9e7735] text-white font-bold text-xs transition-colors cursor-pointer shadow-md flex items-center justify-center gap-1.5"
+                    className="w-full py-2.5 rounded-xl bg-gradient-to-r from-[#102a4e] to-[#b58b42] hover:opacity-95 text-white font-bold text-xs transition-opacity cursor-pointer shadow-sm flex items-center justify-center gap-1.5"
                   >
                     <Send className="w-3.5 h-3.5" />
                     <span>Submit to Faculty Desk</span>
@@ -1941,15 +2203,24 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
                 </form>
 
                 {/* Question History */}
-                <div className="pt-4 border-t border-slate-800 space-y-3">
-                  <div className="text-xs font-bold text-slate-300">My Question History:</div>
+                <div className={`pt-4 border-t space-y-3 ${theme === 'light' ? 'border-slate-100' : 'border-slate-800'}`}>
+                  <div className={`text-xs font-bold ${theme === 'light' ? 'text-slate-800' : 'text-slate-300'}`}>My Question History:</div>
                   {userDoubts.map((d) => (
-                    <div key={d.id} className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 text-xs space-y-2">
-                      <div className="font-semibold text-white">Q: {d.question}</div>
-                      <div className="text-[10px] text-sky-400 font-mono">{d.status} · {d.time}</div>
+                    <div
+                      key={d.id}
+                      className={`p-3.5 rounded-xl border text-xs space-y-2 ${
+                        theme === 'light' ? 'bg-slate-50 border-slate-200' : 'bg-slate-950 border-slate-800'
+                      }`}
+                    >
+                      <div className={`font-semibold ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>Q: {d.question}</div>
+                      <div className="text-[10px] text-sky-600 font-mono">{d.status} · {d.time}</div>
                       {d.reply && (
-                        <div className="p-3 rounded-lg bg-sky-950/60 border border-sky-800/60 text-slate-200 text-xs leading-relaxed">
-                          <strong className="text-[#f1bd5b] block mb-1">Faculty Response:</strong>
+                        <div className={`p-3 rounded-lg border text-xs leading-relaxed ${
+                          theme === 'light'
+                            ? 'bg-sky-50/80 border-sky-200 text-slate-800'
+                            : 'bg-sky-950/60 border-sky-800/60 text-slate-200'
+                        }`}>
+                          <strong className="text-[#b58b42] block mb-1">Faculty Response:</strong>
                           {d.reply}
                         </div>
                       )}
@@ -1966,17 +2237,19 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
         {/* ================================================================= */}
         {activeTab === 'resources' && (
           <div className="space-y-6">
-            <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 flex flex-wrap items-center justify-between gap-4">
+            <div className={`p-6 rounded-3xl border flex flex-wrap items-center justify-between gap-4 ${
+              theme === 'light' ? 'bg-white border-slate-200 shadow-xs' : 'bg-slate-900 border-slate-800'
+            }`}>
               <div>
-                <span className="px-2.5 py-1 rounded-full bg-sky-500/10 border border-sky-500/30 text-sky-400 text-[10px] font-bold uppercase tracking-wider">
+                <span className="px-2.5 py-1 rounded-full bg-sky-500/10 border border-sky-500/30 text-sky-700 text-[10px] font-bold uppercase tracking-wider">
                   OFFICIAL BNC CIA STUDY REPOSITORY
                 </span>
-                <h3 className="text-lg font-black text-white mt-1">
+                <h3 className={`text-lg font-black mt-1 ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>
                   Handouts, Formula Sheets & Mind Maps
                 </h3>
               </div>
-              <div className="text-xs text-slate-400">
-                Total Downloads: <strong className="text-white font-mono">11,957 files</strong>
+              <div className={`text-xs ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>
+                Total Downloads: <strong className={theme === 'light' ? 'text-slate-900 font-mono' : 'text-white font-mono'}>11,957 files</strong>
               </div>
             </div>
 
@@ -1984,34 +2257,44 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
               {lmsResources.map((res) => (
                 <div
                   key={res.id}
-                  className="p-6 rounded-3xl bg-slate-900/90 border border-slate-800 hover:border-[#b58b42]/60 transition-all flex flex-col justify-between space-y-4"
+                  className={`p-6 rounded-3xl border transition-all flex flex-col justify-between space-y-4 ${
+                    theme === 'light'
+                      ? 'bg-white border-slate-200 hover:border-[#b58b42]/60 shadow-xs'
+                      : 'bg-slate-900/90 border-slate-800 hover:border-[#b58b42]/60'
+                  }`}
                 >
                   <div className="space-y-3">
                     <div className="flex items-center justify-between text-[10px] font-bold">
-                      <span className="text-[#f1bd5b] bg-amber-500/10 px-2.5 py-0.5 rounded border border-amber-500/20">
+                      <span className="text-[#b58b42] bg-amber-500/10 px-2.5 py-0.5 rounded border border-amber-500/20">
                         {res.category}
                       </span>
-                      <span className="font-mono text-slate-400 bg-slate-800 px-2 py-0.5 rounded">
+                      <span className={`font-mono px-2 py-0.5 rounded ${
+                        theme === 'light' ? 'bg-slate-100 text-slate-700 border border-slate-200' : 'bg-slate-800 text-slate-400'
+                      }`}>
                         {res.fileType} · {res.fileSize}
                       </span>
                     </div>
 
-                    <h4 className="text-sm font-bold text-white leading-snug">
+                    <h4 className={`text-sm font-bold leading-snug ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>
                       {res.title}
                     </h4>
 
-                    <p className="text-xs text-slate-400 leading-relaxed">
+                    <p className={`text-xs leading-relaxed ${theme === 'light' ? 'text-slate-600' : 'text-slate-400'}`}>
                       {res.description}
                     </p>
                   </div>
 
-                  <div className="pt-3 border-t border-slate-800 flex items-center justify-between">
+                  <div className={`pt-3 border-t flex items-center justify-between ${theme === 'light' ? 'border-slate-100' : 'border-slate-800'}`}>
                     <span className="text-[11px] text-slate-500 font-mono">{res.downloadsCount} downloads</span>
                     <button
                       onClick={() => showToast(`Downloading: ${res.title}`)}
-                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-sky-950 hover:bg-sky-900 border border-sky-800 text-sky-200 text-xs font-semibold transition-colors cursor-pointer"
+                      className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold transition-colors cursor-pointer border ${
+                        theme === 'light'
+                          ? 'bg-sky-50 hover:bg-sky-100 border-sky-200 text-sky-900'
+                          : 'bg-sky-950 hover:bg-sky-900 border-sky-800 text-sky-200'
+                      }`}
                     >
-                      <Download className="w-3.5 h-3.5 text-[#f1bd5b]" />
+                      <Download className="w-3.5 h-3.5 text-[#b58b42]" />
                       <span>Download</span>
                     </button>
                   </div>
@@ -2026,31 +2309,41 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
         {/* ================================================================= */}
         {activeTab === 'ailab' && (
           <div className="space-y-6">
-            <div className="p-6 rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950/60 to-slate-900 border border-indigo-900/60 flex flex-wrap items-center justify-between gap-4">
+            <div className={`p-6 rounded-3xl border flex flex-wrap items-center justify-between gap-4 ${
+              theme === 'light'
+                ? 'bg-gradient-to-r from-slate-50 via-indigo-50/40 to-slate-50 border-indigo-200 shadow-xs'
+                : 'bg-gradient-to-r from-slate-900 via-indigo-950/60 to-slate-900 border-indigo-900/60'
+            }`}>
               <div>
-                <span className="px-3 py-1 rounded-full bg-indigo-500/20 border border-indigo-400/40 text-amber-300 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 w-fit">
-                  <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                <span className={`px-3 py-1 rounded-full border text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 w-fit ${
+                  theme === 'light' ? 'bg-indigo-50 border-indigo-200 text-indigo-900' : 'bg-indigo-500/20 border-indigo-400/40 text-amber-300'
+                }`}>
+                  <Sparkles className="w-3.5 h-3.5 text-[#b58b42]" />
                   PREMIUM PLUS WORKSPACE · AI AUDIT ACCELERATOR
                 </span>
-                <h3 className="text-xl font-black text-white mt-2">
+                <h3 className={`text-xl font-black mt-2 ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>
                   Autonomous Internal Audit Workpaper Sandbox
                 </h3>
-                <p className="text-xs text-slate-300 mt-1 max-w-xl leading-relaxed">
+                <p className={`text-xs mt-1 max-w-xl leading-relaxed ${theme === 'light' ? 'text-slate-600' : 'text-slate-300'}`}>
                   Generate compliant Risk-Control Matrices (RCMs), formal Audit Observation Memos, or Python journal-entry sampling routines powered by specialized audit agents.
                 </p>
               </div>
 
               <div className="flex items-center gap-2">
-                <span className="text-xs font-mono text-emerald-400 bg-emerald-950/70 border border-emerald-800 px-3 py-1.5 rounded-xl">
+                <span className={`text-xs font-mono px-3 py-1.5 rounded-xl border ${
+                  theme === 'light' ? 'bg-emerald-50 text-emerald-800 border-emerald-300' : 'bg-emerald-950/70 text-emerald-400 border-emerald-800'
+                }`}>
                   ● Enterprise Agent Ready
                 </span>
               </div>
             </div>
 
             {/* Template Selector & Prompt Box */}
-            <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-4">
+            <div className={`p-6 rounded-3xl border space-y-4 ${
+              theme === 'light' ? 'bg-white border-slate-200 shadow-xs' : 'bg-slate-900 border-slate-800'
+            }`}>
               <div className="flex flex-wrap items-center gap-2">
-                <span className="text-xs font-bold text-slate-400">Audit Workflows:</span>
+                <span className={`text-xs font-bold ${theme === 'light' ? 'text-slate-700' : 'text-slate-400'}`}>Audit Workflows:</span>
                 <button
                   onClick={() => {
                     setAiPromptCategory('rcm');
@@ -2058,7 +2351,9 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
                   }}
                   className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold cursor-pointer transition-all ${
                     aiPromptCategory === 'rcm'
-                      ? 'bg-indigo-700 text-white shadow-sm'
+                      ? 'bg-gradient-to-r from-[#102a4e] to-[#163a6b] text-white shadow-xs'
+                      : theme === 'light'
+                      ? 'bg-slate-100 text-slate-700 hover:text-slate-900 border border-slate-200'
                       : 'bg-slate-800 text-slate-300 hover:text-white'
                   }`}
                 >
@@ -2072,7 +2367,9 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
                   }}
                   className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold cursor-pointer transition-all ${
                     aiPromptCategory === 'memo'
-                      ? 'bg-indigo-700 text-white shadow-sm'
+                      ? 'bg-gradient-to-r from-[#102a4e] to-[#163a6b] text-white shadow-xs'
+                      : theme === 'light'
+                      ? 'bg-slate-100 text-slate-700 hover:text-slate-900 border border-slate-200'
                       : 'bg-slate-800 text-slate-300 hover:text-white'
                   }`}
                 >
@@ -2086,7 +2383,9 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
                   }}
                   className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold cursor-pointer transition-all ${
                     aiPromptCategory === 'sampling'
-                      ? 'bg-indigo-700 text-white shadow-sm'
+                      ? 'bg-gradient-to-r from-[#102a4e] to-[#163a6b] text-white shadow-xs'
+                      : theme === 'light'
+                      ? 'bg-slate-100 text-slate-700 hover:text-slate-900 border border-slate-200'
                       : 'bg-slate-800 text-slate-300 hover:text-white'
                   }`}
                 >
@@ -2099,7 +2398,11 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
                   rows={3}
                   value={customPrompt}
                   onChange={(e) => setCustomPrompt(e.target.value)}
-                  className="w-full p-4 rounded-2xl bg-slate-950 border border-slate-700 text-white text-xs sm:text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all font-mono"
+                  className={`w-full p-4 rounded-2xl border text-xs sm:text-sm focus:outline-none transition-all font-mono ${
+                    theme === 'light'
+                      ? 'bg-slate-50 border-slate-300 text-slate-900 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600'
+                      : 'bg-slate-950 border-slate-700 text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500'
+                  }`}
                 />
               </div>
 
@@ -2108,7 +2411,7 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
                 <button
                   disabled={isAiGenerating}
                   onClick={handleRunAiAudit}
-                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 via-sky-700 to-[#b58b42] hover:opacity-95 text-white font-bold text-xs cursor-pointer shadow-lg transition-all flex items-center gap-2"
+                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-indigo-700 via-sky-800 to-[#b58b42] hover:opacity-95 text-white font-bold text-xs cursor-pointer shadow-sm transition-all flex items-center gap-2"
                 >
                   {isAiGenerating ? (
                     <>
@@ -2127,21 +2430,31 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
 
             {/* Generated Workpaper Output Screen */}
             {aiOutput && (
-              <div className="p-8 rounded-3xl bg-slate-950 border border-slate-800 space-y-4 animate-in fade-in duration-300">
-                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                  <div className="flex items-center gap-2 text-xs font-bold text-[#f1bd5b]">
+              <div className={`p-8 rounded-3xl border space-y-4 animate-in fade-in duration-300 ${
+                theme === 'light'
+                  ? 'bg-white border-slate-200 shadow-xs'
+                  : 'bg-slate-950 border-slate-800'
+              }`}>
+                <div className={`flex items-center justify-between border-b pb-3 ${
+                  theme === 'light' ? 'border-slate-100' : 'border-slate-800'
+                }`}>
+                  <div className="flex items-center gap-2 text-xs font-bold text-[#b58b42]">
                     <CheckCircle2 className="w-4 h-4" />
                     <span>Validated Audit Workpaper Output (IIA / COSO Compliant)</span>
                   </div>
                   <button
                     onClick={() => showToast('Exported workpaper to clipboard')}
-                    className="text-xs text-sky-400 hover:underline cursor-pointer"
+                    className="text-xs text-sky-600 hover:underline cursor-pointer font-semibold"
                   >
                     Copy to Clipboard
                   </button>
                 </div>
 
-                <div className="overflow-x-auto text-xs text-slate-200 leading-relaxed font-mono whitespace-pre-wrap">
+                <div className={`overflow-x-auto text-xs leading-relaxed font-mono whitespace-pre-wrap p-4 rounded-xl border ${
+                  theme === 'light'
+                    ? 'bg-slate-50 border-slate-200 text-slate-800'
+                    : 'bg-slate-900 border-slate-800 text-slate-200'
+                }`}>
                   {aiOutput}
                 </div>
               </div>
@@ -2156,55 +2469,73 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* Card 1: Estimated Scaled Score */}
-              <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 text-left space-y-2">
-                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Estimated Pearson VUE Score</div>
-                <div className="text-3xl sm:text-4xl font-extrabold text-[#f1bd5b] tracking-tight tabular-nums">
-                  645 <span className="text-sm font-normal text-slate-400">/ 750</span>
+              <div className={`p-6 rounded-3xl border text-left space-y-2 ${
+                theme === 'light' ? 'bg-white border-slate-200 shadow-xs' : 'bg-slate-900 border-slate-800'
+              }`}>
+                <div className={`text-[10px] font-bold uppercase tracking-wider ${
+                  theme === 'light' ? 'text-slate-500' : 'text-slate-400'
+                }`}>Estimated Pearson VUE Score</div>
+                <div className="text-3xl sm:text-4xl font-extrabold text-[#b58b42] tracking-tight tabular-nums">
+                  645 <span className={`text-sm font-normal ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>/ 750</span>
                 </div>
-                <p className="text-xs text-emerald-400 font-semibold flex items-center gap-1">
+                <p className="text-xs text-emerald-600 font-semibold flex items-center gap-1">
                   <CheckCircle2 className="w-3.5 h-3.5" /> Passing Grade: 600+ (SAFE ZONE)
                 </p>
               </div>
 
               {/* Card 2: Questions Mastered */}
-              <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 text-left space-y-2">
-                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Practice MCQs Solved</div>
-                <div className="text-3xl sm:text-4xl font-extrabold text-sky-400 tracking-tight tabular-nums">
-                  480 <span className="text-sm font-normal text-slate-400">/ Gleim Mega Bank</span>
+              <div className={`p-6 rounded-3xl border text-left space-y-2 ${
+                theme === 'light' ? 'bg-white border-slate-200 shadow-xs' : 'bg-slate-900 border-slate-800'
+              }`}>
+                <div className={`text-[10px] font-bold uppercase tracking-wider ${
+                  theme === 'light' ? 'text-slate-500' : 'text-slate-400'
+                }`}>Practice MCQs Solved</div>
+                <div className="text-3xl sm:text-4xl font-extrabold text-sky-700 tracking-tight tabular-nums">
+                  480 <span className={`text-sm font-normal ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>/ Gleim Mega Bank</span>
                 </div>
-                <p className="text-xs text-slate-400">
-                  Average accuracy: <strong className="text-white">82% on first attempt</strong>
+                <p className={`text-xs ${theme === 'light' ? 'text-slate-600' : 'text-slate-400'}`}>
+                  Average accuracy: <strong className={theme === 'light' ? 'text-slate-900' : 'text-white'}>82% on first attempt</strong>
                 </p>
               </div>
 
               {/* Card 3: Target Exam Date */}
-              <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 text-left space-y-2">
-                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Part 1 Target Exam Window</div>
-                <div className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight tabular-nums">
-                  42 <span className="text-sm font-normal text-slate-400">Days Remaining</span>
+              <div className={`p-6 rounded-3xl border text-left space-y-2 ${
+                theme === 'light' ? 'bg-white border-slate-200 shadow-xs' : 'bg-slate-900 border-slate-800'
+              }`}>
+                <div className={`text-[10px] font-bold uppercase tracking-wider ${
+                  theme === 'light' ? 'text-slate-500' : 'text-slate-400'
+                }`}>Part 1 Target Exam Window</div>
+                <div className={`text-3xl sm:text-4xl font-extrabold tracking-tight tabular-nums ${
+                  theme === 'light' ? 'text-slate-900' : 'text-white'
+                }`}>
+                  42 <span className={`text-sm font-normal ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>Days Remaining</span>
                 </div>
-                <p className="text-xs text-sky-300 font-semibold">
+                <p className="text-xs text-sky-700 font-semibold">
                   Recommended test date: Dec 18, 2026
                 </p>
               </div>
             </div>
 
             {/* Certificate of Training Preview */}
-            <div className="p-8 rounded-3xl bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 text-center space-y-4">
-              <span className="px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-[#f1bd5b] text-xs font-bold uppercase tracking-widest">
+            <div className={`p-8 rounded-3xl border text-center space-y-4 ${
+              theme === 'light'
+                ? 'bg-gradient-to-b from-white via-slate-50/70 to-amber-50/30 border-slate-200 shadow-xs'
+                : 'bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800'
+            }`}>
+              <span className="px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-[#b58b42] text-xs font-bold uppercase tracking-widest">
                 OFFICIAL BNC EXECUTIVE ACCREDITATION
               </span>
-              <h3 className="text-2xl font-black text-white tracking-tight">
+              <h3 className={`text-2xl font-black tracking-tight ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>
                 Certificate in Professional Certified Internal Auditor Coaching
               </h3>
-              <p className="text-xs sm:text-sm text-slate-400 max-w-lg mx-auto">
+              <p className={`text-xs sm:text-sm max-w-lg mx-auto ${theme === 'light' ? 'text-slate-600' : 'text-slate-400'}`}>
                 Issued upon completing 100+ hours of live coaching and passing all mock exam simulations. Verifiable credential with digital verification hash.
               </p>
 
               <div className="pt-2">
                 <button
                   onClick={() => showToast('Sample completion certificate downloaded!')}
-                  className="px-6 py-3 rounded-xl bg-gradient-to-r from-sky-700 via-sky-800 to-[#b58b42] hover:from-sky-800 hover:to-[#9e7735] text-white text-xs font-bold transition-all cursor-pointer shadow-lg"
+                  className="px-6 py-3 rounded-xl bg-gradient-to-r from-[#102a4e] via-[#163a6b] to-[#b58b42] hover:opacity-95 text-white text-xs font-bold transition-all cursor-pointer shadow-md"
                 >
                   Download Sample Certificate PDF
                 </button>

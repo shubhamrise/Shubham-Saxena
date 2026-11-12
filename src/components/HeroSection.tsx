@@ -180,20 +180,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 <ArrowRight className="w-4 h-4" />
               </button>
 
-              <button
-                onClick={onOpenQuiz}
-                className="inline-flex items-center gap-2 px-5 py-3 rounded-xl font-semibold text-xs sm:text-sm text-white bg-slate-800/90 hover:bg-slate-700/90 border border-slate-600 shadow-xs hover:border-[#b58b42]/70 transition-all cursor-pointer"
-              >
-                <Award className="w-4 h-4 text-[#f1bd5b]" />
-                <span>Try Real Practice MCQ</span>
-              </button>
 
-              <button
-                onClick={onOpenInquiry}
-                className="px-4 py-3 rounded-xl font-medium text-xs sm:text-sm text-slate-300 hover:text-[#f1bd5b] transition-colors cursor-pointer"
-              >
-                Request Syllabus PDF
-              </button>
 
               {onOpenLms && (
                 <button

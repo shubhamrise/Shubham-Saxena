@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Currency } from '../types';
 import { PACKAGES } from '../data/ciaData';
-import { Check, ArrowRight, Sparkles, FileSpreadsheet, ChevronDown, ChevronUp, Download, Tag } from 'lucide-react';
+import { Check, ArrowRight, Sparkles, FileSpreadsheet, ChevronDown, ChevronUp, Download } from 'lucide-react';
 import { motion } from 'motion/react';
 
 interface PackagesSectionProps {
@@ -12,7 +12,7 @@ interface PackagesSectionProps {
 }
 
 export const PackagesSection: React.FC<PackagesSectionProps> = ({
-  currency,
+  currency: _currency,
   onOpenCheckout,
   onOpenInquiry,
   onOpenBrochure,
@@ -46,14 +46,8 @@ export const PackagesSection: React.FC<PackagesSectionProps> = ({
             All five packages cover every part of the CIA® exam. LMS access starts as soon as your admission is confirmed. IIA exam fees are paid separately.
           </p>
 
-          {/* Promotional 20% off banner from Brochure Page 4 */}
-          <div className="mt-6 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-500/15 border border-emerald-400/40 text-emerald-300 text-xs sm:text-sm font-bold shadow-lg">
-            <Tag className="w-4 h-4 text-emerald-400" />
-            <span>Offer: 20% off the listed package price, valid till 31 March 2027</span>
-          </div>
-
           {/* Brochure & Fee Structure Option */}
-          <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
+          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
             <button
               onClick={() => onOpenBrochure?.('all')}
               className="btn-reflection px-6 py-3 rounded-xl bg-gradient-to-r from-sky-700 via-sky-800 to-[#b58b42] hover:from-sky-800 hover:to-[#9e7735] text-white text-xs font-bold transition-all cursor-pointer shadow-lg shadow-sky-800/25 flex items-center gap-2"
@@ -112,33 +106,12 @@ export const PackagesSection: React.FC<PackagesSectionProps> = ({
                 <div className="relative z-10 flex flex-col justify-between h-full">
                   <div>
                     {/* Header info */}
-                    <div className="mb-2">
+                    <div className="mb-4 pb-3 border-b border-slate-100">
                       <h3 className="text-xl font-black text-slate-900 tracking-tight leading-snug">
                         {pkg.name}
                       </h3>
-                      <div className="text-xs font-semibold text-slate-500 mt-0.5">
+                      <div className="text-xs font-semibold text-slate-500 mt-1">
                         {pkg.deliverables.mode}
-                      </div>
-                    </div>
-
-                    {/* Pricing Display from Brochure Page 4 */}
-                    <div className="my-3.5 pt-3 pb-3 border-y border-slate-100">
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-2xl sm:text-[1.75rem] font-black text-slate-900 tracking-tight">
-                          {currency === 'INR'
-                            ? `₹${pkg.priceINR.toLocaleString('en-IN')}`
-                            : `$${pkg.priceUSD.toLocaleString('en-US')}`}
-                        </span>
-                        {pkg.originalPriceINR && (
-                          <span className="text-xs sm:text-sm font-semibold text-slate-400 line-through">
-                            {currency === 'INR'
-                              ? `₹${pkg.originalPriceINR.toLocaleString('en-IN')}`
-                              : `$${pkg.originalPriceUSD?.toLocaleString('en-US')}`}
-                          </span>
-                        )}
-                      </div>
-                      <div className="mt-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-2 py-0.5 rounded-md inline-block">
-                        {pkg.offerNote || 'full program 20% off till 31 Mar 2027'}
                       </div>
                     </div>
 
@@ -288,14 +261,6 @@ export const PackagesSection: React.FC<PackagesSectionProps> = ({
                   <td className="p-3.5 text-slate-400">–</td>
                   <td className="p-3.5 font-bold text-amber-900 bg-amber-50/50">Included</td>
                 </tr>
-                <tr className="bg-slate-50/70">
-                  <td className="p-3.5 font-bold text-slate-900">Full Program Fee (20% Off)</td>
-                  <td className="p-3.5 font-bold text-slate-900">₹36,000</td>
-                  <td className="p-3.5 font-bold text-slate-900">₹48,000</td>
-                  <td className="p-3.5 font-bold text-sky-800">₹65,600</td>
-                  <td className="p-3.5 font-bold text-purple-900">₹92,000</td>
-                  <td className="p-3.5 font-bold text-amber-900">₹1,16,000</td>
-                </tr>
                 <tr>
                   <td className="p-3.5 font-bold text-slate-900">Brochure Download</td>
                   {PACKAGES.map((pkg) => (
@@ -314,7 +279,7 @@ export const PackagesSection: React.FC<PackagesSectionProps> = ({
               </tbody>
             </table>
             <div className="p-3 text-[11px] text-slate-500 bg-slate-50 border-t border-slate-200">
-              Offer: 20% off the listed package price, valid till 31 March 2027. IIA exam fees are paid separately.
+              All five packages cover every part of the CIA® exam. Full curriculum & inclusions available in the official student brochure. IIA exam fees are paid separately.
             </div>
           </motion.div>
         )}
