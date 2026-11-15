@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="crestBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0b1d3a" />
+      <stop offset="55%" stop-color="#14366b" />
+      <stop offset="100%" stop-color="#09172e" />
+    </linearGradient>
+    <linearGradient id="goldFrame" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f3c669" />
+      <stop offset="50%" stop-color="#d4a243" />
+      <stop offset="100%" stop-color="#b58b42" />
+    </linearGradient>
+    <linearGradient id="goldBar" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#c9973b" />
+      <stop offset="55%" stop-color="#f5cb73" />
+      <stop offset="100%" stop-color="#e2b151" />
+    </linearGradient>
+  </defs>
+
+  <!-- Executive Navy Crest with Gold Border -->
+  <rect x="12" y="12" width="488" height="488" rx="112" fill="url(#crestBg)" stroke="url(#goldFrame)" stroke-width="20" />
+
+  <!-- Subtle Inner Hairline Accent -->
+  <rect x="40" y="40" width="432" height="432" rx="86" fill="none" stroke="#ffffff" stroke-opacity="0.14" stroke-width="4" />
+
+  <!-- Pure Geometric Monogram: "b" -->
+  <rect x="76" y="129" width="35" height="170" rx="5" fill="#ffffff" />
+  <circle cx="130" cy="245" r="37" fill="none" stroke="#ffffff" stroke-width="34" />
+
+  <!-- Pure Geometric Monogram: "n" -->
+  <path
+    d="M 204 299 L 204 241 A 53 50 0 0 1 310 241 L 310 299 L 276 299 L 276 243 A 19 18 0 0 0 238 243 L 238 299 Z"
+    fill="#ffffff"
+  />
+
+  <!-- Pure Geometric Monogram: "c" -->
+  <path
+    d="M 426.6 211.7 A 54 54 0 1 0 426.6 278.3 L 399.8 257.3 A 20 20 0 1 1 399.8 232.7 Z"
+    fill="#ffffff"
+  />
+
+  <!-- Signature BNC ELEVATE Ascending Gold Line -->
+  <path
+    d="M 76 357 L 352 357 L 436 325 L 436 353 L 356 383 L 76 383 Z"
+    fill="url(#goldBar)"
+  />
+</svg>
