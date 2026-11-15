@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Currency } from '../types';
-import { Phone, Mail, ChevronRight, Menu, X, Sparkles, MessageSquare, BookOpen, Download } from 'lucide-react';
+import { Phone, Mail, ChevronRight, Menu, X, BookOpen } from 'lucide-react';
 
 interface NavbarProps {
   currency: Currency;
   setCurrency: (c: Currency) => void;
   onOpenCheckout: (packageId?: string) => void;
   onOpenInquiry: () => void;
-  onOpenChatbot: () => void;
   onOpenLms?: () => void;
   onOpenBrochure?: () => void;
 }
@@ -17,7 +16,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   setCurrency,
   onOpenCheckout,
   onOpenInquiry,
-  onOpenChatbot,
   onOpenLms,
   onOpenBrochure,
 }) => {
@@ -29,7 +27,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
 
-      const sections = ['exam', 'curriculum', 'packages', 'fees', 'faq'];
+      const sections = ['exam', 'curriculum', 'eligibility', 'packages', 'fees', 'faq'];
       const scrollPosition = window.scrollY + 150;
 
       for (let i = sections.length - 1; i >= 0; i--) {
@@ -53,6 +51,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const navLinks = [
     { id: 'exam', label: 'The Exam' },
     { id: 'curriculum', label: 'Curriculum' },
+    { id: 'eligibility', label: 'Eligibility' },
     { id: 'packages', label: 'Packages' },
     { id: 'fees', label: 'IIA Fees' },
     { id: 'faq', label: 'FAQ' },
@@ -139,16 +138,16 @@ export const Navbar: React.FC<NavbarProps> = ({
               </a>
             </div>
 
-            {/* Zone 2: Exactly 5 Central Navigation Links (User requested: "At the header, I want a text to win central, like all five texts.") */}
-            <nav className="hidden lg:flex items-center justify-center flex-1 max-w-xl mx-auto">
-              <div className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-sky-50/70 border border-sky-100/80 shadow-xs">
+            {/* Zone 2: Central Navigation Links */}
+            <nav className="hidden lg:flex items-center justify-center flex-1 max-w-2xl mx-auto">
+              <div className="flex items-center gap-0.5 xl:gap-1 px-2.5 py-1.5 rounded-full bg-sky-50/70 border border-sky-100/80 shadow-xs">
                 {navLinks.map((link) => {
                   const isActive = activeSection === link.id;
                   return (
                     <button
                       key={link.id}
                       onClick={() => scrollTo(link.id)}
-                      className={`px-4 py-2 text-sm font-semibold rounded-full transition-all duration-200 cursor-pointer whitespace-nowrap ${
+                      className={`px-3 xl:px-4 py-2 text-xs xl:text-sm font-semibold rounded-full transition-all duration-200 cursor-pointer whitespace-nowrap ${
                         isActive
                           ? 'bg-gradient-to-r from-sky-700 to-[#b58b42] text-white shadow-md shadow-sky-700/20'
                           : 'text-slate-600 hover:text-sky-800 hover:bg-white'
@@ -176,15 +175,6 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <span>Student LMS</span>
                 </button>
               )}
-
-              {/* AI Counselor Quick Button */}
-              <button
-                onClick={onOpenChatbot}
-                className="hidden xl:inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-slate-700 hover:text-[#b58b42] border border-sky-100 hover:border-amber-300 rounded-lg bg-white hover:bg-amber-50/50 transition-colors cursor-pointer"
-              >
-                <Sparkles className="w-3.5 h-3.5 text-[#b58b42]" />
-                <span>AI Advisor</span>
-              </button>
 
               {/* Primary Enrollment Button with Reflection Effect */}
               <button
@@ -237,16 +227,6 @@ export const Navbar: React.FC<NavbarProps> = ({
               >
                 <span>Enroll Now</span>
                 <ChevronRight className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  onOpenChatbot();
-                }}
-                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-semibold text-slate-700 bg-sky-50 border border-sky-200/80 hover:bg-amber-50"
-              >
-                <Sparkles className="w-4 h-4 text-[#b58b42]" />
-                <span>Ask AI Advisor</span>
               </button>
 
               {onOpenLms && (

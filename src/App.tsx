@@ -141,7 +141,6 @@ export default function App() {
         setCurrency={setCurrency}
         onOpenCheckout={handleOpenCheckout}
         onOpenInquiry={handleOpenInquiry}
-        onOpenChatbot={handleOpenChatbot}
         onOpenLms={() => setLmsOpen(true)}
         onOpenBrochure={handleOpenBrochure}
       />
