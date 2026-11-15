@@ -586,24 +586,19 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
   // If student is not yet authenticated, render the Dual-Mode Verification & Login Screen
   if (!currentUser) {
     return (
-      <div className={`min-h-screen ${theme === 'light' ? 'bg-[#f8fafc]/50 text-slate-800' : 'bg-[#071322] text-slate-100'} flex flex-col font-sans relative selection:bg-[#b58b42] selection:text-white transition-colors duration-200`}>
-        {/* Architectural Backdrop Layer - Prominently Visible in Light Theme */}
+      <div className={`min-h-screen ${theme === 'light' ? 'bg-white text-slate-800' : 'bg-[#071322] text-slate-100'} flex flex-col font-sans relative selection:bg-[#b58b42] selection:text-white transition-colors duration-200`}>
+        {/* Architectural Wallpaper Layer - Clearly Visible & Slightly Lightened Outside Boxes in Light Theme */}
         <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
           <img
             src="/hero-bg.jpg"
             alt="BNC Architectural Backdrop"
-            className={`w-full h-full object-cover object-center filter contrast-125 ${
+            className={`w-full h-full object-cover object-center ${
               theme === 'light'
-                ? 'opacity-45 brightness-100 saturate-125'
-                : 'opacity-30 brightness-75 saturate-110'
+                ? 'opacity-75 brightness-105'
+                : 'filter contrast-125 opacity-30 brightness-75 saturate-110'
             }`}
           />
-          {theme === 'light' ? (
-            <>
-              <div className="absolute inset-0 bg-gradient-to-b from-white/70 via-[#f8fafc]/55 to-[#f1f5f9]/70" />
-              <div className="absolute inset-0 bg-[radial-gradient(#102a4e_1px,transparent_1px)] [background-size:28px_28px] opacity-[0.08]" />
-            </>
-          ) : (
+          {theme === 'dark' && (
             <>
               <div className="absolute inset-0 bg-gradient-to-b from-[#071322]/90 via-[#0b1d33]/85 to-[#06101c]/95" />
               <div className="absolute inset-0 bg-[radial-gradient(#38bdf8_1px,transparent_1px)] [background-size:32px_32px] opacity-[0.06]" />
@@ -732,7 +727,9 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
           {portalMode === 'learner' ? (
             <>
               {/* Header Shield & Description */}
-              <div className="text-center max-w-2xl mx-auto mb-8">
+              <div className={`text-center max-w-2xl mx-auto mb-8 ${
+                theme === 'light' ? 'bg-white border border-slate-200 rounded-3xl px-6 py-5 shadow-md' : ''
+              }`}>
                 <div className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full ${theme === 'light' ? 'bg-amber-50 border border-amber-200 text-[#8d6928]' : 'bg-[#b58b42]/15 border border-[#b58b42]/35 text-[#f1bd5b]'} text-xs font-bold uppercase tracking-wider mb-4`}>
                   <ShieldCheck className="w-4 h-4 text-[#b58b42]" />
                   <span>Enrolled Learners Only · Admin-Assigned Access</span>
@@ -895,7 +892,9 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
             /* ===================== VIEW 2: ADMIN LOGIN ===================== */
             <>
               {/* Admin Header */}
-              <div className="text-center max-w-2xl mx-auto mb-8">
+              <div className={`text-center max-w-2xl mx-auto mb-8 ${
+                theme === 'light' ? 'bg-white border border-slate-200 rounded-3xl px-6 py-5 shadow-md' : ''
+              }`}>
                 <div className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full ${
                   theme === 'light' ? 'bg-sky-50 border border-sky-200 text-sky-800' : 'bg-sky-500/15 border border-sky-500/35 text-sky-300'
                 } text-xs font-bold uppercase tracking-wider mb-4`}>
@@ -1046,24 +1045,19 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
 
 
   return (
-    <div className={`min-h-screen ${theme === 'light' ? 'bg-[#f8fafc]/50 text-slate-800' : 'bg-[#071322] text-slate-100'} flex flex-col font-sans transition-colors duration-200 relative`}>
-      {/* Architectural Backdrop Layer - Prominently Visible Across All Student LMS Sections */}
+    <div className={`min-h-screen ${theme === 'light' ? 'bg-white text-slate-800' : 'bg-[#071322] text-slate-100'} flex flex-col font-sans transition-colors duration-200 relative`}>
+      {/* Architectural Wallpaper Layer - Clearly Visible & Slightly Lightened Outside Boxes in Light Theme */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
         <img
           src="/hero-bg.jpg"
           alt="BNC Architectural Backdrop"
-          className={`w-full h-full object-cover object-center filter contrast-125 ${
+          className={`w-full h-full object-cover object-center ${
             theme === 'light'
-              ? 'opacity-45 brightness-100 saturate-125'
-              : 'opacity-30 brightness-75 saturate-110'
+              ? 'opacity-75 brightness-105'
+              : 'filter contrast-125 opacity-30 brightness-75 saturate-110'
           }`}
         />
-        {theme === 'light' ? (
-          <>
-            <div className="absolute inset-0 bg-gradient-to-b from-white/70 via-[#f8fafc]/55 to-[#f1f5f9]/70" />
-            <div className="absolute inset-0 bg-[radial-gradient(#102a4e_1px,transparent_1px)] [background-size:28px_28px] opacity-[0.08]" />
-          </>
-        ) : (
+        {theme === 'dark' && (
           <>
             <div className="absolute inset-0 bg-gradient-to-b from-[#071322]/90 via-[#0b1d33]/85 to-[#06101c]/95" />
             <div className="absolute inset-0 bg-[radial-gradient(#38bdf8_1px,transparent_1px)] [background-size:32px_32px] opacity-[0.06]" />

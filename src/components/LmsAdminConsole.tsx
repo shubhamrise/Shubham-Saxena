@@ -16,26 +16,16 @@ import {
   BookOpen,
   Filter,
   X,
-  Check,
   AlertTriangle,
   Mail,
   Phone,
   PhoneCall,
   FileSpreadsheet,
   Download,
-  ExternalLink,
   MessageSquare,
   Sun,
   Moon
 } from 'lucide-react';
-import {
-  triggerFormSubmitActivation,
-  sendTestEnquiryToAdmin,
-  getWeb3FormsKey,
-  setWeb3FormsKey,
-  getFormspreeId,
-  setFormspreeId
-} from '../services/enquiryService';
 import { CrmCallLogEditor } from './admin/CrmCallLogEditor';
 
 const INITIAL_CRM_CALL_LOGS: CrmCallLog[] = [
@@ -152,20 +142,6 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
     } catch (e) {
       console.warn(e);
     }
-  };
-
-  // Email Delivery Integration Settings
-  const [web3FormsInput, setWeb3FormsInput] = useState(getWeb3FormsKey);
-  const [formspreeInput, setFormspreeInput] = useState(getFormspreeId);
-  const [isSavedKeyFeedback, setIsSavedKeyFeedback] = useState(false);
-
-  const handleSaveEmailConfig = (e: React.FormEvent) => {
-    e.preventDefault();
-    setWeb3FormsKey(web3FormsInput);
-    setFormspreeId(formspreeInput);
-    setIsSavedKeyFeedback(true);
-    setTimeout(() => setIsSavedKeyFeedback(false), 3000);
-    onShowToast('✓ Permanent email integration saved for info@bncglobal.in!');
   };
 
   // Unified leads state populated from website inquiries
@@ -490,23 +466,18 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
 
   return (
     <div className={`min-h-screen flex flex-col font-sans relative transition-colors duration-200 ${
-      theme === 'light' ? 'bg-[#f8fafc]/50 text-slate-900' : 'bg-[#071322] text-slate-100'
+      theme === 'light' ? 'bg-white text-slate-900' : 'bg-[#071322] text-slate-100'
     }`}>
-      {/* Background Ambience - Prominently Visible in Light Theme */}
+      {/* Background Wallpaper - Clearly Visible & Slightly Lightened Outside Boxes in Light Theme */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
         <img
           src="/hero-bg.jpg"
           alt="BNC Architectural Backdrop"
-          className={`w-full h-full object-cover object-center filter contrast-125 ${
-            theme === 'light' ? 'opacity-45 brightness-100 saturate-125' : 'opacity-30 brightness-75 saturate-110'
+          className={`w-full h-full object-cover object-center ${
+            theme === 'light' ? 'opacity-75 brightness-105' : 'filter contrast-125 opacity-30 brightness-75 saturate-110'
           }`}
         />
-        {theme === 'light' ? (
-          <>
-            <div className="absolute inset-0 bg-gradient-to-b from-white/70 via-[#f8fafc]/55 to-[#f1f5f9]/70" />
-            <div className="absolute inset-0 bg-[radial-gradient(#102a4e_1px,transparent_1px)] [background-size:28px_28px] opacity-[0.08]" />
-          </>
-        ) : (
+        {theme === 'dark' && (
           <>
             <div className="absolute inset-0 bg-gradient-to-b from-[#071322]/95 via-[#0b1d33]/90 to-[#06101c]/95" />
             <div className="absolute inset-0 bg-[radial-gradient(#38bdf8_1px,transparent_1px)] [background-size:32px_32px] opacity-[0.06]" />
@@ -1100,229 +1071,6 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
           </div>
         </div>
 
-        {/* Permanent Form Activation & Multi-Provider Hub for info@bncglobal.in */}
-        <div className={`p-6 rounded-3xl border-2 border-[#b58b42]/70 space-y-6 transition-colors ${
-          theme === 'light'
-            ? 'bg-white shadow-md'
-            : 'bg-gradient-to-r from-[#071a30] via-[#0b2342] to-[#102c4e] shadow-2xl'
-        }`}>
-          {/* Outage Diagnosis Banner for FormSubmit 522 */}
-          <div className={`p-4 rounded-2xl border flex flex-col md:flex-row items-start md:items-center justify-between gap-3 text-xs ${
-            theme === 'light'
-              ? 'bg-amber-50 border-amber-300 text-amber-950'
-              : 'bg-amber-950/40 border-amber-500/50 text-amber-100'
-          }`}>
-            <div className="flex items-start gap-2.5">
-              <AlertTriangle className={`w-5 h-5 shrink-0 mt-0.5 ${theme === 'light' ? 'text-amber-600' : 'text-amber-400'}`} />
-              <div>
-                <div className={`font-bold ${theme === 'light' ? 'text-amber-900' : 'text-amber-200'}`}>
-                  Third-Party FormSubmit Outage Detected (Cloudflare Error 522)
-                </div>
-                <div className={`text-[11px] mt-0.5 leading-relaxed ${theme === 'light' ? 'text-amber-800' : 'text-amber-100/80'}`}>
-                  As shown in your browser, <strong>formsubmit.co's host servers are currently offline</strong> (Error 522 Connection Timed Out). To ensure you receive leads without relying on third-party server outages, you can activate our permanent <strong>Web3Forms</strong> integration below or use the 1-click mail links!
-                </div>
-              </div>
-            </div>
-            <a
-              href="https://web3forms.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="shrink-0 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-[#b58b42] text-slate-950 font-bold text-xs shadow-sm hover:from-amber-400 hover:to-amber-500 transition-all flex items-center gap-1.5 cursor-pointer"
-            >
-              <ExternalLink className="w-3.5 h-3.5" />
-              <span>Get Free Web3Forms Key</span>
-            </a>
-          </div>
-
-          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-            <div className="flex items-start gap-3.5">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#b58b42] to-amber-400 text-slate-950 flex items-center justify-center font-black shadow-md shrink-0">
-                <Mail className="w-6 h-6 text-slate-950" />
-              </div>
-              <div>
-                <div className="flex flex-wrap items-center gap-2 mb-1">
-                  <span className={`px-2.5 py-0.5 rounded-full border text-[10px] font-bold uppercase tracking-wider ${
-                    theme === 'light'
-                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                      : 'bg-emerald-400/20 text-emerald-300 border-emerald-500/50'
-                  }`}>
-                    Permanent Delivery Gateways
-                  </span>
-                  <span className={`text-xs font-semibold flex items-center gap-1 ${
-                    theme === 'light' ? 'text-sky-700' : 'text-sky-300'
-                  }`}>
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                    Target Recipient: info@bncglobal.in
-                  </span>
-                </div>
-                <h3 className={`text-lg sm:text-xl font-black ${
-                  theme === 'light' ? 'text-slate-900' : 'text-white'
-                }`}>
-                  Permanent Email Forwarding Hub
-                </h3>
-                <p className={`text-xs mt-1 max-w-2xl leading-relaxed ${
-                  theme === 'light' ? 'text-slate-600' : 'text-slate-300'
-                }`}>
-                  Connect a free <strong>Web3Forms Access Key</strong> or <strong>Formspree ID</strong> to deliver every candidate enquiry directly to <strong className="text-[#b58b42]">info@bncglobal.in</strong> forever with 99.99% uptime.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-2.5 shrink-0">
-              <button
-                type="button"
-                onClick={async () => {
-                  await sendTestEnquiryToAdmin();
-                  onShowToast('✓ Dispatched test inquiry! Check console and inbox.');
-                }}
-                className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#102a4e] to-[#b58b42] hover:opacity-95 text-white text-xs font-bold transition-all cursor-pointer flex items-center gap-2 shadow-sm"
-                title="Send a sample lead to test delivery"
-              >
-                <Sparkles className="w-4 h-4 text-[#f1bd5b]" />
-                <span>Send Test Lead</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  triggerFormSubmitActivation();
-                  onShowToast('Opened FormSubmit activation window in new tab.');
-                }}
-                className={`px-3.5 py-2.5 rounded-xl text-xs font-semibold border transition-colors cursor-pointer ${
-                  theme === 'light'
-                    ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300'
-                    : 'bg-slate-900/90 hover:bg-slate-800 text-slate-300 border-slate-700'
-                }`}
-                title="Retry FormSubmit activation link"
-              >
-                Retry FormSubmit (If online)
-              </button>
-
-              <a
-                href="mailto:info@bncglobal.in?subject=BNC%20ELEVATE%20Admissions%20Test&body=Admissions%20dispatch%20test"
-                className={`px-3.5 py-2.5 rounded-xl text-xs font-semibold border transition-colors ${
-                  theme === 'light'
-                    ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300'
-                    : 'bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white border-slate-700'
-                }`}
-              >
-                Open Mail App
-              </a>
-            </div>
-          </div>
-
-          {/* Web3Forms & Formspree Configuration Card */}
-          <form
-            onSubmit={handleSaveEmailConfig}
-            className={`p-5 rounded-2xl border space-y-4 ${
-              theme === 'light'
-                ? 'bg-slate-50 border-slate-200'
-                : 'bg-slate-950/80 border-sky-900/80'
-            }`}
-          >
-            <div className={`flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pb-3 border-b ${
-              theme === 'light' ? 'border-slate-200' : 'border-slate-800'
-            }`}>
-              <div>
-                <div className={`text-xs font-bold flex items-center gap-2 ${
-                  theme === 'light' ? 'text-slate-900' : 'text-white'
-                }`}>
-                  <span>Permanent Free Access Keys (Zero Outages)</span>
-                  {web3FormsInput ? (
-                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
-                      theme === 'light'
-                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                        : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
-                    }`}>
-                      Web3Forms Active ✓
-                    </span>
-                  ) : (
-                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
-                      theme === 'light'
-                        ? 'bg-amber-50 text-[#b58b42] border-amber-200'
-                        : 'bg-amber-500/20 text-[#f1bd5b] border-amber-500/40'
-                    }`}>
-                      Setup Recommended
-                    </span>
-                  )}
-                </div>
-                <div className={`text-[11px] mt-0.5 ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>
-                  Web3Forms emails the key instantly to info@bncglobal.in and forwards submissions without Cloudflare errors.
-                </div>
-              </div>
-
-              <a
-                href="https://web3forms.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs text-[#b58b42] hover:underline font-semibold flex items-center gap-1"
-              >
-                <span>Get Free Key at Web3Forms</span>
-                <ExternalLink className="w-3 h-3" />
-              </a>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className={`block text-xs font-semibold mb-1 ${
-                  theme === 'light' ? 'text-slate-700' : 'text-slate-300'
-                }`}>
-                  Web3Forms Access Key (Recommended)
-                </label>
-                <input
-                  type="text"
-                  value={web3FormsInput}
-                  onChange={(e) => setWeb3FormsInput(e.target.value)}
-                  placeholder="e.g. 1a2b3c4d-5e6f-7g8h-9i0j-k1l2m3n4o5p6"
-                  className={`w-full px-3.5 py-2.5 rounded-xl border text-xs font-mono transition-all ${
-                    theme === 'light'
-                      ? 'bg-white border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-sky-600 focus:ring-1 focus:ring-sky-600'
-                      : 'bg-slate-900 border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-[#f1bd5b]'
-                  }`}
-                />
-                <p className={`text-[10px] mt-1 ${theme === 'light' ? 'text-slate-500' : 'text-slate-500'}`}>
-                  Enter info@bncglobal.in at web3forms.com to receive your permanent free access key.
-                </p>
-              </div>
-
-              <div>
-                <label className={`block text-xs font-semibold mb-1 ${
-                  theme === 'light' ? 'text-slate-700' : 'text-slate-300'
-                }`}>
-                  Formspree Form ID (Optional Backup)
-                </label>
-                <input
-                  type="text"
-                  value={formspreeInput}
-                  onChange={(e) => setFormspreeInput(e.target.value)}
-                  placeholder="e.g. xpzgvykl"
-                  className={`w-full px-3.5 py-2.5 rounded-xl border text-xs font-mono transition-all ${
-                    theme === 'light'
-                      ? 'bg-white border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-sky-600 focus:ring-1 focus:ring-sky-600'
-                      : 'bg-slate-900 border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-[#f1bd5b]'
-                  }`}
-                />
-                <p className={`text-[10px] mt-1 ${theme === 'light' ? 'text-slate-500' : 'text-slate-500'}`}>
-                  Optional Formspree endpoint ID from formspree.io.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between pt-2">
-              <span className="text-[11px] text-emerald-600 font-medium">
-                {isSavedKeyFeedback && '✓ Configuration saved to browser storage! Ready for dispatch.'}
-              </span>
-              <button
-                type="submit"
-                className="px-5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white text-xs font-bold transition-all cursor-pointer shadow-sm flex items-center gap-1.5"
-              >
-                <Check className="w-3.5 h-3.5" />
-                <span>Save Email Gateway Key</span>
-              </button>
-            </div>
-          </form>
-        </div>
-
         {/* Search Input for Leads */}
         <div className="relative">
           <Search className="w-4 h-4 text-slate-400 absolute left-4 top-3.5" />
@@ -1502,22 +1250,34 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
       {isAddModalOpen && (
         <div
           onClick={() => setIsAddModalOpen(false)}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-sm overflow-y-auto animate-in fade-in duration-200"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm overflow-y-auto animate-in fade-in duration-200"
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="relative w-full max-w-xl my-8 bg-[#091729] border border-sky-800/80 rounded-3xl shadow-2xl overflow-hidden text-slate-100"
+            className={`relative w-full max-w-xl my-8 border rounded-3xl shadow-2xl overflow-hidden ${
+              theme === 'light'
+                ? 'bg-white border-slate-200 text-slate-900'
+                : 'bg-[#091729] border-sky-800/80 text-slate-100'
+            }`}
           >
-            <div className="h-1.5 bg-gradient-to-r from-sky-600 via-[#f1bd5b] to-sky-700" />
+            <div className="h-1.5 bg-gradient-to-r from-[#102a4e] via-[#b58b42] to-sky-700" />
 
-            <div className="flex items-center justify-between px-6 py-4 bg-[#0b1d33] border-b border-sky-950">
+            <div
+              className={`flex items-center justify-between px-6 py-4 border-b ${
+                theme === 'light'
+                  ? 'bg-slate-50 border-slate-200'
+                  : 'bg-[#0b1d33] border-sky-950'
+              }`}
+            >
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-sky-700 to-[#b58b42] flex items-center justify-center text-white shadow-md">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#102a4e] to-[#b58b42] flex items-center justify-center text-white shadow-md">
                   <UserCheck className="w-5 h-5 text-[#f1bd5b]" />
                 </div>
                 <div>
-                  <h3 className="text-base font-black text-white">Grant New Learner Access</h3>
-                  <p className="text-[11px] text-slate-400">
+                  <h3 className={`text-base font-black ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>
+                    Grant New Learner Access
+                  </h3>
+                  <p className={`text-[11px] ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>
                     Authorize a student with tuition verification
                   </p>
                 </div>
@@ -1525,54 +1285,79 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
               <button
                 type="button"
                 onClick={() => setIsAddModalOpen(false)}
-                className="w-9 h-9 rounded-full flex items-center justify-center text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-700 cursor-pointer"
+                className={`w-9 h-9 rounded-full flex items-center justify-center cursor-pointer ${
+                  theme === 'light'
+                    ? 'text-slate-500 hover:text-slate-900 bg-slate-200 hover:bg-slate-300'
+                    : 'text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-700'
+                }`}
               >
                 <X className="w-5 h-5 pointer-events-none" />
               </button>
             </div>
 
-            <form onSubmit={handleAddLearner} className="p-6 space-y-4 text-xs">
+            <form onSubmit={handleAddLearner} className="p-6 space-y-4 text-xs max-h-[80vh] overflow-y-auto">
               <div>
-                <label className="block font-semibold text-slate-300 mb-1">Student Full Name *</label>
+                <label className={`block font-semibold mb-1 ${theme === 'light' ? 'text-slate-700' : 'text-slate-300'}`}>
+                  Student Full Name *
+                </label>
                 <input
                   type="text"
                   required
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
                   placeholder="e.g. Vikram Malhotra"
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-[#f1bd5b]"
+                  className={`w-full px-3.5 py-2.5 rounded-xl border focus:outline-none ${
+                    theme === 'light'
+                      ? 'bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-400 focus:border-sky-600 focus:ring-1 focus:ring-sky-600'
+                      : 'bg-slate-900 border-slate-700 text-white placeholder-slate-500 focus:border-[#f1bd5b]'
+                  }`}
                 />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold text-slate-300 mb-1">Student Email *</label>
+                  <label className={`block font-semibold mb-1 ${theme === 'light' ? 'text-slate-700' : 'text-slate-300'}`}>
+                    Student Email *
+                  </label>
                   <input
                     type="email"
                     required
                     value={newEmail}
                     onChange={(e) => setNewEmail(e.target.value)}
                     placeholder="vikram@example.com"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-[#f1bd5b]"
+                    className={`w-full px-3.5 py-2.5 rounded-xl border focus:outline-none ${
+                      theme === 'light'
+                        ? 'bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-400 focus:border-sky-600 focus:ring-1 focus:ring-sky-600'
+                        : 'bg-slate-900 border-slate-700 text-white placeholder-slate-500 focus:border-[#f1bd5b]'
+                    }`}
                   />
                 </div>
 
                 <div>
-                  <label className="block font-semibold text-slate-300 mb-1">WhatsApp / Phone</label>
+                  <label className={`block font-semibold mb-1 ${theme === 'light' ? 'text-slate-700' : 'text-slate-300'}`}>
+                    WhatsApp / Phone
+                  </label>
                   <input
                     type="text"
                     value={newPhone}
                     onChange={(e) => setNewPhone(e.target.value)}
                     placeholder="+91 98765 43210"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-[#f1bd5b]"
+                    className={`w-full px-3.5 py-2.5 rounded-xl border focus:outline-none ${
+                      theme === 'light'
+                        ? 'bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-400 focus:border-sky-600 focus:ring-1 focus:ring-sky-600'
+                        : 'bg-slate-900 border-slate-700 text-white placeholder-slate-500 focus:border-[#f1bd5b]'
+                    }`}
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold text-slate-300 mb-1">
-                    Student Access Password * <span className="text-amber-400 font-normal">(Login key)</span>
+                  <label className={`block font-semibold mb-1 ${theme === 'light' ? 'text-slate-700' : 'text-slate-300'}`}>
+                    Student Access Password *{' '}
+                    <span className={`font-normal ${theme === 'light' ? 'text-[#8d6928]' : 'text-amber-400'}`}>
+                      (Login key)
+                    </span>
                   </label>
                   <input
                     type="text"
@@ -1580,19 +1365,29 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     placeholder="e.g. bnc2026"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-amber-300 font-mono font-bold placeholder-slate-500 focus:outline-none focus:border-[#f1bd5b]"
+                    className={`w-full px-3.5 py-2.5 rounded-xl border font-mono font-bold focus:outline-none ${
+                      theme === 'light'
+                        ? 'bg-slate-50 border-slate-300 text-[#8d6928] placeholder-slate-400 focus:border-sky-600 focus:ring-1 focus:ring-sky-600'
+                        : 'bg-slate-900 border-slate-700 text-amber-300 placeholder-slate-500 focus:border-[#f1bd5b]'
+                    }`}
                   />
-                  <p className="text-[10px] text-slate-400 mt-1">
+                  <p className={`text-[10px] mt-1 ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>
                     Student will sign in using their email and this password.
                   </p>
                 </div>
 
                 <div>
-                  <label className="block font-semibold text-slate-300 mb-1">Enrolled Package *</label>
+                  <label className={`block font-semibold mb-1 ${theme === 'light' ? 'text-slate-700' : 'text-slate-300'}`}>
+                    Enrolled Package *
+                  </label>
                   <select
                     value={newPackage}
                     onChange={(e) => setNewPackage(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white focus:outline-none focus:border-[#f1bd5b]"
+                    className={`w-full px-3.5 py-2.5 rounded-xl border focus:outline-none ${
+                      theme === 'light'
+                        ? 'bg-slate-50 border-slate-300 text-slate-900 focus:border-sky-600 focus:ring-1 focus:ring-sky-600'
+                        : 'bg-slate-900 border-slate-700 text-white focus:border-[#f1bd5b]'
+                    }`}
                   >
                     <option>Premium Plus with AI Audit Lab</option>
                     <option>Premium Live Interactive</option>
@@ -1604,25 +1399,38 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-300 mb-1">
-                  Assigned Reference / Order ID <span className="text-slate-400 font-normal">(Optional internal tracking)</span>
+                <label className={`block font-semibold mb-1 ${theme === 'light' ? 'text-slate-700' : 'text-slate-300'}`}>
+                  Assigned Reference / Order ID{' '}
+                  <span className={`font-normal ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>
+                    (Optional internal tracking)
+                  </span>
                 </label>
                 <input
                   type="text"
                   value={newOrderId}
                   onChange={(e) => setNewOrderId(e.target.value)}
                   placeholder="e.g. 2026005"
-                  className="w-full px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sky-300 font-mono text-xs placeholder-slate-500 focus:outline-none focus:border-[#f1bd5b]"
+                  className={`w-full px-3.5 py-2 rounded-xl border font-mono text-xs focus:outline-none ${
+                    theme === 'light'
+                      ? 'bg-slate-50 border-slate-300 text-sky-700 placeholder-slate-400 focus:border-sky-600 focus:ring-1 focus:ring-sky-600'
+                      : 'bg-slate-900 border-slate-700 text-sky-300 placeholder-slate-500 focus:border-[#f1bd5b]'
+                  }`}
                 />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold text-slate-300 mb-1">Tuition Fee Status</label>
+                  <label className={`block font-semibold mb-1 ${theme === 'light' ? 'text-slate-700' : 'text-slate-300'}`}>
+                    Tuition Fee Status
+                  </label>
                   <select
                     value={newFeeStatus}
                     onChange={(e) => setNewFeeStatus(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white focus:outline-none focus:border-[#f1bd5b]"
+                    className={`w-full px-3.5 py-2.5 rounded-xl border focus:outline-none ${
+                      theme === 'light'
+                        ? 'bg-slate-50 border-slate-300 text-slate-900 focus:border-sky-600 focus:ring-1 focus:ring-sky-600'
+                        : 'bg-slate-900 border-slate-700 text-white focus:border-[#f1bd5b]'
+                    }`}
                   >
                     <option>Full Tuition Paid & Verified</option>
                     <option>Installment 1/2 Received (Active)</option>
@@ -1633,11 +1441,17 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
                 </div>
 
                 <div>
-                  <label className="block font-semibold text-slate-300 mb-1">Initial Access Status</label>
+                  <label className={`block font-semibold mb-1 ${theme === 'light' ? 'text-slate-700' : 'text-slate-300'}`}>
+                    Initial Access Status
+                  </label>
                   <select
                     value={newStatus}
                     onChange={(e) => setNewStatus(e.target.value as any)}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white focus:outline-none focus:border-[#f1bd5b]"
+                    className={`w-full px-3.5 py-2.5 rounded-xl border focus:outline-none ${
+                      theme === 'light'
+                        ? 'bg-slate-50 border-slate-300 text-slate-900 focus:border-sky-600 focus:ring-1 focus:ring-sky-600'
+                        : 'bg-slate-900 border-slate-700 text-white focus:border-[#f1bd5b]'
+                    }`}
                   >
                     <option value="active">Active (Access Granted Immediately)</option>
                     <option value="pending">Pending Clearance (Awaiting Check)</option>
@@ -1647,27 +1461,37 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-300 mb-1">Administrative Notes</label>
+                <label className={`block font-semibold mb-1 ${theme === 'light' ? 'text-slate-700' : 'text-slate-300'}`}>
+                  Administrative Notes
+                </label>
                 <input
                   type="text"
                   value={newNotes}
                   onChange={(e) => setNewNotes(e.target.value)}
                   placeholder="e.g. Bank transfer reference UTR-98234, verified by finance desk"
-                  className="w-full px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-[#f1bd5b]"
+                  className={`w-full px-3.5 py-2 rounded-xl border focus:outline-none ${
+                    theme === 'light'
+                      ? 'bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-400 focus:border-sky-600 focus:ring-1 focus:ring-sky-600'
+                      : 'bg-slate-900 border-slate-700 text-white placeholder-slate-500 focus:border-[#f1bd5b]'
+                  }`}
                 />
               </div>
 
-              <div className="pt-3 flex items-center justify-end gap-3 border-t border-slate-800">
+              <div className={`pt-3 flex items-center justify-end gap-3 border-t ${theme === 'light' ? 'border-slate-200' : 'border-slate-800'}`}>
                 <button
                   type="button"
                   onClick={() => setIsAddModalOpen(false)}
-                  className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold cursor-pointer"
+                  className={`px-4 py-2.5 rounded-xl font-semibold cursor-pointer ${
+                    theme === 'light'
+                      ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300'
+                      : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
+                  }`}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-sky-700 to-[#b58b42] hover:from-sky-800 hover:to-[#9e7735] text-white font-bold cursor-pointer shadow-md"
+                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#102a4e] to-[#b58b42] hover:opacity-95 text-white font-bold cursor-pointer shadow-sm"
                 >
                   Authorize Learner
                 </button>
@@ -1681,52 +1505,85 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
       {editingLearner && (
         <div
           onClick={() => setEditingLearner(null)}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-sm overflow-y-auto animate-in fade-in duration-200"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm overflow-y-auto animate-in fade-in duration-200"
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="relative w-full max-w-lg my-8 bg-[#091729] border border-sky-800/80 rounded-3xl shadow-2xl overflow-hidden text-slate-100"
+            className={`relative w-full max-w-lg my-8 border rounded-3xl shadow-2xl overflow-hidden ${
+              theme === 'light'
+                ? 'bg-white border-slate-200 text-slate-900'
+                : 'bg-[#091729] border-sky-800/80 text-slate-100'
+            }`}
           >
-            <div className="h-1.5 bg-gradient-to-r from-sky-600 via-[#f1bd5b] to-sky-700" />
+            <div className="h-1.5 bg-gradient-to-r from-[#102a4e] via-[#b58b42] to-sky-700" />
 
-            <div className="flex items-center justify-between px-6 py-4 bg-[#0b1d33] border-b border-sky-950">
-              <h3 className="text-base font-black text-white">Edit Learner Profile</h3>
+            <div
+              className={`flex items-center justify-between px-6 py-4 border-b ${
+                theme === 'light'
+                  ? 'bg-slate-50 border-slate-200'
+                  : 'bg-[#0b1d33] border-sky-950'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#102a4e] to-[#b58b42] flex items-center justify-center text-white shadow-md">
+                  <Edit3 className="w-4 h-4 text-[#f1bd5b]" />
+                </div>
+                <h3 className={`text-base font-black ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>
+                  Edit Learner Profile
+                </h3>
+              </div>
               <button
                 type="button"
                 onClick={() => setEditingLearner(null)}
-                className="w-9 h-9 rounded-full flex items-center justify-center text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-700 cursor-pointer"
+                className={`w-9 h-9 rounded-full flex items-center justify-center cursor-pointer ${
+                  theme === 'light'
+                    ? 'text-slate-500 hover:text-slate-900 bg-slate-200 hover:bg-slate-300'
+                    : 'text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-700'
+                }`}
               >
                 <X className="w-5 h-5 pointer-events-none" />
               </button>
             </div>
 
-            <form onSubmit={handleSaveEdit} className="p-6 space-y-4 text-xs">
+            <form onSubmit={handleSaveEdit} className="p-6 space-y-4 text-xs max-h-[80vh] overflow-y-auto">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold text-slate-300 mb-1">Student Name</label>
+                  <label className={`block font-semibold mb-1 ${theme === 'light' ? 'text-slate-700' : 'text-slate-300'}`}>
+                    Student Name
+                  </label>
                   <input
                     type="text"
                     required
                     value={editingLearner.name}
                     onChange={(e) => setEditingLearner({ ...editingLearner, name: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white focus:outline-none focus:border-[#f1bd5b]"
+                    className={`w-full px-3.5 py-2.5 rounded-xl border focus:outline-none ${
+                      theme === 'light'
+                        ? 'bg-slate-50 border-slate-300 text-slate-900 focus:border-sky-600 focus:ring-1 focus:ring-sky-600'
+                        : 'bg-slate-900 border-slate-700 text-white focus:border-[#f1bd5b]'
+                    }`}
                   />
                 </div>
                 <div>
-                  <label className="block font-semibold text-slate-300 mb-1">Registered Email</label>
+                  <label className={`block font-semibold mb-1 ${theme === 'light' ? 'text-slate-700' : 'text-slate-300'}`}>
+                    Registered Email
+                  </label>
                   <input
                     type="email"
                     required
                     value={editingLearner.email}
                     onChange={(e) => setEditingLearner({ ...editingLearner, email: e.target.value.toLowerCase() })}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white focus:outline-none focus:border-[#f1bd5b]"
+                    className={`w-full px-3.5 py-2.5 rounded-xl border focus:outline-none ${
+                      theme === 'light'
+                        ? 'bg-slate-50 border-slate-300 text-slate-900 focus:border-sky-600 focus:ring-1 focus:ring-sky-600'
+                        : 'bg-slate-900 border-slate-700 text-white focus:border-[#f1bd5b]'
+                    }`}
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-300 mb-1">
-                  Student Access Password <span className="text-[#f1bd5b]">*</span>
+                <label className={`block font-semibold mb-1 ${theme === 'light' ? 'text-slate-700' : 'text-slate-300'}`}>
+                  Student Access Password <span className="text-[#b58b42]">*</span>
                 </label>
                 <input
                   type="text"
@@ -1736,21 +1593,31 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
                     setEditingLearner({ ...editingLearner, password: e.target.value })
                   }
                   placeholder="e.g. bnc2026"
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-amber-300 font-mono font-bold focus:outline-none focus:border-[#f1bd5b]"
+                  className={`w-full px-3.5 py-2.5 rounded-xl border font-mono font-bold focus:outline-none ${
+                    theme === 'light'
+                      ? 'bg-slate-50 border-slate-300 text-[#8d6928] focus:border-sky-600 focus:ring-1 focus:ring-sky-600'
+                      : 'bg-slate-900 border-slate-700 text-amber-300 focus:border-[#f1bd5b]'
+                  }`}
                 />
-                <p className="text-[10px] text-slate-400 mt-1">
+                <p className={`text-[10px] mt-1 ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>
                   Admin-managed access password. Student uses their email and this password to sign in.
                 </p>
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-300 mb-1">Enrolled Package</label>
+                <label className={`block font-semibold mb-1 ${theme === 'light' ? 'text-slate-700' : 'text-slate-300'}`}>
+                  Enrolled Package
+                </label>
                 <select
                   value={editingLearner.packageName}
                   onChange={(e) =>
                     setEditingLearner({ ...editingLearner, packageName: e.target.value })
                   }
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                  className={`w-full px-3.5 py-2.5 rounded-xl border focus:outline-none ${
+                    theme === 'light'
+                      ? 'bg-slate-50 border-slate-300 text-slate-900 focus:border-sky-600 focus:ring-1 focus:ring-sky-600'
+                      : 'bg-slate-900 border-slate-700 text-white focus:border-[#f1bd5b]'
+                  }`}
                 >
                   <option>Premium Plus with AI Audit Lab</option>
                   <option>Premium Live Interactive</option>
@@ -1761,19 +1628,27 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-300 mb-1">Tuition Fee Status</label>
+                <label className={`block font-semibold mb-1 ${theme === 'light' ? 'text-slate-700' : 'text-slate-300'}`}>
+                  Tuition Fee Status
+                </label>
                 <input
                   type="text"
                   value={editingLearner.feeStatus}
                   onChange={(e) =>
                     setEditingLearner({ ...editingLearner, feeStatus: e.target.value })
                   }
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                  className={`w-full px-3.5 py-2.5 rounded-xl border focus:outline-none ${
+                    theme === 'light'
+                      ? 'bg-slate-50 border-slate-300 text-slate-900 focus:border-sky-600 focus:ring-1 focus:ring-sky-600'
+                      : 'bg-slate-900 border-slate-700 text-white focus:border-[#f1bd5b]'
+                  }`}
                 />
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-300 mb-1">LMS Access Status</label>
+                <label className={`block font-semibold mb-1 ${theme === 'light' ? 'text-slate-700' : 'text-slate-300'}`}>
+                  LMS Access Status
+                </label>
                 <select
                   value={editingLearner.status}
                   onChange={(e) =>
@@ -1782,7 +1657,11 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
                       status: e.target.value as 'active' | 'revoked' | 'pending'
                     })
                   }
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                  className={`w-full px-3.5 py-2.5 rounded-xl border focus:outline-none ${
+                    theme === 'light'
+                      ? 'bg-slate-50 border-slate-300 text-slate-900 focus:border-sky-600 focus:ring-1 focus:ring-sky-600'
+                      : 'bg-slate-900 border-slate-700 text-white focus:border-[#f1bd5b]'
+                  }`}
                 >
                   <option value="active">Active (Access Granted)</option>
                   <option value="revoked">Revoked (Access Blocked)</option>
@@ -1790,17 +1669,21 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
                 </select>
               </div>
 
-              <div className="pt-3 flex items-center justify-end gap-3 border-t border-slate-800">
+              <div className={`pt-3 flex items-center justify-end gap-3 border-t ${theme === 'light' ? 'border-slate-200' : 'border-slate-800'}`}>
                 <button
                   type="button"
                   onClick={() => setEditingLearner(null)}
-                  className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold cursor-pointer"
+                  className={`px-4 py-2 rounded-xl font-semibold cursor-pointer ${
+                    theme === 'light'
+                      ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300'
+                      : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
+                  }`}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-gradient-to-r from-sky-700 to-[#b58b42] text-white font-bold cursor-pointer"
+                  className="px-5 py-2 rounded-xl bg-gradient-to-r from-[#102a4e] to-[#b58b42] hover:opacity-95 text-white font-bold cursor-pointer shadow-sm"
                 >
                   Save Changes
                 </button>
