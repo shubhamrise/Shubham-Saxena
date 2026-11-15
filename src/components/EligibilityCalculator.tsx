@@ -17,7 +17,7 @@ export const EligibilityCalculator: React.FC<EligibilityCalculatorProps> = ({
     ELIGIBILITY_PATHWAYS.find((p) => p.id === selectedPathwayId) || ELIGIBILITY_PATHWAYS[1];
 
   return (
-    <section id="curriculum" className="relative overflow-hidden py-20 border-b border-sky-950">
+    <section id="eligibility" className="scroll-mt-24 relative overflow-hidden py-20 border-b border-sky-950">
       {/* Corporate Architectural Background Layer - Slightly dark, modern, premium, stylish */}
       <div className="absolute inset-0 pointer-events-none z-0">
         <img
@@ -60,7 +60,7 @@ export const EligibilityCalculator: React.FC<EligibilityCalculatorProps> = ({
                   {path.badge}
                 </span>
                 <h4 className="font-bold text-slate-900 text-sm sm:text-base mb-1">{path.title}</h4>
-                <p className="text-xs text-slate-600 line-clamp-2">{path.qualification}</p>
+                <p className="text-xs text-slate-600 leading-relaxed">{path.qualification}</p>
               </button>
             );
           })}
@@ -69,33 +69,33 @@ export const EligibilityCalculator: React.FC<EligibilityCalculatorProps> = ({
         {/* Pathway Breakdown Card */}
         <div className="p-8 rounded-3xl bg-white border border-slate-200/90 shadow-2xl">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Column 1: Entry & Requirements */}
+            {/* Column 1: To Sit the Exams */}
             <div className="space-y-4">
               <div className="flex items-center gap-2 text-xs font-bold text-sky-800 uppercase tracking-wider">
                 <GraduationCap className="w-4 h-4" />
-                <span>Eligibility At Exam Entry</span>
+                <span>To Sit the Exams</span>
               </div>
               <h3 className="text-xl font-bold text-slate-900">{activePathway.title}</h3>
-              <p className="text-xs text-slate-600 leading-relaxed">
+              <p className="text-xs sm:text-sm text-slate-700 leading-relaxed">
                 {activePathway.entryRequirement}
               </p>
-              <div className="p-3.5 rounded-xl bg-white border border-sky-100 text-xs text-slate-700">
-                <span className="font-semibold text-slate-900 block mb-1">Qualifying Education:</span>
+              <div className="p-3.5 rounded-xl bg-white border border-sky-100 text-xs text-slate-700 leading-relaxed">
+                <span className="font-semibold text-slate-900 block mb-1">Qualifying Profile:</span>
                 {activePathway.qualification}
               </div>
             </div>
 
-            {/* Column 2: Certification Completion */}
+            {/* Column 2: To Be Certified */}
             <div className="space-y-4">
               <div className="flex items-center gap-2 text-xs font-bold text-[#b58b42] uppercase tracking-wider">
                 <Briefcase className="w-4 h-4" />
-                <span>Work Experience Needed</span>
+                <span>To Be Certified</span>
               </div>
-              <h4 className="text-lg font-bold text-slate-900">For Final CIA® Credential</h4>
-              <p className="text-xs text-slate-600 leading-relaxed">
+              <h4 className="text-lg font-bold text-slate-900">Certification & Experience Path</h4>
+              <p className="text-xs sm:text-sm text-slate-700 leading-relaxed">
                 {activePathway.toCertify}
               </p>
-              <div className="p-3.5 rounded-xl bg-amber-50/60 border border-amber-200/90 text-xs text-slate-800">
+              <div className="p-3.5 rounded-xl bg-amber-50/60 border border-amber-200/90 text-xs text-slate-800 leading-relaxed">
                 <span className="font-semibold text-[#b58b42] block mb-1 flex items-center gap-1">
                   <Sparkles className="w-3.5 h-3.5 text-[#b58b42]" />
                   Experience Flexibility:

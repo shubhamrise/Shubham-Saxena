@@ -80,8 +80,8 @@ export const AiAdvisorChatbot: React.FC<AiAdvisorChatbotProps> = ({
       const lower = query.toLowerCase();
 
       if (lower.includes('eligib') || lower.includes('degree') || lower.includes('bachelor') || lower.includes('master') || lower.includes('experience')) {
-        aiReply = "Under the IIA Global Internal Audit Standards:\n\n• Master's Degree holders need 1 year of audit/control experience to certify.\n• Bachelor's Degree holders need 2 years of experience.\n• University/College Students can start immediately without a degree via the IAP Part 1 route.\n• Chartered Accountants (CA) & CPAs can qualify through 1 single Challenge Exam sitting!\n\nZero prior experience is needed to enroll in our classes and sit for the exams.";
-        action = { label: "View Full Eligibility Guide", targetId: "curriculum" };
+        aiReply = "Under the IIA Global Internal Audit Standards:\n\n• Students & no degree (IAP™ fast track): No degree needed (ID proof only); pass the IAP within 2 years, claim the Part 1 exemption within 4 years, and pass Parts 2–3 with 1–2 yrs experience by degree or 5 yrs without one.\n• Bachelor's degree (incl. final-year students): No experience needed to sit all 3 exams; 2 years experience to certify.\n• Master's degree: No experience needed to sit all 3 exams; 1 year experience to certify.\n• Qualified professionals (Active CA, CMA, CPA, CISA, or 10+ yrs internal audit experience pilot): One Challenge Exam (150 questions, 180 mins, up to 8 attempts in 3 years).";
+        action = { label: "View Full Eligibility Guide", targetId: "eligibility" };
       } else if (lower.includes('fee') || lower.includes('cost') || lower.includes('iia') || lower.includes('tax') || lower.includes('gst')) {
         aiReply = "Official IIA India Exam Fees for 2026-27 (with 18% GST):\n\n• CIA Application Fee: US$ 84.96\n• Part 1 Exam: US$ 219.48\n• Part 2 Exam: US$ 198.24\n• Part 3 Exam: US$ 198.24\n• Full Program Total: US$ 700.92 (approx. ₹60,600).\n\nIIA India student members can start with the IAP route for just US$ 247.80 total!";
         action = { label: "Open IIA Fee Calculator", targetId: "fees" };

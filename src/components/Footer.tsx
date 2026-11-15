@@ -92,6 +92,11 @@ export const Footer: React.FC<FooterProps> = ({ onOpenCheckout, onOpenInquiry, o
               </li>
               <li>
                 <a href="#curriculum" className="hover:text-sky-300 transition-colors">
+                  3-Part CIA® Curriculum
+                </a>
+              </li>
+              <li>
+                <a href="#eligibility" className="hover:text-sky-300 transition-colors">
                   Eligibility & Pathways
                 </a>
               </li>

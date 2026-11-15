@@ -16,7 +16,7 @@ export const ExamBlueprintSection: React.FC<ExamBlueprintSectionProps> = ({
   const currentPart = EXAM_PARTS.find((p) => p.id === activePartId) || EXAM_PARTS[0];
 
   return (
-    <section id="exam" className="relative overflow-hidden py-20 border-b border-sky-950">
+    <section id="exam" className="scroll-mt-24 relative overflow-hidden py-20 border-b border-sky-950">
       {/* Corporate Architectural Background Layer - Slightly dark, modern, premium, stylish */}
       <div className="absolute inset-0 pointer-events-none z-0">
         <img
@@ -41,8 +41,10 @@ export const ExamBlueprintSection: React.FC<ExamBlueprintSectionProps> = ({
           </p>
         </div>
 
-        {/* Tab Navigation for Parts */}
-        <div className="flex flex-wrap items-center justify-center gap-3 mb-10">
+        {/* Interactive 3-Part CIA Curriculum Anchor */}
+        <div id="curriculum" className="scroll-mt-28">
+          {/* Tab Navigation for Parts */}
+          <div className="flex flex-wrap items-center justify-center gap-3 mb-10">
           {EXAM_PARTS.map((part) => {
             const isActive = activePartId === part.id;
             return (
@@ -171,6 +173,7 @@ export const ExamBlueprintSection: React.FC<ExamBlueprintSectionProps> = ({
               </div>
             </div>
           </div>
+        </div>
         </div>
       </div>
     </section>

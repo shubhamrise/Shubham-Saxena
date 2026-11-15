@@ -405,42 +405,42 @@ export const IIA_FEES: FeeItem[] = [
 
 export const ELIGIBILITY_PATHWAYS = [
   {
-    id: 'master',
-    title: "Master's Degree Holders",
-    badge: 'ACCELERATED 1-YEAR EXP',
-    qualification: 'M.Com, MBA, MS, M.Sc or equivalent postgraduate degree',
-    entryRequirement: 'Zero experience required to enroll & sit for all 3 exams',
-    toCertify: 'Pass all 3 CIA exams + 12 months internal audit or risk experience',
-    idealPlan: 'Premium Live Package',
-    savingsTip: 'Enroll now and complete all exams within 6-9 months before your first annual appraisal.'
+    id: 'student',
+    title: 'Students and no degree',
+    badge: 'IAP™ FAST TRACK',
+    qualification: 'IAP™ fast track. No degree needed; proof of ID only.',
+    entryRequirement: 'Pass the IAP (CIA Part 1 syllabus) within 2 years, then claim the Part 1 exemption within 4 years.',
+    toCertify: 'Pass Parts 2 and 3, plus 1–2 years’ experience by degree, or 5 years without one.',
+    idealPlan: 'Basic or Premium Package',
+    savingsTip: 'Earn the IAP™ credential on Part 1, save over $150 via the student candidate discount, and transition to full CIA with Part 1 exemption.'
   },
   {
     id: 'bachelor',
-    title: "Bachelor's Degree Holders",
-    badge: 'MOST COMMON PATHWAY',
-    qualification: 'B.Com, BBA, B.Sc, B.Tech, BA or equivalent graduate degree',
-    entryRequirement: 'Zero experience required to enroll & clear exams',
-    toCertify: 'Pass all 3 CIA exams + 24 months internal audit or related control experience',
+    title: "Bachelor's degree",
+    badge: 'MOST COMMON',
+    qualification: 'B.Com, BBA, B.Sc, B.Tech, BA or equivalent. Final-year students can apply.',
+    entryRequirement: 'No experience needed to apply and sit all 3 exams.',
+    toCertify: 'Pass all 3 exams + 2 years of internal audit or equivalent experience.',
     idealPlan: 'Premium Live Package',
-    savingsTip: 'Related experience in external audit, compliance, risk, QA or accounting counts toward IIA verification.'
+    savingsTip: 'Related experience in external audit, compliance, risk, QA, or accounting counts toward IIA verification.'
   },
   {
-    id: 'student',
-    title: 'University / Final-Year Students',
-    badge: 'IAP FAST TRACK',
-    qualification: 'Enrolled undergraduate or postgraduate college students',
-    entryRequirement: 'No degree proof required upfront; student ID verification',
-    toCertify: 'Earn the IAP credential on Part 1 alone, then transition to full CIA with fee waiver',
-    idealPlan: 'Basic or Premium Package',
-    savingsTip: 'Save over $150 on IIA examination fees via the official student candidate discount program.'
+    id: 'master',
+    title: "Master's degree",
+    badge: 'ACCELERATED 1-YEAR EXP',
+    qualification: 'M.Com, MBA, MS, M.Sc or equivalent',
+    entryRequirement: 'No experience needed to apply and sit all 3 exams.',
+    toCertify: 'Pass all 3 exams + 1 year of internal audit or equivalent experience.',
+    idealPlan: 'Premium Live Package',
+    savingsTip: 'Enroll now and complete all exams within 6–9 months before your first annual appraisal.'
   },
   {
     id: 'challenge',
-    title: 'Chartered Accountants & CPAs',
+    title: 'Qualified professionals',
     badge: 'ONE EXAM SITTING',
-    qualification: 'Active CA (ICAI), CPA (AICPA), CISA (ISACA), ACCA or CMA members',
-    entryRequirement: 'Proof of active membership in recognized professional body',
-    toCertify: 'Take 1 single comprehensive Challenge Exam (150 questions) to earn full CIA',
+    qualification: "Active CA, CMA, CPA or CISA holders, or 10+ years' internal audit experience (pilot).",
+    entryRequirement: 'Proof of active membership in good standing. Not open to students.',
+    toCertify: 'One Challenge Exam: 150 questions in 180 minutes, up to 8 attempts in 3 years.',
     idealPlan: 'Premium Live Package',
     savingsTip: 'BNC Global provides specialized Challenge Exam modules covering only the differential syllabus.'
   }
