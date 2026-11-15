@@ -127,7 +127,7 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
     onShowToast(`Admin Console switched to ${next === 'light' ? 'Executive Light' : 'Dark'} mode`);
   };
 
-  const [consoleTab, setConsoleTab] = useState<AdminConsoleTab>('learners');
+  const [consoleTab, setConsoleTab] = useState<AdminConsoleTab>('crm');
   const [searchTerm, setSearchTerm] = useState('');
   const [leadSearchTerm, setLeadSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'revoked' | 'pending'>('all');
@@ -598,11 +598,12 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
               : 'bg-[#091729] border-sky-800/80 shadow-xl'
           }`}
         >
+          {/* 1. Student Call CRM */}
           <button
             type="button"
-            onClick={() => setConsoleTab('learners')}
+            onClick={() => setConsoleTab('crm')}
             className={`group px-4 py-3.5 rounded-2xl text-sm sm:text-[15px] font-extrabold tracking-tight transition-all cursor-pointer flex items-center justify-between gap-3 whitespace-nowrap ${
-              consoleTab === 'learners'
+              consoleTab === 'crm'
                 ? 'bg-gradient-to-r from-[#0e2444] via-[#163a6b] to-[#b58b42] text-white shadow-lg ring-1 ring-[#f1bd5b]/40'
                 : theme === 'light'
                 ? 'bg-slate-50 hover:bg-slate-100 text-slate-800 border border-slate-200/90 hover:border-slate-300'
@@ -612,68 +613,31 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
             <span className="flex items-center gap-3 min-w-0">
               <span
                 className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
-                  consoleTab === 'learners'
-                    ? 'bg-white/15 text-[#f7cd76]'
+                  consoleTab === 'crm'
+                    ? 'bg-white/15 text-emerald-300'
                     : theme === 'light'
-                    ? 'bg-amber-100/90 text-[#9c742e]'
-                    : 'bg-amber-500/15 text-[#f1bd5b]'
+                    ? 'bg-emerald-100 text-emerald-700'
+                    : 'bg-emerald-500/15 text-emerald-300'
                 }`}
               >
-                <UserCheck className="w-[18px] h-[18px]" />
+                <PhoneCall className="w-[18px] h-[18px]" />
               </span>
-              <span className="truncate">Learners & Access</span>
+              <span className="truncate">Student Call CRM</span>
             </span>
             <span
               className={`px-2.5 py-0.5 rounded-lg text-xs font-black tabular-nums shrink-0 ${
-                consoleTab === 'learners'
+                consoleTab === 'crm'
                   ? 'bg-white/20 text-white'
                   : theme === 'light'
                   ? 'bg-white text-slate-700 border border-slate-200'
                   : 'bg-slate-800 text-slate-300 border border-slate-700'
               }`}
             >
-              {learners.length}
+              {crmCallLogs.length}
             </span>
           </button>
 
-          <button
-            type="button"
-            onClick={() => setConsoleTab('videos')}
-            className={`group px-4 py-3.5 rounded-2xl text-sm sm:text-[15px] font-extrabold tracking-tight transition-all cursor-pointer flex items-center justify-between gap-3 whitespace-nowrap ${
-              consoleTab === 'videos'
-                ? 'bg-gradient-to-r from-[#0e2444] via-[#163a6b] to-[#b58b42] text-white shadow-lg ring-1 ring-[#f1bd5b]/40'
-                : theme === 'light'
-                ? 'bg-slate-50 hover:bg-slate-100 text-slate-800 border border-slate-200/90 hover:border-slate-300'
-                : 'bg-slate-900/70 hover:bg-slate-800 text-slate-200 border border-sky-900/60 hover:border-sky-700'
-            }`}
-          >
-            <span className="flex items-center gap-3 min-w-0">
-              <span
-                className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
-                  consoleTab === 'videos'
-                    ? 'bg-white/15 text-[#f7cd76]'
-                    : theme === 'light'
-                    ? 'bg-amber-100/90 text-[#9c742e]'
-                    : 'bg-amber-500/15 text-[#f1bd5b]'
-                }`}
-              >
-                <Video className="w-[18px] h-[18px]" />
-              </span>
-              <span className="truncate">Video Uploads</span>
-            </span>
-            <span
-              className={`px-2.5 py-0.5 rounded-lg text-xs font-black tabular-nums shrink-0 ${
-                consoleTab === 'videos'
-                  ? 'bg-white/20 text-white'
-                  : theme === 'light'
-                  ? 'bg-white text-slate-700 border border-slate-200'
-                  : 'bg-slate-800 text-slate-300 border border-slate-700'
-              }`}
-            >
-              {modules.reduce((acc, m) => acc + m.lessons.length, 0)}
-            </span>
-          </button>
-
+          {/* 2. Enquiries & Leads */}
           <button
             type="button"
             onClick={() => setConsoleTab('leads')}
@@ -712,11 +676,12 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
             </span>
           </button>
 
+          {/* 3. Learners & Access */}
           <button
             type="button"
-            onClick={() => setConsoleTab('crm')}
+            onClick={() => setConsoleTab('learners')}
             className={`group px-4 py-3.5 rounded-2xl text-sm sm:text-[15px] font-extrabold tracking-tight transition-all cursor-pointer flex items-center justify-between gap-3 whitespace-nowrap ${
-              consoleTab === 'crm'
+              consoleTab === 'learners'
                 ? 'bg-gradient-to-r from-[#0e2444] via-[#163a6b] to-[#b58b42] text-white shadow-lg ring-1 ring-[#f1bd5b]/40'
                 : theme === 'light'
                 ? 'bg-slate-50 hover:bg-slate-100 text-slate-800 border border-slate-200/90 hover:border-slate-300'
@@ -726,27 +691,66 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
             <span className="flex items-center gap-3 min-w-0">
               <span
                 className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
-                  consoleTab === 'crm'
-                    ? 'bg-white/15 text-emerald-300'
+                  consoleTab === 'learners'
+                    ? 'bg-white/15 text-[#f7cd76]'
                     : theme === 'light'
-                    ? 'bg-emerald-100 text-emerald-700'
-                    : 'bg-emerald-500/15 text-emerald-300'
+                    ? 'bg-amber-100/90 text-[#9c742e]'
+                    : 'bg-amber-500/15 text-[#f1bd5b]'
                 }`}
               >
-                <PhoneCall className="w-[18px] h-[18px]" />
+                <UserCheck className="w-[18px] h-[18px]" />
               </span>
-              <span className="truncate">Student Call CRM</span>
+              <span className="truncate">Learners & Access</span>
             </span>
             <span
               className={`px-2.5 py-0.5 rounded-lg text-xs font-black tabular-nums shrink-0 ${
-                consoleTab === 'crm'
+                consoleTab === 'learners'
                   ? 'bg-white/20 text-white'
                   : theme === 'light'
                   ? 'bg-white text-slate-700 border border-slate-200'
                   : 'bg-slate-800 text-slate-300 border border-slate-700'
               }`}
             >
-              {crmCallLogs.length}
+              {learners.length}
+            </span>
+          </button>
+
+          {/* 4. Video Uploads */}
+          <button
+            type="button"
+            onClick={() => setConsoleTab('videos')}
+            className={`group px-4 py-3.5 rounded-2xl text-sm sm:text-[15px] font-extrabold tracking-tight transition-all cursor-pointer flex items-center justify-between gap-3 whitespace-nowrap ${
+              consoleTab === 'videos'
+                ? 'bg-gradient-to-r from-[#0e2444] via-[#163a6b] to-[#b58b42] text-white shadow-lg ring-1 ring-[#f1bd5b]/40'
+                : theme === 'light'
+                ? 'bg-slate-50 hover:bg-slate-100 text-slate-800 border border-slate-200/90 hover:border-slate-300'
+                : 'bg-slate-900/70 hover:bg-slate-800 text-slate-200 border border-sky-900/60 hover:border-sky-700'
+            }`}
+          >
+            <span className="flex items-center gap-3 min-w-0">
+              <span
+                className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
+                  consoleTab === 'videos'
+                    ? 'bg-white/15 text-[#f7cd76]'
+                    : theme === 'light'
+                    ? 'bg-amber-100/90 text-[#9c742e]'
+                    : 'bg-amber-500/15 text-[#f1bd5b]'
+                }`}
+              >
+                <Video className="w-[18px] h-[18px]" />
+              </span>
+              <span className="truncate">Video Uploads</span>
+            </span>
+            <span
+              className={`px-2.5 py-0.5 rounded-lg text-xs font-black tabular-nums shrink-0 ${
+                consoleTab === 'videos'
+                  ? 'bg-white/20 text-white'
+                  : theme === 'light'
+                  ? 'bg-white text-slate-700 border border-slate-200'
+                  : 'bg-slate-800 text-slate-300 border border-slate-700'
+              }`}
+            >
+              {modules.reduce((acc, m) => acc + m.lessons.length, 0)}
             </span>
           </button>
         </div>
