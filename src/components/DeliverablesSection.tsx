@@ -33,13 +33,13 @@ export const DeliverablesSection: React.FC<DeliverablesSectionProps> = ({ onOpen
     {
       icon: BookOpen,
       title: 'Gleim Premium CIA Study System',
-      desc: 'Full access to the gold-standard Gleim CIA review materials, featuring SmartAdapt™ adaptive learning technology, the authoritative digital test bank with detailed answer explanations, and printed hardcopy textbook access couriered to your doorstep.',
+      desc: 'Full access to the gold-standard Gleim CIA review materials, featuring SmartAdapt™ adaptive learning technology and the authoritative digital test bank with detailed answer explanations.',
       tag: 'Official Gleim Partner',
       isGleimFeatured: true,
       highlights: [
         'SmartAdapt™ Adaptive Learning',
         'Authoritative Digital Test Bank',
-        'Hardcopy Printed Textbooks'
+        'Digital Exam Review System'
       ]
     },
     {

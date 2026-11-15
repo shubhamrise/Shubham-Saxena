@@ -19,10 +19,10 @@ export interface EnquiryPayload {
  */
 export const triggerBrochureDownload = (): boolean => {
   try {
-    const brochurePath = '/assets/aistudio/BNC_Global_CIA_Student_Brochure_60003cf7.pdf';
+    const brochurePath = '/assets/aistudio/BNC_ELEVATE_CIA_Student_Brochure_3a050142.pdf';
     const link = document.createElement('a');
     link.href = brochurePath;
-    link.download = 'BNC_Global_CIA_Student_Brochure.pdf';
+    link.download = 'BNC_ELEVATE_CIA_Student_Brochure.pdf';
     link.target = '_blank';
     document.body.appendChild(link);
     link.click();
@@ -242,7 +242,7 @@ export const dispatchToInfoBncGlobal = async (data: EnquiryPayload): Promise<{ s
       'Highest Qualification': data.qualification || "Bachelor's Degree",
       'Program of Interest': data.program || 'All CIA Packages',
       'Source of Enquiry': data.source,
-      'Brochure Downloaded': 'Yes (BNC_Global_CIA_Student_Brochure.pdf)',
+      'Brochure Downloaded': 'Yes (BNC_ELEVATE_CIA_Student_Brochure.pdf)',
       'Submission Timestamp': new Date().toLocaleString()
     };
 

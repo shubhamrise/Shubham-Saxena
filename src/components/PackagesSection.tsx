@@ -238,14 +238,6 @@ export const PackagesSection: React.FC<PackagesSectionProps> = ({
                   <td className="p-3.5 font-medium text-slate-800">Live + mentorship</td>
                 </tr>
                 <tr>
-                  <td className="p-3.5 font-bold text-slate-900">Printed books and test bank</td>
-                  <td className="p-3.5 text-slate-400">–</td>
-                  <td className="p-3.5 text-slate-400">–</td>
-                  <td className="p-3.5 text-slate-400">–</td>
-                  <td className="p-3.5 font-bold text-emerald-700">Included</td>
-                  <td className="p-3.5 font-bold text-emerald-700">Included</td>
-                </tr>
-                <tr>
                   <td className="p-3.5 font-bold text-slate-900">AI audit training and certificate</td>
                   <td className="p-3.5 text-slate-400">–</td>
                   <td className="p-3.5 text-slate-400">–</td>

@@ -113,14 +113,13 @@ export const PACKAGES: PackagePlan[] = [
       'Modern tech-enabled audit workflows for 5x on-the-job productivity',
       'BNC Executive Certificate in “AI-Enabled Internal Auditing”',
       'Direct interview referrals to GCC, banking and boutique consulting partners',
-      'Printed copy of official Gleim CIA books and the BNC Test Bank couriered to your doorstep',
       'Lifetime alumni masterclasses and CPE guidance'
     ],
     deliverables: {
       hours: '120+ hrs (100 live + 20 AI Lab)',
       mode: 'Live classes + AI Lab',
       lmsAccess: '24 months Extended LMS',
-      booksIncluded: true,
+      booksIncluded: false,
       aiTraining: true,
       mocksCount: '8 Full Mocks + AI Case Studies',
       placementSupport: true
@@ -151,7 +150,7 @@ export const PACKAGES: PackagePlan[] = [
       hours: '140+ hrs (Live + AI + mentorship)',
       mode: 'Live + Expert Mentorship',
       lmsAccess: '36 months + lifetime alumni',
-      booksIncluded: true,
+      booksIncluded: false,
       aiTraining: true,
       mocksCount: '10 Full Mocks + Partner Reviews',
       placementSupport: true

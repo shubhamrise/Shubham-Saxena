@@ -61,9 +61,9 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Add-ons
-  const [printedBooks, setPrintedBooks] = useState(true);
-  const [oneOnOneMentoring, setOneOnOneMentoring] = useState(false);
-  const [aiAuditLab, setAiAuditLab] = useState(activePackageId === 'premium-plus');
+  const [oneOnOneMentoring] = useState(false);
+  const [aiAuditLab] = useState(activePackageId === 'premium-plus');
+  const printedBooks = false;
 
   // Student Info
   const [name, setName] = useState('');
@@ -96,10 +96,9 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const currentPkg = PACKAGES.find((p) => p.id === activePackageId) || PACKAGES[1];
 
   const basePrice = currency === 'INR' ? currentPkg.priceINR : currentPkg.priceUSD;
-  const booksCost = printedBooks && activePackageId === 'basic' ? (currency === 'INR' ? 4500 : 55) : 0;
   const mentorCost = oneOnOneMentoring && activePackageId !== 'elite' ? (currency === 'INR' ? 8000 : 100) : 0;
   const aiLabCost = aiAuditLab && activePackageId !== 'premium-plus' && activePackageId !== 'elite' ? (currency === 'INR' ? 12000 : 150) : 0;
-  const subtotal = basePrice + booksCost + mentorCost + aiLabCost;
+  const subtotal = basePrice + mentorCost + aiLabCost;
 
   const discountAmount = couponApplied ? Math.round(subtotal * (couponDiscountPercent / 100)) : 0;
   const finalTotal = subtotal - discountAmount;
@@ -348,38 +347,6 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                 </div>
               </div>
 
-              {/* Add-ons */}
-              <div>
-                <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider mb-2">
-                  Optional Study Materials
-                </label>
-                <div className="space-y-2">
-                  <label className="flex items-center justify-between p-3.5 rounded-xl bg-slate-50/90 border border-slate-200 cursor-pointer hover:bg-sky-50/50 transition-colors">
-                    <div className="flex items-center gap-3">
-                      <input
-                        type="checkbox"
-                        checked={printedBooks}
-                        onChange={(e) => setPrintedBooks(e.target.checked)}
-                        className="w-4 h-4 rounded text-sky-700 focus:ring-sky-600"
-                      />
-                      <div>
-                        <div className="text-sm font-bold text-slate-900">
-                          Physical Printed Test Bank & Reference Binder
-                        </div>
-                        <div className="text-xs text-slate-600 mt-0.5">
-                          {activePackageId === 'basic'
-                            ? 'Doorstep express courier across India · 3-volume comprehensive printed question bank'
-                            : 'Included Free with Premium & Premium Plus cohorts'}
-                        </div>
-                      </div>
-                    </div>
-                    <span className="text-xs font-extrabold text-emerald-700 whitespace-nowrap">
-                      {activePackageId === 'basic' ? 'ADD-ON OPTION' : 'INCLUDED FREE'}
-                    </span>
-                  </label>
-                </div>
-              </div>
-
               {/* Order Summary Footnote */}
               <div className="p-4 rounded-2xl bg-sky-50/60 border border-sky-100 flex items-center justify-between">
                 <div>
@@ -516,9 +483,9 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                   <span className="font-semibold text-slate-900">{currentPkg.deliverables.lmsAccess} Access</span>
                 </div>
                 <div className="flex justify-between text-slate-700">
-                  <span>Physical Study Material:</span>
+                  <span>Study Material Access:</span>
                   <span className="font-semibold text-emerald-700">
-                    {printedBooks ? 'Included (Doorstep Express Courier)' : 'Digital Study Kit Included'}
+                    Digital Study Kit & LMS Included
                   </span>
                 </div>
                 <div className="text-[11px] text-slate-500 pt-2 border-t border-sky-100">
