@@ -5,27 +5,26 @@ import {
   Plus,
   Edit3,
   Trash2,
-  Clock,
   User,
   FileText,
   Search,
-  CheckCircle2,
   X,
   Save,
-  BookOpen,
-  Sparkles
+  BookOpen
 } from 'lucide-react';
 
 interface CurriculumEditorProps {
   modules: LmsModule[];
   onUpdateModules: (updated: LmsModule[]) => void;
   onShowToast: (msg: string) => void;
+  theme?: 'light' | 'dark';
 }
 
 export const CurriculumEditor: React.FC<CurriculumEditorProps> = ({
   modules,
   onUpdateModules,
-  onShowToast
+  onShowToast,
+  theme = 'light'
 }) => {
   const [selectedPart, setSelectedPart] = useState<'all' | 'part-1' | 'part-2' | 'part-3' | 'ai-lab'>('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -167,21 +166,31 @@ export const CurriculumEditor: React.FC<CurriculumEditorProps> = ({
     }))
     .filter((m) => m.lessons.length > 0 || searchTerm === '');
 
-  const totalLessons = modules.reduce((sum, m) => sum + m.lessons.length, 0);
-
   return (
     <div className="space-y-6">
-      {/* Header Banner */}
-      <div className="p-6 rounded-3xl bg-gradient-to-r from-[#0b1d33] via-[#091b30] to-[#122338] border border-sky-800/60 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      {/* Header Banner - Executive Light Theme Sync */}
+      <div className={`p-6 rounded-3xl border shadow-xs transition-colors flex flex-col md:flex-row items-start md:items-center justify-between gap-4 ${
+        theme === 'light'
+          ? 'bg-gradient-to-r from-slate-50 via-sky-50/40 to-slate-50 border-slate-200'
+          : 'bg-gradient-to-r from-[#0b1d33] via-[#091b30] to-[#122338] border-sky-800/60 shadow-xl'
+      }`}>
         <div>
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#b58b42]/20 text-[#f1bd5b] border border-[#b58b42]/40 text-[10px] font-bold uppercase tracking-wider mb-2">
+          <div className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border text-[10px] font-bold uppercase tracking-wider mb-2 ${
+            theme === 'light'
+              ? 'bg-amber-50 text-[#b58b42] border-amber-200'
+              : 'bg-[#b58b42]/20 text-[#f1bd5b] border-[#b58b42]/40'
+          }`}>
             <BookOpen className="w-3.5 h-3.5" />
             <span>Master Syllabus Controller · Full Edit Privileges</span>
           </div>
-          <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+          <h2 className={`text-xl sm:text-2xl font-black tracking-tight ${
+            theme === 'light' ? 'text-slate-900' : 'text-white'
+          }`}>
             Curriculum & Video Masterclasses Editor
           </h2>
-          <p className="text-xs sm:text-sm text-slate-300 mt-1 max-w-2xl leading-relaxed">
+          <p className={`text-xs sm:text-sm mt-1 max-w-2xl leading-relaxed ${
+            theme === 'light' ? 'text-slate-600' : 'text-slate-300'
+          }`}>
             Directly modify lesson titles, durations, instructors, handouts, and takeaways across all CIA Parts and AI Audit Lab. All updates reflect instantly on learner portals.
           </p>
         </div>
@@ -189,7 +198,7 @@ export const CurriculumEditor: React.FC<CurriculumEditorProps> = ({
         <button
           type="button"
           onClick={() => openAddModal()}
-          className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-sky-700 via-sky-800 to-[#b58b42] hover:from-sky-800 hover:to-[#9e7735] text-white text-xs font-bold flex items-center gap-2 shadow-lg transition-all cursor-pointer shrink-0"
+          className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#102a4e] to-[#b58b42] hover:opacity-95 text-white text-xs font-bold flex items-center gap-2 shadow-sm transition-all cursor-pointer shrink-0"
         >
           <Plus className="w-4 h-4" />
           <span>Add New Video Lesson</span>
@@ -197,8 +206,12 @@ export const CurriculumEditor: React.FC<CurriculumEditorProps> = ({
       </div>
 
       {/* Part Filter & Search Bar */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 rounded-2xl bg-[#091729]/95 border border-sky-900/60 shadow-md">
-        <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
+      <div className={`flex flex-col sm:flex-row items-center justify-between gap-3 p-4 rounded-2xl border shadow-xs transition-colors ${
+        theme === 'light'
+          ? 'bg-white/92 backdrop-blur-md border-slate-200/90'
+          : 'bg-[#091729]/95 border-sky-900/60 shadow-md'
+      }`}>
+        <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 scrollbar-none">
           {[
             { id: 'all', label: 'All Parts' },
             { id: 'part-1', label: 'Part 1: GIAS' },
@@ -209,9 +222,11 @@ export const CurriculumEditor: React.FC<CurriculumEditorProps> = ({
             <button
               key={tab.id}
               onClick={() => setSelectedPart(tab.id as any)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
                 selectedPart === tab.id
-                  ? 'bg-gradient-to-r from-sky-700 to-[#b58b42] text-white shadow-xs'
+                  ? 'bg-gradient-to-r from-[#102a4e] via-[#163a6b] to-[#b58b42] text-white shadow-xs'
+                  : theme === 'light'
+                  ? 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                   : 'bg-slate-800/80 text-slate-300 hover:text-white'
               }`}
             >
@@ -227,7 +242,11 @@ export const CurriculumEditor: React.FC<CurriculumEditorProps> = ({
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search lessons by title, domain..."
-            className="w-full pl-10 pr-4 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white placeholder-slate-500 text-xs focus:outline-none focus:border-[#f1bd5b] transition-all"
+            className={`w-full pl-10 pr-4 py-2 rounded-xl border text-xs transition-all ${
+              theme === 'light'
+                ? 'bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-sky-600 focus:ring-1 focus:ring-sky-600'
+                : 'bg-slate-900 border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-[#f1bd5b]'
+            }`}
           />
         </div>
       </div>
@@ -237,68 +256,108 @@ export const CurriculumEditor: React.FC<CurriculumEditorProps> = ({
         {filteredModules.map((module) => (
           <div
             key={module.id}
-            className="rounded-3xl bg-[#091729]/95 border border-sky-900/60 overflow-hidden shadow-xl"
+            className={`rounded-3xl border overflow-hidden shadow-xs transition-colors ${
+              theme === 'light'
+                ? 'bg-white/92 backdrop-blur-md border-slate-200/90'
+                : 'bg-[#091729]/95 border-sky-900/60 shadow-xl'
+            }`}
           >
             {/* Module Header */}
-            <div className="px-6 py-4 bg-[#061220] border-b border-sky-950 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div className={`px-6 py-4 border-b flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 ${
+              theme === 'light'
+                ? 'bg-slate-50/90 border-slate-200/80'
+                : 'bg-[#061220] border-sky-950'
+            }`}>
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#b58b42]/20 text-[#f1bd5b] border border-[#b58b42]/40 uppercase tracking-wider">
+                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${
+                    theme === 'light'
+                      ? 'bg-amber-50 text-[#b58b42] border-amber-200'
+                      : 'bg-[#b58b42]/20 text-[#f1bd5b] border-[#b58b42]/40'
+                  }`}>
                     {module.partId.toUpperCase()}
                   </span>
-                  <span className="text-xs font-bold text-slate-400">
+                  <span className={`text-xs font-bold ${
+                    theme === 'light' ? 'text-slate-500' : 'text-slate-400'
+                  }`}>
                     Module {module.moduleNumber} · {module.lessons.length} Lessons
                   </span>
                 </div>
-                <h3 className="text-base font-extrabold text-white mt-0.5">{module.title}</h3>
-                <p className="text-xs text-slate-400 mt-0.5">{module.description}</p>
+                <h3 className={`text-base font-extrabold mt-0.5 ${
+                  theme === 'light' ? 'text-slate-900' : 'text-white'
+                }`}>
+                  {module.title}
+                </h3>
+                <p className={`text-xs mt-0.5 ${
+                  theme === 'light' ? 'text-slate-500' : 'text-slate-400'
+                }`}>
+                  {module.description}
+                </p>
               </div>
 
               <button
                 type="button"
                 onClick={() => openAddModal(module.id)}
-                className="px-3 py-1.5 rounded-lg bg-sky-950 hover:bg-sky-900 text-sky-200 border border-sky-800 text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer shrink-0"
+                className={`px-3 py-1.5 rounded-lg border text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer shrink-0 ${
+                  theme === 'light'
+                    ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300'
+                    : 'bg-sky-950 hover:bg-sky-900 text-sky-200 border-sky-800'
+                }`}
               >
-                <Plus className="w-3.5 h-3.5 text-[#f1bd5b]" />
+                <Plus className="w-3.5 h-3.5 text-[#b58b42]" />
                 <span>Add Lesson Here</span>
               </button>
             </div>
 
             {/* Lessons Cards */}
-            <div className="divide-y divide-sky-950/60">
+            <div className={`divide-y ${
+              theme === 'light' ? 'divide-slate-100' : 'divide-sky-950/60'
+            }`}>
               {module.lessons.map((lesson, idx) => (
                 <div
                   key={lesson.id}
-                  className="p-5 hover:bg-slate-900/40 transition-colors flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 group"
+                  className={`p-5 transition-colors flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 group ${
+                    theme === 'light' ? 'hover:bg-slate-50/80' : 'hover:bg-slate-900/40'
+                  }`}
                 >
                   <div className="flex items-start gap-4 flex-1">
-                    <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-sky-800 to-[#b58b42] flex items-center justify-center text-white font-black text-xs shadow-md shrink-0 mt-0.5">
+                    <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#102a4e] to-[#b58b42] flex items-center justify-center text-white font-black text-xs shadow-xs shrink-0 mt-0.5">
                       {idx + 1}
                     </div>
                     <div className="space-y-1.5 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <h4 className="text-sm font-bold text-white group-hover:text-[#f1bd5b] transition-colors">
+                        <h4 className={`text-sm font-bold transition-colors ${
+                          theme === 'light' ? 'text-slate-900 group-hover:text-sky-800' : 'text-white group-hover:text-[#f1bd5b]'
+                        }`}>
                           {lesson.title}
                         </h4>
-                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-sky-950 text-sky-300 border border-sky-800/50">
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
+                          theme === 'light'
+                            ? 'bg-slate-100 text-slate-700 border-slate-200'
+                            : 'bg-sky-950 text-sky-300 border-sky-800/50'
+                        }`}>
                           {lesson.duration}
                         </span>
                       </div>
-                      <p className="text-xs text-slate-300 leading-relaxed max-w-3xl">
+                      <p className={`text-xs leading-relaxed max-w-3xl ${
+                        theme === 'light' ? 'text-slate-600' : 'text-slate-300'
+                      }`}>
                         {lesson.description}
                       </p>
-                      <div className="flex flex-wrap items-center gap-3 text-[11px] text-slate-400 pt-1">
-                        <span className="flex items-center gap-1 text-slate-300">
-                          <User className="w-3 h-3 text-[#f1bd5b]" />
-                          <span>{lesson.instructor}</span>
+                      <div className={`flex flex-wrap items-center gap-3 text-[11px] pt-1 ${
+                        theme === 'light' ? 'text-slate-500' : 'text-slate-400'
+                      }`}>
+                        <span className="flex items-center gap-1 font-medium">
+                          <User className="w-3 h-3 text-[#b58b42]" />
+                          <span className={theme === 'light' ? 'text-slate-800' : 'text-slate-300'}>{lesson.instructor}</span>
                         </span>
                         <span>•</span>
-                        <span className="flex items-center gap-1 text-slate-300">
-                          <FileText className="w-3 h-3 text-sky-400" />
-                          <span>Handout: {lesson.handoutName} ({lesson.handoutSize})</span>
+                        <span className="flex items-center gap-1 font-medium">
+                          <FileText className="w-3 h-3 text-sky-600" />
+                          <span className={theme === 'light' ? 'text-slate-800' : 'text-slate-300'}>Handout: {lesson.handoutName} ({lesson.handoutSize})</span>
                         </span>
                         <span>•</span>
-                        <span className="text-slate-400">{lesson.domain}</span>
+                        <span className={theme === 'light' ? 'text-slate-500' : 'text-slate-400'}>{lesson.domain}</span>
                       </div>
                     </div>
                   </div>
@@ -307,15 +366,23 @@ export const CurriculumEditor: React.FC<CurriculumEditorProps> = ({
                     <button
                       type="button"
                       onClick={() => openEditModal(lesson, module.id)}
-                      className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-[#b58b42] text-slate-200 hover:text-white text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 border border-slate-700 shadow-sm"
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 border shadow-xs ${
+                        theme === 'light'
+                          ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300'
+                          : 'bg-slate-800 hover:bg-[#b58b42] text-slate-200 hover:text-white border-slate-700'
+                      }`}
                     >
-                      <Edit3 className="w-3.5 h-3.5 text-[#f1bd5b] group-hover:text-white" />
+                      <Edit3 className="w-3.5 h-3.5 text-[#b58b42]" />
                       <span>Edit Lesson</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => handleDeleteLesson(module.id, lesson.id, lesson.title)}
-                      className="p-1.5 rounded-lg bg-slate-800 hover:bg-rose-950 text-slate-400 hover:text-rose-300 transition-colors cursor-pointer border border-slate-700"
+                      className={`p-1.5 rounded-lg transition-colors cursor-pointer border ${
+                        theme === 'light'
+                          ? 'bg-slate-100 hover:bg-rose-50 text-slate-500 hover:text-rose-600 border-slate-300'
+                          : 'bg-slate-800 hover:bg-rose-950 text-slate-400 hover:text-rose-300 border-slate-700'
+                      }`}
                       title="Delete lesson"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -330,20 +397,28 @@ export const CurriculumEditor: React.FC<CurriculumEditorProps> = ({
 
       {/* Edit / Add Modal */}
       {(editingLesson || isAddModalOpen) && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-sm overflow-y-auto">
-          <div className="relative w-full max-w-2xl my-8 bg-[#091729] border border-sky-800/80 rounded-3xl shadow-2xl overflow-hidden text-slate-100">
-            <div className="h-1.5 bg-gradient-to-r from-sky-600 via-[#f1bd5b] to-sky-700" />
+        <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm overflow-y-auto ${
+          theme === 'light' ? 'bg-slate-900/50' : 'bg-slate-950/85'
+        }`}>
+          <div className={`relative w-full max-w-2xl my-8 border rounded-3xl shadow-2xl overflow-hidden ${
+            theme === 'light'
+              ? 'bg-white border-slate-200 text-slate-900'
+              : 'bg-[#091729] border-sky-800/80 text-slate-100'
+          }`}>
+            <div className="h-1.5 bg-gradient-to-r from-sky-600 via-[#b58b42] to-amber-500" />
 
-            <div className="flex items-center justify-between px-6 py-4 bg-[#0b1d33] border-b border-sky-950">
+            <div className={`flex items-center justify-between px-6 py-4 border-b ${
+              theme === 'light' ? 'bg-slate-50 border-slate-200' : 'bg-[#0b1d33] border-sky-950'
+            }`}>
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-sky-700 to-[#b58b42] flex items-center justify-center text-white shadow-md">
-                  <Video className="w-4 h-4 text-[#f1bd5b]" />
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-sky-700 to-[#b58b42] flex items-center justify-center text-white shadow-xs">
+                  <Video className="w-4 h-4 text-white" />
                 </div>
                 <div>
-                  <h3 className="text-base font-extrabold text-white">
+                  <h3 className={`text-base font-extrabold ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>
                     {editingLesson ? 'Edit Curriculum Lesson' : 'Create New Curriculum Lesson'}
                   </h3>
-                  <div className="text-[11px] text-slate-400">
+                  <div className={`text-[11px] ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>
                     Changes take effect across all student portals immediately
                   </div>
                 </div>
@@ -355,7 +430,11 @@ export const CurriculumEditor: React.FC<CurriculumEditorProps> = ({
                   setEditingLesson(null);
                   setIsAddModalOpen(false);
                 }}
-                className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 transition-colors cursor-pointer"
+                className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors cursor-pointer ${
+                  theme === 'light'
+                    ? 'text-slate-500 hover:text-slate-900 bg-slate-200/80 hover:bg-slate-300'
+                    : 'text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700'
+                }`}
               >
                 <X className="w-4 h-4" />
               </button>
@@ -366,7 +445,9 @@ export const CurriculumEditor: React.FC<CurriculumEditorProps> = ({
               className="p-6 space-y-4 max-h-[75vh] overflow-y-auto"
             >
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className={`block text-xs font-semibold mb-1 ${
+                  theme === 'light' ? 'text-slate-700' : 'text-slate-300'
+                }`}>
                   Lesson Title *
                 </label>
                 <input
@@ -375,19 +456,29 @@ export const CurriculumEditor: React.FC<CurriculumEditorProps> = ({
                   value={formTitle}
                   onChange={(e) => setFormTitle(e.target.value)}
                   placeholder="e.g. Domain I: Purpose & Mandatory GIAS Foundations"
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white placeholder-slate-500 text-xs focus:outline-none focus:border-[#f1bd5b] transition-all"
+                  className={`w-full px-3.5 py-2.5 rounded-xl border text-xs transition-all ${
+                    theme === 'light'
+                      ? 'bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-sky-600 focus:ring-1 focus:ring-sky-600'
+                      : 'bg-slate-900 border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-[#f1bd5b]'
+                  }`}
                 />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  <label className={`block text-xs font-semibold mb-1 ${
+                    theme === 'light' ? 'text-slate-700' : 'text-slate-300'
+                  }`}>
                     Exam Part
                   </label>
                   <select
                     value={formPartId}
                     onChange={(e) => setFormPartId(e.target.value as any)}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:border-[#f1bd5b]"
+                    className={`w-full px-3 py-2 rounded-xl border text-xs ${
+                      theme === 'light'
+                        ? 'bg-slate-50 border-slate-300 text-slate-900'
+                        : 'bg-slate-900 border-slate-700 text-white'
+                    }`}
                   >
                     <option value="part-1">Part 1 (GIAS)</option>
                     <option value="part-2">Part 2 (Practice)</option>
@@ -397,7 +488,9 @@ export const CurriculumEditor: React.FC<CurriculumEditorProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  <label className={`block text-xs font-semibold mb-1 ${
+                    theme === 'light' ? 'text-slate-700' : 'text-slate-300'
+                  }`}>
                     Duration Display
                   </label>
                   <input
@@ -406,12 +499,18 @@ export const CurriculumEditor: React.FC<CurriculumEditorProps> = ({
                     value={formDuration}
                     onChange={(e) => setFormDuration(e.target.value)}
                     placeholder="e.g. 54 mins"
-                    className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:border-[#f1bd5b]"
+                    className={`w-full px-3 py-2 rounded-xl border text-xs ${
+                      theme === 'light'
+                        ? 'bg-slate-50 border-slate-300 text-slate-900'
+                        : 'bg-slate-900 border-slate-700 text-white'
+                    }`}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  <label className={`block text-xs font-semibold mb-1 ${
+                    theme === 'light' ? 'text-slate-700' : 'text-slate-300'
+                  }`}>
                     Master Instructor
                   </label>
                   <input
@@ -420,13 +519,19 @@ export const CurriculumEditor: React.FC<CurriculumEditorProps> = ({
                     value={formInstructor}
                     onChange={(e) => setFormInstructor(e.target.value)}
                     placeholder="CA Gurvinder Pal Singh"
-                    className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:border-[#f1bd5b]"
+                    className={`w-full px-3 py-2 rounded-xl border text-xs ${
+                      theme === 'light'
+                        ? 'bg-slate-50 border-slate-300 text-slate-900'
+                        : 'bg-slate-900 border-slate-700 text-white'
+                    }`}
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className={`block text-xs font-semibold mb-1 ${
+                  theme === 'light' ? 'text-slate-700' : 'text-slate-300'
+                }`}>
                   Syllabus Domain / Category
                 </label>
                 <input
@@ -435,12 +540,18 @@ export const CurriculumEditor: React.FC<CurriculumEditorProps> = ({
                   value={formDomain}
                   onChange={(e) => setFormDomain(e.target.value)}
                   placeholder="e.g. Ethics & Professionalism"
-                  className="w-full px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:border-[#f1bd5b]"
+                  className={`w-full px-3.5 py-2 rounded-xl border text-xs ${
+                    theme === 'light'
+                      ? 'bg-slate-50 border-slate-300 text-slate-900'
+                      : 'bg-slate-900 border-slate-700 text-white'
+                  }`}
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className={`block text-xs font-semibold mb-1 ${
+                  theme === 'light' ? 'text-slate-700' : 'text-slate-300'
+                }`}>
                   Description
                 </label>
                 <textarea
@@ -448,12 +559,18 @@ export const CurriculumEditor: React.FC<CurriculumEditorProps> = ({
                   value={formDescription}
                   onChange={(e) => setFormDescription(e.target.value)}
                   placeholder="Comprehensive lecture breakdown covering core GIAS examination requirements..."
-                  className="w-full px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white placeholder-slate-500 text-xs focus:outline-none focus:border-[#f1bd5b]"
+                  className={`w-full px-3.5 py-2 rounded-xl border text-xs ${
+                    theme === 'light'
+                      ? 'bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-400'
+                      : 'bg-slate-900 border-slate-700 text-white placeholder-slate-500'
+                  }`}
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className={`block text-xs font-semibold mb-1 ${
+                  theme === 'light' ? 'text-slate-700' : 'text-slate-300'
+                }`}>
                   Key Takeaways (One per line)
                 </label>
                 <textarea
@@ -461,13 +578,19 @@ export const CurriculumEditor: React.FC<CurriculumEditorProps> = ({
                   value={formTakeaways}
                   onChange={(e) => setFormTakeaways(e.target.value)}
                   placeholder="Key takeaway 1&#10;Key takeaway 2&#10;Key takeaway 3"
-                  className="w-full px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white placeholder-slate-500 text-xs font-mono focus:outline-none focus:border-[#f1bd5b]"
+                  className={`w-full px-3.5 py-2 rounded-xl border text-xs font-mono ${
+                    theme === 'light'
+                      ? 'bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-400'
+                      : 'bg-slate-900 border-slate-700 text-white placeholder-slate-500'
+                  }`}
                 />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  <label className={`block text-xs font-semibold mb-1 ${
+                    theme === 'light' ? 'text-slate-700' : 'text-slate-300'
+                  }`}>
                     Downloadable Handout Name
                   </label>
                   <input
@@ -475,12 +598,18 @@ export const CurriculumEditor: React.FC<CurriculumEditorProps> = ({
                     value={formHandoutName}
                     onChange={(e) => setFormHandoutName(e.target.value)}
                     placeholder="e.g. GIAS_Crosswalk_Matrix.pdf"
-                    className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:border-[#f1bd5b]"
+                    className={`w-full px-3 py-2 rounded-xl border text-xs ${
+                      theme === 'light'
+                        ? 'bg-slate-50 border-slate-300 text-slate-900'
+                        : 'bg-slate-900 border-slate-700 text-white'
+                    }`}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  <label className={`block text-xs font-semibold mb-1 ${
+                    theme === 'light' ? 'text-slate-700' : 'text-slate-300'
+                  }`}>
                     Handout File Size
                   </label>
                   <input
@@ -488,25 +617,35 @@ export const CurriculumEditor: React.FC<CurriculumEditorProps> = ({
                     value={formHandoutSize}
                     onChange={(e) => setFormHandoutSize(e.target.value)}
                     placeholder="e.g. 2.4 MB"
-                    className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:border-[#f1bd5b]"
+                    className={`w-full px-3 py-2 rounded-xl border text-xs ${
+                      theme === 'light'
+                        ? 'bg-slate-50 border-slate-300 text-slate-900'
+                        : 'bg-slate-900 border-slate-700 text-white'
+                    }`}
                   />
                 </div>
               </div>
 
-              <div className="pt-3 border-t border-sky-950 flex items-center justify-end gap-3">
+              <div className={`pt-3 border-t flex items-center justify-end gap-3 ${
+                theme === 'light' ? 'border-slate-200' : 'border-sky-950'
+              }`}>
                 <button
                   type="button"
                   onClick={() => {
                     setEditingLesson(null);
                     setIsAddModalOpen(false);
                   }}
-                  className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold cursor-pointer"
+                  className={`px-4 py-2 rounded-xl text-xs font-semibold cursor-pointer ${
+                    theme === 'light'
+                      ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300'
+                      : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
+                  }`}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-gradient-to-r from-sky-700 to-[#b58b42] hover:from-sky-800 hover:to-[#9e7735] text-white text-xs font-bold flex items-center gap-2 cursor-pointer shadow-md"
+                  className="px-5 py-2 rounded-xl bg-gradient-to-r from-[#102a4e] to-[#b58b42] hover:opacity-95 text-white text-xs font-bold flex items-center gap-2 cursor-pointer shadow-sm"
                 >
                   <Save className="w-4 h-4" />
                   <span>{editingLesson ? 'Save Lesson Changes' : 'Create Lesson'}</span>

@@ -136,3 +136,21 @@ export interface StudentDoubtItem {
   reply?: string;
   studentName?: string;
 }
+
+export interface CrmCallLog {
+  id: string;
+  studentName: string;
+  phone: string;
+  email?: string;
+  direction: 'outbound' | 'inbound';
+  callStatus: 'Connected' | 'No Answer' | 'Callback Requested' | 'Busy' | 'Voicemail';
+  callDateTime: string;
+  durationSeconds: number;
+  responseSummary: string;
+  interestLevel: 'Hot / Ready to Enroll' | 'Warm / Follow-up' | 'Support / Existing Student' | 'Cold / Not Interested';
+  reconnectAgain: boolean;
+  nextFollowUpDate?: string;
+  feedback: string;
+  handledBy: string;
+}
+

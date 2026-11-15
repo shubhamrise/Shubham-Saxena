@@ -9,20 +9,21 @@ import {
   CheckCircle2,
   X,
   Save,
-  Award,
-  BookOpen
+  Award
 } from 'lucide-react';
 
 interface TestBankEditorProps {
   questions: LmsMcqQuestion[];
   onUpdateQuestions: (updated: LmsMcqQuestion[]) => void;
   onShowToast: (msg: string) => void;
+  theme?: 'light' | 'dark';
 }
 
 export const TestBankEditor: React.FC<TestBankEditorProps> = ({
   questions,
   onUpdateQuestions,
-  onShowToast
+  onShowToast,
+  theme = 'light'
 }) => {
   const [selectedPart, setSelectedPart] = useState<'all' | 'part-1' | 'part-2' | 'part-3'>('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -142,16 +143,28 @@ export const TestBankEditor: React.FC<TestBankEditorProps> = ({
   return (
     <div className="space-y-6">
       {/* Header Banner */}
-      <div className="p-6 rounded-3xl bg-gradient-to-r from-[#0b1d33] via-[#091b30] to-[#122338] border border-sky-800/60 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div className={`p-6 rounded-3xl border shadow-xs transition-colors flex flex-col md:flex-row items-start md:items-center justify-between gap-4 ${
+        theme === 'light'
+          ? 'bg-gradient-to-r from-slate-50 via-sky-50/40 to-slate-50 border-slate-200'
+          : 'bg-gradient-to-r from-[#0b1d33] via-[#091b30] to-[#122338] border-sky-800/60 shadow-xl'
+      }`}>
         <div>
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#b58b42]/20 text-[#f1bd5b] border border-[#b58b42]/40 text-[10px] font-bold uppercase tracking-wider mb-2">
+          <div className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border text-[10px] font-bold uppercase tracking-wider mb-2 ${
+            theme === 'light'
+              ? 'bg-amber-50 text-[#b58b42] border-amber-200'
+              : 'bg-[#b58b42]/20 text-[#f1bd5b] border-[#b58b42]/40'
+          }`}>
             <Award className="w-3.5 h-3.5" />
             <span>IIA Test Bank Engine · Full Edit Access</span>
           </div>
-          <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+          <h2 className={`text-xl sm:text-2xl font-black tracking-tight ${
+            theme === 'light' ? 'text-slate-900' : 'text-white'
+          }`}>
             MCQ Test Bank & Exam Questions Manager
           </h2>
-          <p className="text-xs sm:text-sm text-slate-300 mt-1 max-w-2xl leading-relaxed">
+          <p className={`text-xs sm:text-sm mt-1 max-w-2xl leading-relaxed ${
+            theme === 'light' ? 'text-slate-600' : 'text-slate-300'
+          }`}>
             Create, edit, or adjust question prompts, 4 answer choices, correct option indicators, rationales, and GIAS standard references. Changes apply instantly to student exam simulation drills.
           </p>
         </div>
@@ -159,7 +172,7 @@ export const TestBankEditor: React.FC<TestBankEditorProps> = ({
         <button
           type="button"
           onClick={openAddModal}
-          className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-sky-700 via-sky-800 to-[#b58b42] hover:from-sky-800 hover:to-[#9e7735] text-white text-xs font-bold flex items-center gap-2 shadow-lg transition-all cursor-pointer shrink-0"
+          className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#102a4e] to-[#b58b42] hover:opacity-95 text-white text-xs font-bold flex items-center gap-2 shadow-sm transition-all cursor-pointer shrink-0"
         >
           <Plus className="w-4 h-4" />
           <span>Add New MCQ Question</span>
@@ -167,8 +180,12 @@ export const TestBankEditor: React.FC<TestBankEditorProps> = ({
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 rounded-2xl bg-[#091729]/95 border border-sky-900/60 shadow-md">
-        <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
+      <div className={`flex flex-col sm:flex-row items-center justify-between gap-3 p-4 rounded-2xl border shadow-xs transition-colors ${
+        theme === 'light'
+          ? 'bg-white/92 backdrop-blur-md border-slate-200/90'
+          : 'bg-[#091729]/95 border-sky-900/60 shadow-md'
+      }`}>
+        <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 scrollbar-none">
           {[
             { id: 'all', label: `All Parts (${questions.length})` },
             { id: 'part-1', label: `Part 1 (${questions.filter((q) => q.partId === 'part-1').length})` },
@@ -178,9 +195,11 @@ export const TestBankEditor: React.FC<TestBankEditorProps> = ({
             <button
               key={tab.id}
               onClick={() => setSelectedPart(tab.id as any)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
                 selectedPart === tab.id
-                  ? 'bg-gradient-to-r from-sky-700 to-[#b58b42] text-white shadow-xs'
+                  ? 'bg-gradient-to-r from-[#102a4e] via-[#163a6b] to-[#b58b42] text-white shadow-xs'
+                  : theme === 'light'
+                  ? 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                   : 'bg-slate-800/80 text-slate-300 hover:text-white'
               }`}
             >
@@ -196,7 +215,11 @@ export const TestBankEditor: React.FC<TestBankEditorProps> = ({
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search questions by scenario, standard, domain..."
-            className="w-full pl-10 pr-4 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white placeholder-slate-500 text-xs focus:outline-none focus:border-[#f1bd5b] transition-all"
+            className={`w-full pl-10 pr-4 py-2 rounded-xl border text-xs transition-all ${
+              theme === 'light'
+                ? 'bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-sky-600 focus:ring-1 focus:ring-sky-600'
+                : 'bg-slate-900 border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-[#f1bd5b]'
+            }`}
           />
         </div>
       </div>
@@ -204,27 +227,43 @@ export const TestBankEditor: React.FC<TestBankEditorProps> = ({
       {/* Questions List */}
       <div className="space-y-4">
         {filteredQuestions.length === 0 ? (
-          <div className="p-12 text-center text-slate-400 rounded-3xl bg-[#091729]/80 border border-sky-950">
+          <div className={`p-12 text-center rounded-3xl border ${
+            theme === 'light' ? 'bg-white border-slate-200 text-slate-500' : 'bg-[#091729]/80 border-sky-950 text-slate-400'
+          }`}>
             No questions found matching your filter criteria.
           </div>
         ) : (
           filteredQuestions.map((q, idx) => (
             <div
               key={q.id}
-              className="p-6 rounded-3xl bg-[#091729]/95 border border-sky-900/60 shadow-lg space-y-4 hover:border-sky-700/60 transition-colors"
+              className={`p-6 rounded-3xl border shadow-xs space-y-4 transition-colors ${
+                theme === 'light'
+                  ? 'bg-white/92 backdrop-blur-md border-slate-200/90 hover:border-slate-300'
+                  : 'bg-[#091729]/95 border-sky-900/60 shadow-lg hover:border-sky-700/60'
+              }`}
             >
               {/* Question Top Meta */}
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pb-3 border-b border-sky-950">
+              <div className={`flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pb-3 border-b ${
+                theme === 'light' ? 'border-slate-100' : 'border-sky-950'
+              }`}>
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="w-7 h-7 rounded-lg bg-sky-900 text-sky-200 text-xs font-black flex items-center justify-center">
+                  <span className={`w-7 h-7 rounded-lg text-xs font-black flex items-center justify-center ${
+                    theme === 'light' ? 'bg-sky-100 text-sky-900' : 'bg-sky-900 text-sky-200'
+                  }`}>
                     #{idx + 1}
                   </span>
-                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#b58b42]/20 text-[#f1bd5b] border border-[#b58b42]/40 uppercase tracking-wider">
+                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${
+                    theme === 'light'
+                      ? 'bg-amber-50 text-[#b58b42] border-amber-200'
+                      : 'bg-[#b58b42]/20 text-[#f1bd5b] border-[#b58b42]/40'
+                  }`}>
                     {q.partId.toUpperCase()}
                   </span>
-                  <span className="text-xs font-semibold text-slate-300">{q.domain}</span>
-                  <span className="text-slate-600">•</span>
-                  <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-800 text-slate-300">
+                  <span className={`text-xs font-semibold ${theme === 'light' ? 'text-slate-700' : 'text-slate-300'}`}>{q.domain}</span>
+                  <span className={theme === 'light' ? 'text-slate-300' : 'text-slate-600'}>•</span>
+                  <span className={`px-2 py-0.5 rounded text-[10px] font-semibold border ${
+                    theme === 'light' ? 'bg-slate-100 text-slate-700 border-slate-200' : 'bg-slate-800 text-slate-300 border-slate-700'
+                  }`}>
                     {q.difficulty}
                   </span>
                 </div>
@@ -233,15 +272,23 @@ export const TestBankEditor: React.FC<TestBankEditorProps> = ({
                   <button
                     type="button"
                     onClick={() => openEditModal(q)}
-                    className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-[#b58b42] text-slate-200 hover:text-white text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 border border-slate-700"
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 border shadow-xs ${
+                      theme === 'light'
+                        ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300'
+                        : 'bg-slate-800 hover:bg-[#b58b42] text-slate-200 hover:text-white border-slate-700'
+                    }`}
                   >
-                    <Edit3 className="w-3.5 h-3.5 text-[#f1bd5b]" />
+                    <Edit3 className="w-3.5 h-3.5 text-[#b58b42]" />
                     <span>Edit MCQ</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => handleDeleteQuestion(q.id)}
-                    className="p-1.5 rounded-lg bg-slate-800 hover:bg-rose-950 text-slate-400 hover:text-rose-300 transition-colors cursor-pointer border border-slate-700"
+                    className={`p-1.5 rounded-lg transition-colors cursor-pointer border ${
+                      theme === 'light'
+                        ? 'bg-slate-100 hover:bg-rose-50 text-slate-500 hover:text-rose-600 border-slate-300'
+                        : 'bg-slate-800 hover:bg-rose-950 text-slate-400 hover:text-rose-300 border-slate-700'
+                    }`}
                     title="Delete question"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -250,7 +297,9 @@ export const TestBankEditor: React.FC<TestBankEditorProps> = ({
               </div>
 
               {/* Question Text */}
-              <h4 className="text-sm sm:text-base font-bold text-white leading-relaxed">
+              <h4 className={`text-sm sm:text-base font-bold leading-relaxed ${
+                theme === 'light' ? 'text-slate-900' : 'text-white'
+              }`}>
                 {q.question}
               </h4>
 
@@ -263,7 +312,11 @@ export const TestBankEditor: React.FC<TestBankEditorProps> = ({
                       key={oIdx}
                       className={`p-3 rounded-xl border text-xs flex items-start gap-2.5 ${
                         isCorrect
-                          ? 'bg-emerald-950/60 border-emerald-500/60 text-emerald-200'
+                          ? theme === 'light'
+                            ? 'bg-emerald-50/80 border-emerald-300 text-emerald-950 font-medium'
+                            : 'bg-emerald-950/60 border-emerald-500/60 text-emerald-200'
+                          : theme === 'light'
+                          ? 'bg-slate-50 border-slate-200 text-slate-700'
                           : 'bg-slate-900/60 border-slate-800 text-slate-300'
                       }`}
                     >
@@ -271,6 +324,8 @@ export const TestBankEditor: React.FC<TestBankEditorProps> = ({
                         className={`w-5 h-5 rounded-md flex items-center justify-center font-bold text-[11px] shrink-0 mt-0.5 ${
                           isCorrect
                             ? 'bg-emerald-500 text-slate-950 font-black'
+                            : theme === 'light'
+                            ? 'bg-slate-200 text-slate-700'
                             : 'bg-slate-800 text-slate-400'
                         }`}
                       >
@@ -278,7 +333,7 @@ export const TestBankEditor: React.FC<TestBankEditorProps> = ({
                       </span>
                       <span className="flex-1 leading-relaxed">{opt}</span>
                       {isCorrect && (
-                        <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
                       )}
                     </div>
                   );
@@ -286,12 +341,16 @@ export const TestBankEditor: React.FC<TestBankEditorProps> = ({
               </div>
 
               {/* Rationale & Standard Reference */}
-              <div className="p-3.5 rounded-2xl bg-slate-950/70 border border-sky-950 space-y-1 text-xs">
-                <div className="flex items-center gap-2 text-slate-400 font-semibold text-[11px]">
-                  <span className="text-[#f1bd5b]">Official Rationale:</span>
-                  <span>{q.iiaStandardReference}</span>
+              <div className={`p-3.5 rounded-2xl border space-y-1 text-xs ${
+                theme === 'light'
+                  ? 'bg-slate-50/80 border-slate-200 text-slate-700'
+                  : 'bg-slate-950/70 border-sky-950 text-slate-300'
+              }`}>
+                <div className="flex items-center gap-2 font-semibold text-[11px]">
+                  <span className="text-[#b58b42] font-bold">Official Rationale:</span>
+                  <span className={theme === 'light' ? 'text-slate-600' : 'text-slate-400'}>{q.iiaStandardReference}</span>
                 </div>
-                <p className="text-slate-300 leading-relaxed">{q.rationale}</p>
+                <p className="leading-relaxed">{q.rationale}</p>
               </div>
             </div>
           ))
@@ -300,20 +359,28 @@ export const TestBankEditor: React.FC<TestBankEditorProps> = ({
 
       {/* Edit / Add Modal */}
       {(editingQuestion || isAddModalOpen) && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-sm overflow-y-auto">
-          <div className="relative w-full max-w-2xl my-8 bg-[#091729] border border-sky-800/80 rounded-3xl shadow-2xl overflow-hidden text-slate-100">
-            <div className="h-1.5 bg-gradient-to-r from-sky-600 via-[#f1bd5b] to-sky-700" />
+        <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm overflow-y-auto ${
+          theme === 'light' ? 'bg-slate-900/50' : 'bg-slate-950/85'
+        }`}>
+          <div className={`relative w-full max-w-2xl my-8 border rounded-3xl shadow-2xl overflow-hidden ${
+            theme === 'light'
+              ? 'bg-white border-slate-200 text-slate-900'
+              : 'bg-[#091729] border-sky-800/80 text-slate-100'
+          }`}>
+            <div className="h-1.5 bg-gradient-to-r from-sky-600 via-[#b58b42] to-amber-500" />
 
-            <div className="flex items-center justify-between px-6 py-4 bg-[#0b1d33] border-b border-sky-950">
+            <div className={`flex items-center justify-between px-6 py-4 border-b ${
+              theme === 'light' ? 'bg-slate-50 border-slate-200' : 'bg-[#0b1d33] border-sky-950'
+            }`}>
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-sky-700 to-[#b58b42] flex items-center justify-center text-white shadow-md">
-                  <HelpCircle className="w-4 h-4 text-[#f1bd5b]" />
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-sky-700 to-[#b58b42] flex items-center justify-center text-white shadow-xs">
+                  <HelpCircle className="w-4 h-4 text-white" />
                 </div>
                 <div>
-                  <h3 className="text-base font-extrabold text-white">
+                  <h3 className={`text-base font-extrabold ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>
                     {editingQuestion ? 'Edit MCQ Practice Question' : 'Create New MCQ Question'}
                   </h3>
-                  <div className="text-[11px] text-slate-400">
+                  <div className={`text-[11px] ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>
                     Live updates to student test bank drills
                   </div>
                 </div>
@@ -325,7 +392,11 @@ export const TestBankEditor: React.FC<TestBankEditorProps> = ({
                   setEditingQuestion(null);
                   setIsAddModalOpen(false);
                 }}
-                className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 transition-colors cursor-pointer"
+                className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors cursor-pointer ${
+                  theme === 'light'
+                    ? 'text-slate-500 hover:text-slate-900 bg-slate-200/80 hover:bg-slate-300'
+                    : 'text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700'
+                }`}
               >
                 <X className="w-4 h-4" />
               </button>
@@ -337,11 +408,17 @@ export const TestBankEditor: React.FC<TestBankEditorProps> = ({
             >
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">Exam Part</label>
+                  <label className={`block text-xs font-semibold mb-1 ${
+                    theme === 'light' ? 'text-slate-700' : 'text-slate-300'
+                  }`}>Exam Part</label>
                   <select
                     value={formPartId}
                     onChange={(e) => setFormPartId(e.target.value as any)}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:border-[#f1bd5b]"
+                    className={`w-full px-3 py-2 rounded-xl border text-xs ${
+                      theme === 'light'
+                        ? 'bg-slate-50 border-slate-300 text-slate-900'
+                        : 'bg-slate-900 border-slate-700 text-white'
+                    }`}
                   >
                     <option value="part-1">Part 1 (GIAS)</option>
                     <option value="part-2">Part 2 (Practice)</option>
@@ -350,11 +427,17 @@ export const TestBankEditor: React.FC<TestBankEditorProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">Difficulty</label>
+                  <label className={`block text-xs font-semibold mb-1 ${
+                    theme === 'light' ? 'text-slate-700' : 'text-slate-300'
+                  }`}>Difficulty</label>
                   <select
                     value={formDifficulty}
                     onChange={(e) => setFormDifficulty(e.target.value as any)}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:border-[#f1bd5b]"
+                    className={`w-full px-3 py-2 rounded-xl border text-xs ${
+                      theme === 'light'
+                        ? 'bg-slate-50 border-slate-300 text-slate-900'
+                        : 'bg-slate-900 border-slate-700 text-white'
+                    }`}
                   >
                     <option value="Foundation">Foundation</option>
                     <option value="Moderate">Moderate</option>
@@ -363,13 +446,19 @@ export const TestBankEditor: React.FC<TestBankEditorProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  <label className={`block text-xs font-semibold mb-1 ${
+                    theme === 'light' ? 'text-slate-700' : 'text-slate-300'
+                  }`}>
                     Correct Option
                   </label>
                   <select
                     value={formCorrectIndex}
                     onChange={(e) => setFormCorrectIndex(parseInt(e.target.value, 10))}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-emerald-500 text-emerald-300 font-bold text-xs focus:outline-none"
+                    className={`w-full px-3 py-2 rounded-xl border font-bold text-xs ${
+                      theme === 'light'
+                        ? 'bg-emerald-50 border-emerald-400 text-emerald-800'
+                        : 'bg-slate-900 border-emerald-500 text-emerald-300'
+                    }`}
                   >
                     <option value={0}>Option A (Correct)</option>
                     <option value={1}>Option B (Correct)</option>
@@ -380,7 +469,9 @@ export const TestBankEditor: React.FC<TestBankEditorProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className={`block text-xs font-semibold mb-1 ${
+                  theme === 'light' ? 'text-slate-700' : 'text-slate-300'
+                }`}>
                   Syllabus Domain
                 </label>
                 <input
@@ -389,12 +480,18 @@ export const TestBankEditor: React.FC<TestBankEditorProps> = ({
                   value={formDomain}
                   onChange={(e) => setFormDomain(e.target.value)}
                   placeholder="e.g. Domain I: Purpose of Internal Auditing"
-                  className="w-full px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:border-[#f1bd5b]"
+                  className={`w-full px-3.5 py-2 rounded-xl border text-xs ${
+                    theme === 'light'
+                      ? 'bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-sky-600 focus:ring-1 focus:ring-sky-600'
+                      : 'bg-slate-900 border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-[#f1bd5b]'
+                  }`}
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className={`block text-xs font-semibold mb-1 ${
+                  theme === 'light' ? 'text-slate-700' : 'text-slate-300'
+                }`}>
                   Question Prompt / Scenario *
                 </label>
                 <textarea
@@ -403,13 +500,19 @@ export const TestBankEditor: React.FC<TestBankEditorProps> = ({
                   value={formQuestion}
                   onChange={(e) => setFormQuestion(e.target.value)}
                   placeholder="Under the newly enacted Global Internal Audit Standards (GIAS), which of the following is strictly required regarding the approval of the internal audit charter?"
-                  className="w-full px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:border-[#f1bd5b]"
+                  className={`w-full px-3.5 py-2 rounded-xl border text-xs ${
+                    theme === 'light'
+                      ? 'bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-400'
+                      : 'bg-slate-900 border-slate-700 text-white placeholder-slate-500'
+                  }`}
                 />
               </div>
 
               {/* Options Inputs */}
               <div className="space-y-2.5">
-                <label className="block text-xs font-semibold text-slate-300">
+                <label className={`block text-xs font-semibold ${
+                  theme === 'light' ? 'text-slate-700' : 'text-slate-300'
+                }`}>
                   Multiple Choice Options
                 </label>
 
@@ -424,6 +527,8 @@ export const TestBankEditor: React.FC<TestBankEditorProps> = ({
                       className={`w-7 h-7 rounded-lg text-xs font-black flex items-center justify-center shrink-0 ${
                         formCorrectIndex === item.idx
                           ? 'bg-emerald-500 text-slate-950'
+                          : theme === 'light'
+                          ? 'bg-slate-200 text-slate-700'
                           : 'bg-slate-800 text-slate-400'
                       }`}
                     >
@@ -435,10 +540,14 @@ export const TestBankEditor: React.FC<TestBankEditorProps> = ({
                       value={item.val}
                       onChange={(e) => item.setVal(e.target.value)}
                       placeholder={`Enter ${item.label}...`}
-                      className={`flex-1 px-3 py-2 rounded-xl bg-slate-900 border text-xs focus:outline-none ${
+                      className={`flex-1 px-3 py-2 rounded-xl border text-xs ${
                         formCorrectIndex === item.idx
-                          ? 'border-emerald-500 text-emerald-200'
-                          : 'border-slate-700 text-white'
+                          ? theme === 'light'
+                            ? 'border-emerald-500 bg-emerald-50/50 text-slate-900'
+                            : 'border-emerald-500 bg-slate-900 text-emerald-200'
+                          : theme === 'light'
+                          ? 'border-slate-300 bg-slate-50 text-slate-900'
+                          : 'border-slate-700 bg-slate-900 text-white'
                       }`}
                     />
                     <button
@@ -447,6 +556,8 @@ export const TestBankEditor: React.FC<TestBankEditorProps> = ({
                       className={`px-2.5 py-1.5 rounded-lg text-[10px] font-bold cursor-pointer transition-colors ${
                         formCorrectIndex === item.idx
                           ? 'bg-emerald-500 text-slate-950'
+                          : theme === 'light'
+                          ? 'bg-slate-200 hover:bg-slate-300 text-slate-700'
                           : 'bg-slate-800 text-slate-400 hover:text-white'
                       }`}
                     >
@@ -457,7 +568,9 @@ export const TestBankEditor: React.FC<TestBankEditorProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className={`block text-xs font-semibold mb-1 ${
+                  theme === 'light' ? 'text-slate-700' : 'text-slate-300'
+                }`}>
                   Detailed Rationale / Explanation *
                 </label>
                 <textarea
@@ -466,12 +579,18 @@ export const TestBankEditor: React.FC<TestBankEditorProps> = ({
                   value={formRationale}
                   onChange={(e) => setFormRationale(e.target.value)}
                   placeholder="Explain why the selected option is correct and why other options are distractors..."
-                  className="w-full px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:border-[#f1bd5b]"
+                  className={`w-full px-3.5 py-2 rounded-xl border text-xs ${
+                    theme === 'light'
+                      ? 'bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-400'
+                      : 'bg-slate-900 border-slate-700 text-white placeholder-slate-500'
+                  }`}
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className={`block text-xs font-semibold mb-1 ${
+                  theme === 'light' ? 'text-slate-700' : 'text-slate-300'
+                }`}>
                   IIA Standard / GTAG Reference
                 </label>
                 <input
@@ -479,24 +598,34 @@ export const TestBankEditor: React.FC<TestBankEditorProps> = ({
                   value={formStandardRef}
                   onChange={(e) => setFormStandardRef(e.target.value)}
                   placeholder="e.g. GIAS Principle 1 & Domain I Requirement 1.1"
-                  className="w-full px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:border-[#f1bd5b]"
+                  className={`w-full px-3.5 py-2 rounded-xl border text-xs ${
+                    theme === 'light'
+                      ? 'bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-400'
+                      : 'bg-slate-900 border-slate-700 text-white placeholder-slate-500'
+                  }`}
                 />
               </div>
 
-              <div className="pt-3 border-t border-sky-950 flex items-center justify-end gap-3">
+              <div className={`pt-3 border-t flex items-center justify-end gap-3 ${
+                theme === 'light' ? 'border-slate-200' : 'border-sky-950'
+              }`}>
                 <button
                   type="button"
                   onClick={() => {
                     setEditingQuestion(null);
                     setIsAddModalOpen(false);
                   }}
-                  className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold cursor-pointer"
+                  className={`px-4 py-2 rounded-xl text-xs font-semibold cursor-pointer ${
+                    theme === 'light'
+                      ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300'
+                      : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
+                  }`}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-gradient-to-r from-sky-700 to-[#b58b42] hover:from-sky-800 hover:to-[#9e7735] text-white text-xs font-bold flex items-center gap-2 cursor-pointer shadow-md"
+                  className="px-5 py-2 rounded-xl bg-gradient-to-r from-[#102a4e] to-[#b58b42] hover:opacity-95 text-white text-xs font-bold flex items-center gap-2 cursor-pointer shadow-sm"
                 >
                   <Save className="w-4 h-4" />
                   <span>{editingQuestion ? 'Save MCQ Changes' : 'Add MCQ Question'}</span>

@@ -1,13 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import {
   LMS_MODULES,
-  LMS_TEST_BANK_QUESTIONS,
-  LMS_RESOURCES,
-  UPCOMING_LIVE_CLASSES,
   LmsLesson,
-  LmsModule,
-  LmsMcqQuestion,
-  LmsResource
+  LmsModule
 } from '../data/lmsData';
 import {
   BookOpen,
@@ -15,25 +10,20 @@ import {
   Play,
   Pause,
   CheckCircle2,
-  Clock,
   Download,
   FileText,
   HelpCircle,
   Sparkles,
   ArrowLeft,
-  Calendar,
   Award,
   ChevronRight,
-  Send,
   Cpu,
   Search,
-  ExternalLink,
   RotateCcw,
   Volume2,
   Maximize2,
   MessageSquare,
   ShieldCheck,
-  BarChart3,
   Check,
   Lock,
   KeyRound,
@@ -52,7 +42,7 @@ import {
   Moon
 } from 'lucide-react';
 import { LmsAdminConsole } from './LmsAdminConsole';
-import { ManagedLearner, LmsAdminUser, LiveClassItem, StudentDoubtItem } from '../types';
+import { ManagedLearner, LmsAdminUser } from '../types';
 
 export interface AuthenticatedStudent {
   name: string;
@@ -220,77 +210,17 @@ export const StudentLmsPortal: React.FC<StudentLmsPortalProps> = ({
   const [isAdminSubmitting, setIsAdminSubmitting] = useState(false);
 
   // Navigation tabs
-  const [activeTab, setActiveTab] = useState<'curriculum' | 'testbank' | 'live' | 'resources' | 'ailab' | 'readiness'>('curriculum');
+  const [activeTab, setActiveTab] = useState<'curriculum' | 'ailab'>('curriculum');
   const [selectedPart, setSelectedPart] = useState<'all' | 'part-1' | 'part-2' | 'part-3' | 'ai-lab'>('part-1');
 
-  // LMS Data States (backed by localStorage so Admin edits persist across student view)
-  const [lmsModules, setLmsModules] = useState<LmsModule[]>(() => {
+  // LMS Data States
+  const [lmsModules] = useState<LmsModule[]>(() => {
     try {
       const saved = localStorage.getItem('bnc_lms_modules');
       if (saved) return JSON.parse(saved);
     } catch {}
     return LMS_MODULES;
   });
-
-  const [testBankQuestions, setTestBankQuestions] = useState<LmsMcqQuestion[]>(() => {
-    try {
-      const saved = localStorage.getItem('bnc_lms_test_bank');
-      if (saved) return JSON.parse(saved);
-    } catch {}
-    return LMS_TEST_BANK_QUESTIONS;
-  });
-
-  const [liveClasses, setLiveClasses] = useState<LiveClassItem[]>(() => {
-    try {
-      const saved = localStorage.getItem('bnc_lms_live_classes');
-      if (saved) return JSON.parse(saved);
-    } catch {}
-    return UPCOMING_LIVE_CLASSES;
-  });
-
-  const [lmsResources, setLmsResources] = useState<LmsResource[]>(() => {
-    try {
-      const saved = localStorage.getItem('bnc_lms_resources');
-      if (saved) return JSON.parse(saved);
-    } catch {}
-    return LMS_RESOURCES;
-  });
-
-  const handleUpdateModules = (updated: LmsModule[]) => {
-    setLmsModules(updated);
-    try {
-      localStorage.setItem('bnc_lms_modules', JSON.stringify(updated));
-    } catch (e) {
-      console.warn(e);
-    }
-  };
-
-  const handleUpdateTestBank = (updated: LmsMcqQuestion[]) => {
-    setTestBankQuestions(updated);
-    try {
-      localStorage.setItem('bnc_lms_test_bank', JSON.stringify(updated));
-    } catch (e) {
-      console.warn(e);
-    }
-  };
-
-  const handleUpdateLiveClasses = (updated: LiveClassItem[]) => {
-    setLiveClasses(updated);
-    try {
-      localStorage.setItem('bnc_lms_live_classes', JSON.stringify(updated));
-    } catch (e) {
-      console.warn(e);
-    }
-  };
-
-  const handleUpdateResources = (updated: LmsResource[]) => {
-    setLmsResources(updated);
-    try {
-      localStorage.setItem('bnc_lms_resources', JSON.stringify(updated));
-    } catch (e) {
-      console.warn(e);
-    }
-  };
   
   // Video Player state
   const [activeLesson, setActiveLesson] = useState<LmsLesson>(lmsModules[0]?.lessons[0] || LMS_MODULES[0].lessons[0]);
@@ -320,50 +250,11 @@ export const StudentLmsPortal: React.FC<StudentLmsPortalProps> = ({
   });
   const [noteSavedFeedback, setNoteSavedFeedback] = useState(false);
 
-  // MCQ Test Bank state
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
-  const [isAnswerSubmitted, setIsAnswerSubmitted] = useState(false);
-  const [flaggedQuestions, setFlaggedQuestions] = useState<string[]>([]);
-  const [testScore, setTestScore] = useState(0);
-  const [totalAttempted, setTotalAttempted] = useState(0);
-  const [examTimerSeconds, setExamTimerSeconds] = useState(150 * 60); // 150 minutes
-  const [isTimerRunning, setIsTimerRunning] = useState(true);
-
   // AI Audit Lab state
   const [aiPromptCategory, setAiPromptCategory] = useState<'rcm' | 'memo' | 'sampling'>('rcm');
   const [customPrompt, setCustomPrompt] = useState('Generate an audit testing procedure for Procure-to-Pay vendor onboarding under SOX / ICFR controls.');
   const [isAiGenerating, setIsAiGenerating] = useState(false);
   const [aiOutput, setAiOutput] = useState<string>('');
-
-  // Live Class & Doubt state
-  const [doubtText, setDoubtText] = useState('');
-  const [doubtSubmitted, setDoubtSubmitted] = useState(false);
-  const [userDoubts, setUserDoubts] = useState<StudentDoubtItem[]>(() => {
-    try {
-      const saved = localStorage.getItem('bnc_lms_user_doubts');
-      if (saved) return JSON.parse(saved);
-    } catch {}
-    return [
-      {
-        id: 'd-1',
-        question: 'In GIAS Standard 2.1, does consulting on an ERP migration immediately disqualify the team from conducting assurance on the same system later?',
-        time: 'Yesterday at 4:15 PM',
-        status: 'Answered by CA Gurvinder Pal Singh',
-        reply: 'Yes, if the internal audit team designed or implemented operating controls during the migration, independence is impaired for a minimum of 1 year. If advisory was strictly limited to evaluating design without management decision-making, assurance can proceed with disclosure to the Audit Committee.',
-        studentName: 'Rohit Verma'
-      }
-    ];
-  });
-
-  const handleUpdateDoubts = (updated: StudentDoubtItem[]) => {
-    setUserDoubts(updated);
-    try {
-      localStorage.setItem('bnc_lms_user_doubts', JSON.stringify(updated));
-    } catch (e) {
-      console.warn(e);
-    }
-  };
 
   // Toast feedback
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -573,22 +464,6 @@ export const StudentLmsPortal: React.FC<StudentLmsPortalProps> = ({
     setStudentNote(savedNotes[activeLesson.id] || '');
   }, [activeLesson.id, savedNotes]);
 
-  // Exam timer countdown
-  useEffect(() => {
-    if (!isTimerRunning) return;
-    const timer = setInterval(() => {
-      setExamTimerSeconds((prev) => (prev > 0 ? prev - 1 : 0));
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [isTimerRunning]);
-
-  const formatTimer = (totalSeconds: number) => {
-    const hours = Math.floor(totalSeconds / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
-    const seconds = totalSeconds % 60;
-    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-  };
-
   // Run AI Audit tool
   const handleRunAiAudit = () => {
     setIsAiGenerating(true);
@@ -660,24 +535,6 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
     }, 900);
   };
 
-  // Submit student doubt
-  const handleDoubtSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!doubtText.trim()) return;
-    const newDoubt = {
-      id: `d-${Date.now()}`,
-      question: doubtText,
-      time: 'Just now',
-      status: 'Transmitted to CA Gurvinder Pal Singh (Review in progress)',
-      reply: undefined
-    };
-    setUserDoubts([newDoubt, ...userDoubts]);
-    setDoubtText('');
-    setDoubtSubmitted(true);
-    setTimeout(() => setDoubtSubmitted(false), 3000);
-    showToast('Doubt submitted to Senior Faculty desk!');
-  };
-
   // Filter modules
   const filteredModules = selectedPart === 'all'
     ? lmsModules
@@ -695,16 +552,6 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
         learners={managedLearners}
         onUpdateLearners={handleUpdateLearners}
         onLogoutAdmin={handleLogoutAdmin}
-        modules={lmsModules}
-        onUpdateModules={handleUpdateModules}
-        testBank={testBankQuestions}
-        onUpdateTestBank={handleUpdateTestBank}
-        liveClasses={liveClasses}
-        onUpdateLiveClasses={handleUpdateLiveClasses}
-        resources={lmsResources}
-        onUpdateResources={handleUpdateResources}
-        doubts={userDoubts}
-        onUpdateDoubts={handleUpdateDoubts}
         onSwitchToStudentView={(learner) => {
           if (learner) {
             setCurrentUser({
@@ -773,7 +620,7 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
         )}
 
         {/* Top Header Bar */}
-        <header className={`relative z-10 ${theme === 'light' ? 'bg-white/95 border-slate-200/90 shadow-xs' : 'bg-[#07172b]/90 border-sky-950 shadow-md'} backdrop-blur-md border-b px-4 sm:px-6 lg:px-8 py-3.5`}>
+        <header className={`relative z-10 ${theme === 'light' ? 'bg-white border-slate-200 shadow-xs' : 'bg-[#07172b]/90 border-sky-950 shadow-md backdrop-blur-md'} border-b px-4 sm:px-6 lg:px-8 py-3.5`}>
           <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
             <div className="flex items-center gap-4">
               <button
@@ -841,7 +688,7 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
           
           {/* Dual Role Selector: Learner vs Academic Admin */}
           <div className="flex items-center justify-center mb-6">
-            <div className={`p-1 ${theme === 'light' ? 'bg-slate-200/80 border-slate-300' : 'bg-slate-900/90 border-sky-800/60'} rounded-2xl border inline-flex shadow-sm`}>
+            <div className={`p-1 ${theme === 'light' ? 'bg-slate-200 border-slate-300' : 'bg-slate-900/90 border-sky-800/60'} rounded-2xl border inline-flex shadow-sm`}>
               <button
                 type="button"
                 onClick={() => {
@@ -899,7 +746,7 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
               </div>
 
               {/* Learner Verification Box */}
-              <div className={`${theme === 'light' ? 'bg-white border-slate-200/90 shadow-xl shadow-slate-200/60' : 'bg-[#0a1829]/95 border-sky-900/60 shadow-2xl'} backdrop-blur-xl border rounded-3xl p-6 sm:p-8 relative overflow-hidden transition-colors`}>
+              <div className={`${theme === 'light' ? 'bg-white border-slate-200 shadow-xl shadow-slate-200/60' : 'bg-[#0a1829]/95 border-sky-900/60 shadow-2xl backdrop-blur-xl'} border rounded-3xl p-6 sm:p-8 relative overflow-hidden transition-colors`}>
                 {/* Top Accent Rim */}
                 <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-sky-600 via-[#b58b42] to-amber-500" />
 
@@ -1064,7 +911,7 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
               </div>
 
               {/* Admin Box */}
-              <div className={`${theme === 'light' ? 'bg-white border-slate-200 shadow-xl shadow-slate-200/50' : 'bg-[#0a1829]/95 border-sky-800/60 shadow-2xl'} backdrop-blur-xl border rounded-3xl p-6 sm:p-8 relative overflow-hidden transition-colors`}>
+              <div className={`${theme === 'light' ? 'bg-white border-slate-200 shadow-xl shadow-slate-200/50' : 'bg-[#0a1829]/95 border-sky-800/60 shadow-2xl backdrop-blur-xl'} border rounded-3xl p-6 sm:p-8 relative overflow-hidden transition-colors`}>
                 {/* Top Accent Rim */}
                 <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-sky-500 via-[#b58b42] to-amber-500" />
 
@@ -1164,28 +1011,28 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
           {/* Platform Capability Teasers */}
           <div className="mt-10 grid grid-cols-2 md:grid-cols-4 gap-3">
             <div className={`p-3.5 rounded-2xl border text-left ${
-              theme === 'light' ? 'bg-white border-slate-200/90 shadow-xs' : 'bg-[#091626]/80 border-sky-950/80'
+              theme === 'light' ? 'bg-white border-slate-200 shadow-xs' : 'bg-[#091626]/80 border-sky-950/80'
             }`}>
               <Video className="w-5 h-5 text-[#b58b42] mb-1.5" />
               <div className={`text-xs font-bold ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>100–120+ Hrs Video</div>
               <div className={`text-[10px] ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>Parts 1, 2, 3 with timestamped notes</div>
             </div>
             <div className={`p-3.5 rounded-2xl border text-left ${
-              theme === 'light' ? 'bg-white border-slate-200/90 shadow-xs' : 'bg-[#091626]/80 border-sky-950/80'
+              theme === 'light' ? 'bg-white border-slate-200 shadow-xs' : 'bg-[#091626]/80 border-sky-950/80'
             }`}>
               <HelpCircle className="w-5 h-5 text-sky-600 mb-1.5" />
               <div className={`text-xs font-bold ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>Gleim Mega Test Bank</div>
               <div className={`text-[10px] ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>SmartAdapt™ AI adaptive simulator</div>
             </div>
             <div className={`p-3.5 rounded-2xl border text-left ${
-              theme === 'light' ? 'bg-white border-slate-200/90 shadow-xs' : 'bg-[#091626]/80 border-sky-950/80'
+              theme === 'light' ? 'bg-white border-slate-200 shadow-xs' : 'bg-[#091626]/80 border-sky-950/80'
             }`}>
               <Cpu className="w-5 h-5 text-purple-600 mb-1.5" />
               <div className={`text-xs font-bold ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>AI Audit Lab</div>
               <div className={`text-[10px] ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>RCM generator & Benford anomaly scripts</div>
             </div>
             <div className={`p-3.5 rounded-2xl border text-left ${
-              theme === 'light' ? 'bg-white border-slate-200/90 shadow-xs' : 'bg-[#091626]/80 border-sky-950/80'
+              theme === 'light' ? 'bg-white border-slate-200 shadow-xs' : 'bg-[#091626]/80 border-sky-950/80'
             }`}>
               <MessageSquare className="w-5 h-5 text-emerald-600 mb-1.5" />
               <div className={`text-xs font-bold ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>Faculty Clinic</div>
@@ -1197,8 +1044,6 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
     );
   }
 
-
-  const currentMcq = testBankQuestions[currentQuestionIndex] || testBankQuestions[0];
 
   return (
     <div className={`min-h-screen ${theme === 'light' ? 'bg-[#f8fafc]/50 text-slate-800' : 'bg-[#071322] text-slate-100'} flex flex-col font-sans transition-colors duration-200 relative`}>
@@ -1359,7 +1204,7 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
       )}
 
       {/* Top LMS Header Bar */}
-      <header className={`sticky top-0 z-40 ${theme === 'light' ? 'bg-white/90 border-slate-200/90 shadow-xs' : 'bg-[#07172b]/95 border-sky-950 shadow-md'} backdrop-blur-md border-b px-4 sm:px-6 lg:px-8 py-3.5`}>
+      <header className={`sticky top-0 z-40 ${theme === 'light' ? 'bg-white border-slate-200 shadow-xs' : 'bg-[#07172b]/95 border-sky-950 shadow-md backdrop-blur-md'} border-b px-4 sm:px-6 lg:px-8 py-3.5`}>
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
           {/* Brand & Mode */}
           <div className="flex items-center gap-4 shrink-0">
@@ -1477,7 +1322,7 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
       </header>
 
       {/* LMS Primary Navigation Sub-Bar */}
-      <div className={`${theme === 'light' ? 'bg-white/85 backdrop-blur-md border-slate-200/90 shadow-xs' : 'bg-[#0b1b30]/95 backdrop-blur-md border-sky-950/80'} border-b px-4 sm:px-6 lg:px-8 py-2 relative z-30`}>
+      <div className={`${theme === 'light' ? 'bg-white border-slate-200 shadow-xs' : 'bg-[#0b1b30]/95 backdrop-blur-md border-sky-950/80'} border-b px-4 sm:px-6 lg:px-8 py-2 relative z-30`}>
         <div className="max-w-7xl mx-auto flex items-center justify-between overflow-x-auto gap-2 text-xs font-semibold scrollbar-none">
           <div className="flex items-center gap-1">
             <button
@@ -1495,48 +1340,6 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
             </button>
 
             <button
-              onClick={() => setActiveTab('testbank')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all cursor-pointer whitespace-nowrap ${
-                activeTab === 'testbank'
-                  ? 'bg-gradient-to-r from-[#102a4e] via-[#163a6b] to-[#b58b42] text-white shadow-sm font-bold'
-                  : theme === 'light'
-                  ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-              }`}
-            >
-              <HelpCircle className="w-4 h-4 text-[#b58b42]" />
-              <span>Gleim Test Bank Simulator</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('live')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all cursor-pointer whitespace-nowrap ${
-                activeTab === 'live'
-                  ? 'bg-gradient-to-r from-[#102a4e] via-[#163a6b] to-[#b58b42] text-white shadow-sm font-bold'
-                  : theme === 'light'
-                  ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-              }`}
-            >
-              <Calendar className="w-4 h-4 text-[#b58b42]" />
-              <span>Live Schedule & Faculty Doubt Desk</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('resources')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all cursor-pointer whitespace-nowrap ${
-                activeTab === 'resources'
-                  ? 'bg-gradient-to-r from-[#102a4e] via-[#163a6b] to-[#b58b42] text-white shadow-sm font-bold'
-                  : theme === 'light'
-                  ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-              }`}
-            >
-              <Download className="w-4 h-4 text-[#b58b42]" />
-              <span>Study Notes & Handouts</span>
-            </button>
-
-            <button
               onClick={() => setActiveTab('ailab')}
               className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all cursor-pointer whitespace-nowrap ${
                 activeTab === 'ailab'
@@ -1548,20 +1351,6 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
             >
               <Sparkles className="w-4 h-4 text-amber-500" />
               <span>AI Audit Lab Sandbox</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('readiness')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all cursor-pointer whitespace-nowrap ${
-                activeTab === 'readiness'
-                  ? 'bg-gradient-to-r from-[#102a4e] via-[#163a6b] to-[#b58b42] text-white shadow-sm font-bold'
-                  : theme === 'light'
-                  ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-              }`}
-            >
-              <BarChart3 className="w-4 h-4 text-[#b58b42]" />
-              <span>Exam Readiness Index</span>
             </button>
           </div>
         </div>
@@ -1841,7 +1630,7 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
                                   ? 'bg-sky-50 border-sky-400 shadow-xs ring-1 ring-sky-300'
                                   : 'bg-sky-950/90 border-sky-600 shadow-md ring-1 ring-sky-500/40'
                                 : theme === 'light'
-                                ? 'bg-slate-50/70 border-slate-200 hover:border-slate-300 hover:bg-slate-100'
+                                ? 'bg-slate-50 border-slate-200 hover:border-slate-300 hover:bg-slate-100'
                                 : 'bg-slate-950/60 border-slate-800 hover:border-slate-700'
                             }`}
                           >
@@ -1888,430 +1677,13 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
         )}
 
         {/* ================================================================= */}
-        {/* TAB 2: OFFICIAL GLEIM CIA EXAM SIMULATOR (SMARTADAPT™ ENGINE)    */}
-        {/* ================================================================= */}
-        {activeTab === 'testbank' && (
-          <div className="space-y-6">
-            {/* Exam Simulation Top HUD */}
-            <div className={`p-5 rounded-3xl border flex flex-wrap items-center justify-between gap-4 ${
-              theme === 'light' ? 'bg-white border-slate-200 shadow-xs' : 'bg-slate-900 border-slate-800'
-            }`}>
-              <div>
-                <span className="px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-[#b58b42] text-[10px] font-bold uppercase tracking-wider">
-                  PEARSON VUE REAL EXAM SIMULATOR · GLEIM SMARTADAPT™
-                </span>
-                <h3 className={`text-lg font-black mt-1 ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>
-                  Official Gleim CIA Mega Test Bank · Question {currentQuestionIndex + 1} of {testBankQuestions.length}
-                </h3>
-              </div>
-
-              {/* Timer & Controls */}
-              <div className="flex items-center gap-3">
-                <div className={`flex items-center gap-2 px-3.5 py-2 rounded-xl font-mono text-xs border ${
-                  theme === 'light' ? 'bg-slate-100 border-slate-300 text-slate-800' : 'bg-slate-950 border-slate-700 text-white'
-                }`}>
-                  <Clock className="w-4 h-4 text-[#b58b42]" />
-                  <span className="font-bold">Time Remaining: {formatTimer(examTimerSeconds)}</span>
-                </div>
-
-                <button
-                  onClick={() => {
-                    const qId = currentMcq.id;
-                    if (flaggedQuestions.includes(qId)) {
-                      setFlaggedQuestions(flaggedQuestions.filter((id) => id !== qId));
-                      showToast('Unflagged for review');
-                    } else {
-                      setFlaggedQuestions([...flaggedQuestions, qId]);
-                      showToast('Question flagged for end-of-test review');
-                    }
-                  }}
-                  className={`px-3 py-2 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
-                    flaggedQuestions.includes(currentMcq.id)
-                      ? 'bg-amber-600 text-white'
-                      : theme === 'light'
-                      ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300'
-                      : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
-                  }`}
-                >
-                  {flaggedQuestions.includes(currentMcq.id) ? '🚩 Flagged' : '🏳️ Flag for Review'}
-                </button>
-              </div>
-            </div>
-
-            {/* Question Screen */}
-            <div className={`p-8 rounded-3xl border space-y-6 ${
-              theme === 'light' ? 'bg-white border-slate-200 shadow-xs' : 'bg-slate-900/90 border-slate-800'
-            }`}>
-              {/* Question Header & Meta */}
-              <div className={`flex flex-wrap items-center justify-between gap-2 border-b pb-4 text-xs ${
-                theme === 'light' ? 'border-slate-100 text-slate-500' : 'border-slate-800 text-slate-400'
-              }`}>
-                <span className="font-semibold text-sky-700">{currentMcq.domain}</span>
-                <span className={`font-mono text-[11px] px-2.5 py-0.5 rounded ${
-                  theme === 'light' ? 'bg-slate-100 text-slate-700 border border-slate-200' : 'bg-slate-800 text-slate-300'
-                }`}>
-                  Standard Ref: {currentMcq.iiaStandardReference}
-                </span>
-              </div>
-
-              {/* Question Text */}
-              <div className={`text-base sm:text-lg font-semibold leading-relaxed ${
-                theme === 'light' ? 'text-slate-900' : 'text-white'
-              }`}>
-                {currentMcq.question}
-              </div>
-
-              {/* Answer Options */}
-              <div className="space-y-3">
-                {currentMcq.options.map((opt, idx) => {
-                  const isSelected = selectedAnswer === idx;
-                  const isCorrect = idx === currentMcq.correctIndex;
-
-                  let optionStyle = theme === 'light'
-                    ? 'bg-slate-50 border-slate-200 hover:border-sky-300 hover:bg-sky-50/40 text-slate-800'
-                    : 'bg-slate-950/70 border-slate-800 hover:border-slate-700 text-slate-200';
-
-                  if (isSelected && !isAnswerSubmitted) {
-                    optionStyle = theme === 'light'
-                      ? 'bg-sky-50 border-sky-500 text-sky-950 shadow-xs ring-1 ring-sky-500 font-semibold'
-                      : 'bg-sky-950/90 border-sky-500 text-white shadow-md ring-1 ring-sky-500';
-                  } else if (isAnswerSubmitted) {
-                    if (isCorrect) {
-                      optionStyle = theme === 'light'
-                        ? 'bg-emerald-50 border-emerald-500 text-emerald-950 ring-1 ring-emerald-500 font-semibold'
-                        : 'bg-emerald-950/90 border-emerald-500 text-emerald-200 ring-1 ring-emerald-500';
-                    } else if (isSelected && !isCorrect) {
-                      optionStyle = theme === 'light'
-                        ? 'bg-rose-50 border-rose-400 text-rose-950 font-medium'
-                        : 'bg-rose-950/90 border-rose-500 text-rose-200';
-                    }
-                  }
-
-                  return (
-                    <div
-                      key={idx}
-                      onClick={() => {
-                        if (!isAnswerSubmitted) {
-                          setSelectedAnswer(idx);
-                        }
-                      }}
-                      className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-start gap-3.5 ${optionStyle}`}
-                    >
-                      <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 mt-0.5 ${
-                        theme === 'light' ? 'bg-slate-200 text-slate-800' : 'bg-slate-800 text-white'
-                      }`}>
-                        {String.fromCharCode(65 + idx)}
-                      </span>
-                      <span className="text-xs sm:text-sm leading-relaxed">{opt}</span>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Detailed Rationale & IIA Explanations (Shown upon submit) */}
-              {isAnswerSubmitted && (
-                <div className={`p-6 rounded-2xl border space-y-3 animate-in fade-in duration-300 ${
-                  theme === 'light'
-                    ? 'bg-amber-50/60 border-amber-200 text-slate-800'
-                    : 'bg-slate-950 border-slate-800 text-slate-300'
-                }`}>
-                  <div className={`flex items-center gap-2 font-bold text-sm ${
-                    theme === 'light' ? 'text-amber-900' : 'text-white'
-                  }`}>
-                    <Sparkles className="w-4 h-4 text-[#b58b42]" />
-                    <span>Psychometric Analysis & IIA Standard Rationale:</span>
-                  </div>
-                  <p className="text-xs sm:text-sm leading-relaxed">
-                    {currentMcq.rationale}
-                  </p>
-                </div>
-              )}
-
-              {/* Footer Question Nav Action Buttons */}
-              <div className={`flex flex-wrap items-center justify-between gap-4 pt-4 border-t ${
-                theme === 'light' ? 'border-slate-100' : 'border-slate-800'
-              }`}>
-                <button
-                  disabled={currentQuestionIndex === 0}
-                  onClick={() => {
-                    setCurrentQuestionIndex((prev) => prev - 1);
-                    setSelectedAnswer(null);
-                    setIsAnswerSubmitted(false);
-                  }}
-                  className={`px-5 py-2.5 rounded-xl disabled:opacity-40 text-xs font-bold transition-colors cursor-pointer ${
-                    theme === 'light'
-                      ? 'bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300'
-                      : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
-                  }`}
-                >
-                  ← Previous Question
-                </button>
-
-                <div className="flex items-center gap-3">
-                  {!isAnswerSubmitted ? (
-                    <button
-                      disabled={selectedAnswer === null}
-                      onClick={() => {
-                        setIsAnswerSubmitted(true);
-                        setTotalAttempted((prev) => prev + 1);
-                        if (selectedAnswer === currentMcq.correctIndex) {
-                          setTestScore((prev) => prev + 1);
-                          showToast('Correct! +1 point');
-                        } else {
-                          showToast('Incorrect. Review the detailed rationale below.');
-                        }
-                      }}
-                      className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-sky-700 via-sky-800 to-[#b58b42] hover:from-sky-800 hover:to-[#9e7735] disabled:opacity-40 text-white font-bold text-xs shadow-md cursor-pointer transition-all"
-                    >
-                      Check Answer & View Rationale
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => {
-                        if (currentQuestionIndex < testBankQuestions.length - 1) {
-                          setCurrentQuestionIndex((prev) => prev + 1);
-                          setSelectedAnswer(null);
-                          setIsAnswerSubmitted(false);
-                        } else {
-                          showToast(`Test Complete! Score: ${testScore + (selectedAnswer === currentMcq.correctIndex ? 1 : 0)}/${testBankQuestions.length}`);
-                        }
-                      }}
-                      className="px-6 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white font-bold text-xs shadow-md cursor-pointer transition-all"
-                    >
-                      {currentQuestionIndex < testBankQuestions.length - 1 ? 'Next Question →' : 'Finish & Score Test'}
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ================================================================= */}
-        {/* TAB 3: LIVE COACHING SCHEDULE & DOUBT DESK                        */}
-        {/* ================================================================= */}
-        {activeTab === 'live' && (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-            {/* Left Column (7 Cols): Upcoming Live Cohort Zoom Schedules */}
-            <div className="lg:col-span-7 space-y-6">
-              <div className={`p-6 rounded-3xl border space-y-4 ${
-                theme === 'light' ? 'bg-white border-slate-200 shadow-xs' : 'bg-slate-900 border-slate-800'
-              }`}>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-5 h-5 text-[#b58b42]" />
-                    <h3 className={`text-base font-bold ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>Upcoming Live Weekend Cohort Sessions</h3>
-                  </div>
-                  <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border ${
-                    theme === 'light' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-emerald-950/70 text-emerald-400 border-emerald-800'
-                  }`}>
-                    Live Room Open
-                  </span>
-                </div>
-
-                <div className="space-y-4 pt-2">
-                  {liveClasses.map((session) => (
-                    <div
-                      key={session.id}
-                      className={`p-5 rounded-2xl border transition-all space-y-3 ${
-                        theme === 'light'
-                          ? 'bg-slate-50/70 border-slate-200 hover:border-sky-400 hover:bg-slate-50'
-                          : 'bg-slate-950/80 border-slate-800 hover:border-sky-600'
-                      }`}
-                    >
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <span className="text-xs font-bold text-[#b58b42] bg-amber-500/10 px-2.5 py-0.5 rounded-md border border-amber-500/20">
-                          {session.date} · {session.time}
-                        </span>
-                        <span className={`text-[11px] ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>
-                          Meeting ID: <strong className={`font-mono ${theme === 'light' ? 'text-slate-900' : 'text-slate-200'}`}>{session.meetingId}</strong>
-                        </span>
-                      </div>
-
-                      <h4 className={`text-sm font-bold leading-snug ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>
-                        {session.title}
-                      </h4>
-
-                      <div className={`text-xs ${theme === 'light' ? 'text-slate-600' : 'text-slate-400'}`}>
-                        Conducted by: <strong className={theme === 'light' ? 'text-slate-900' : 'text-slate-200'}>{session.instructor}</strong>
-                      </div>
-
-                      <div className="flex flex-wrap gap-1.5 pt-1">
-                        {session.topics.map((t, i) => (
-                          <span
-                            key={i}
-                            className={`text-[10px] px-2 py-0.5 rounded border ${
-                              theme === 'light'
-                                ? 'bg-white text-slate-700 border-slate-200'
-                                : 'bg-slate-900 text-slate-400 border-slate-800'
-                            }`}
-                          >
-                            • {t}
-                          </span>
-                        ))}
-                      </div>
-
-                      <div className="pt-2 flex items-center justify-between">
-                        <span className={`text-[11px] font-mono ${theme === 'light' ? 'text-slate-500' : 'text-slate-500'}`}>Passcode: {session.passcode}</span>
-                        <button
-                          onClick={() => showToast(`Connecting to secure student live stream for ${session.title}...`)}
-                          className="px-4 py-2 rounded-xl bg-gradient-to-r from-sky-700 via-sky-800 to-[#b58b42] hover:from-sky-800 hover:to-[#9e7735] text-white text-xs font-bold transition-all cursor-pointer shadow-sm flex items-center gap-1.5"
-                        >
-                          <ExternalLink className="w-3.5 h-3.5" />
-                          <span>Join Live Classroom</span>
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Right Column (5 Cols): Ask Faculty a Doubt & Q&A Thread */}
-            <div className="lg:col-span-5 space-y-6">
-              <div className={`p-6 rounded-3xl border space-y-4 ${
-                theme === 'light' ? 'bg-white border-slate-200 shadow-xs' : 'bg-slate-900 border-slate-800'
-              }`}>
-                <div className="flex items-center gap-2">
-                  <MessageSquare className="w-5 h-5 text-sky-600" />
-                  <h3 className={`text-base font-bold ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>Ask Faculty a Doubt</h3>
-                </div>
-                <p className={`text-xs leading-relaxed ${theme === 'light' ? 'text-slate-600' : 'text-slate-400'}`}>
-                  Questions are reviewed directly by CA Gurvinder Pal Singh and the BNC senior faculty panel within 4 hours.
-                </p>
-
-                <form onSubmit={handleDoubtSubmit} className="space-y-3">
-                  <textarea
-                    rows={3}
-                    required
-                    value={doubtText}
-                    onChange={(e) => setDoubtText(e.target.value)}
-                    placeholder="Type your exam scenario or concept question here..."
-                    className={`w-full p-3 rounded-xl border text-xs transition-all resize-y ${
-                      theme === 'light'
-                        ? 'bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-sky-600'
-                        : 'bg-slate-950 border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-sky-500'
-                    }`}
-                  />
-                  <button
-                    type="submit"
-                    className="w-full py-2.5 rounded-xl bg-gradient-to-r from-[#102a4e] to-[#b58b42] hover:opacity-95 text-white font-bold text-xs transition-opacity cursor-pointer shadow-sm flex items-center justify-center gap-1.5"
-                  >
-                    <Send className="w-3.5 h-3.5" />
-                    <span>Submit to Faculty Desk</span>
-                  </button>
-                </form>
-
-                {/* Question History */}
-                <div className={`pt-4 border-t space-y-3 ${theme === 'light' ? 'border-slate-100' : 'border-slate-800'}`}>
-                  <div className={`text-xs font-bold ${theme === 'light' ? 'text-slate-800' : 'text-slate-300'}`}>My Question History:</div>
-                  {userDoubts.map((d) => (
-                    <div
-                      key={d.id}
-                      className={`p-3.5 rounded-xl border text-xs space-y-2 ${
-                        theme === 'light' ? 'bg-slate-50 border-slate-200' : 'bg-slate-950 border-slate-800'
-                      }`}
-                    >
-                      <div className={`font-semibold ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>Q: {d.question}</div>
-                      <div className="text-[10px] text-sky-600 font-mono">{d.status} · {d.time}</div>
-                      {d.reply && (
-                        <div className={`p-3 rounded-lg border text-xs leading-relaxed ${
-                          theme === 'light'
-                            ? 'bg-sky-50/80 border-sky-200 text-slate-800'
-                            : 'bg-sky-950/60 border-sky-800/60 text-slate-200'
-                        }`}>
-                          <strong className="text-[#b58b42] block mb-1">Faculty Response:</strong>
-                          {d.reply}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ================================================================= */}
-        {/* TAB 4: STUDY MATERIALS & DIGITAL LIBRARY DOWNLOADS               */}
-        {/* ================================================================= */}
-        {activeTab === 'resources' && (
-          <div className="space-y-6">
-            <div className={`p-6 rounded-3xl border flex flex-wrap items-center justify-between gap-4 ${
-              theme === 'light' ? 'bg-white border-slate-200 shadow-xs' : 'bg-slate-900 border-slate-800'
-            }`}>
-              <div>
-                <span className="px-2.5 py-1 rounded-full bg-sky-500/10 border border-sky-500/30 text-sky-700 text-[10px] font-bold uppercase tracking-wider">
-                  OFFICIAL BNC CIA STUDY REPOSITORY
-                </span>
-                <h3 className={`text-lg font-black mt-1 ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>
-                  Handouts, Formula Sheets & Mind Maps
-                </h3>
-              </div>
-              <div className={`text-xs ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>
-                Total Downloads: <strong className={theme === 'light' ? 'text-slate-900 font-mono' : 'text-white font-mono'}>11,957 files</strong>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {lmsResources.map((res) => (
-                <div
-                  key={res.id}
-                  className={`p-6 rounded-3xl border transition-all flex flex-col justify-between space-y-4 ${
-                    theme === 'light'
-                      ? 'bg-white border-slate-200 hover:border-[#b58b42]/60 shadow-xs'
-                      : 'bg-slate-900/90 border-slate-800 hover:border-[#b58b42]/60'
-                  }`}
-                >
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between text-[10px] font-bold">
-                      <span className="text-[#b58b42] bg-amber-500/10 px-2.5 py-0.5 rounded border border-amber-500/20">
-                        {res.category}
-                      </span>
-                      <span className={`font-mono px-2 py-0.5 rounded ${
-                        theme === 'light' ? 'bg-slate-100 text-slate-700 border border-slate-200' : 'bg-slate-800 text-slate-400'
-                      }`}>
-                        {res.fileType} · {res.fileSize}
-                      </span>
-                    </div>
-
-                    <h4 className={`text-sm font-bold leading-snug ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>
-                      {res.title}
-                    </h4>
-
-                    <p className={`text-xs leading-relaxed ${theme === 'light' ? 'text-slate-600' : 'text-slate-400'}`}>
-                      {res.description}
-                    </p>
-                  </div>
-
-                  <div className={`pt-3 border-t flex items-center justify-between ${theme === 'light' ? 'border-slate-100' : 'border-slate-800'}`}>
-                    <span className="text-[11px] text-slate-500 font-mono">{res.downloadsCount} downloads</span>
-                    <button
-                      onClick={() => showToast(`Downloading: ${res.title}`)}
-                      className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold transition-colors cursor-pointer border ${
-                        theme === 'light'
-                          ? 'bg-sky-50 hover:bg-sky-100 border-sky-200 text-sky-900'
-                          : 'bg-sky-950 hover:bg-sky-900 border-sky-800 text-sky-200'
-                      }`}
-                    >
-                      <Download className="w-3.5 h-3.5 text-[#b58b42]" />
-                      <span>Download</span>
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* ================================================================= */}
-        {/* TAB 5: ENTERPRISE AI AUDIT LAB (EXCLUSIVE SANDBOX)                */}
+        {/* TAB 2: ENTERPRISE AI AUDIT LAB (EXCLUSIVE SANDBOX)                */}
         {/* ================================================================= */}
         {activeTab === 'ailab' && (
           <div className="space-y-6">
             <div className={`p-6 rounded-3xl border flex flex-wrap items-center justify-between gap-4 ${
               theme === 'light'
-                ? 'bg-gradient-to-r from-slate-50 via-indigo-50/40 to-slate-50 border-indigo-200 shadow-xs'
+                ? 'bg-gradient-to-r from-white via-indigo-50 to-white border-indigo-200 shadow-xs'
                 : 'bg-gradient-to-r from-slate-900 via-indigo-950/60 to-slate-900 border-indigo-900/60'
             }`}>
               <div>
@@ -2462,87 +1834,6 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
           </div>
         )}
 
-        {/* ================================================================= */}
-        {/* TAB 6: EXAM READINESS & CERTIFICATE PREVIEW                      */}
-        {/* ================================================================= */}
-        {activeTab === 'readiness' && (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Card 1: Estimated Scaled Score */}
-              <div className={`p-6 rounded-3xl border text-left space-y-2 ${
-                theme === 'light' ? 'bg-white border-slate-200 shadow-xs' : 'bg-slate-900 border-slate-800'
-              }`}>
-                <div className={`text-[10px] font-bold uppercase tracking-wider ${
-                  theme === 'light' ? 'text-slate-500' : 'text-slate-400'
-                }`}>Estimated Pearson VUE Score</div>
-                <div className="text-3xl sm:text-4xl font-extrabold text-[#b58b42] tracking-tight tabular-nums">
-                  645 <span className={`text-sm font-normal ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>/ 750</span>
-                </div>
-                <p className="text-xs text-emerald-600 font-semibold flex items-center gap-1">
-                  <CheckCircle2 className="w-3.5 h-3.5" /> Passing Grade: 600+ (SAFE ZONE)
-                </p>
-              </div>
-
-              {/* Card 2: Questions Mastered */}
-              <div className={`p-6 rounded-3xl border text-left space-y-2 ${
-                theme === 'light' ? 'bg-white border-slate-200 shadow-xs' : 'bg-slate-900 border-slate-800'
-              }`}>
-                <div className={`text-[10px] font-bold uppercase tracking-wider ${
-                  theme === 'light' ? 'text-slate-500' : 'text-slate-400'
-                }`}>Practice MCQs Solved</div>
-                <div className="text-3xl sm:text-4xl font-extrabold text-sky-700 tracking-tight tabular-nums">
-                  480 <span className={`text-sm font-normal ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>/ Gleim Mega Bank</span>
-                </div>
-                <p className={`text-xs ${theme === 'light' ? 'text-slate-600' : 'text-slate-400'}`}>
-                  Average accuracy: <strong className={theme === 'light' ? 'text-slate-900' : 'text-white'}>82% on first attempt</strong>
-                </p>
-              </div>
-
-              {/* Card 3: Target Exam Date */}
-              <div className={`p-6 rounded-3xl border text-left space-y-2 ${
-                theme === 'light' ? 'bg-white border-slate-200 shadow-xs' : 'bg-slate-900 border-slate-800'
-              }`}>
-                <div className={`text-[10px] font-bold uppercase tracking-wider ${
-                  theme === 'light' ? 'text-slate-500' : 'text-slate-400'
-                }`}>Part 1 Target Exam Window</div>
-                <div className={`text-3xl sm:text-4xl font-extrabold tracking-tight tabular-nums ${
-                  theme === 'light' ? 'text-slate-900' : 'text-white'
-                }`}>
-                  42 <span className={`text-sm font-normal ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>Days Remaining</span>
-                </div>
-                <p className="text-xs text-sky-700 font-semibold">
-                  Recommended test date: Dec 18, 2026
-                </p>
-              </div>
-            </div>
-
-            {/* Certificate of Training Preview */}
-            <div className={`p-8 rounded-3xl border text-center space-y-4 ${
-              theme === 'light'
-                ? 'bg-gradient-to-b from-white via-slate-50/70 to-amber-50/30 border-slate-200 shadow-xs'
-                : 'bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800'
-            }`}>
-              <span className="px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-[#b58b42] text-xs font-bold uppercase tracking-widest">
-                OFFICIAL BNC EXECUTIVE ACCREDITATION
-              </span>
-              <h3 className={`text-2xl font-black tracking-tight ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>
-                Certificate in Professional Certified Internal Auditor Coaching
-              </h3>
-              <p className={`text-xs sm:text-sm max-w-lg mx-auto ${theme === 'light' ? 'text-slate-600' : 'text-slate-400'}`}>
-                Issued upon completing 100+ hours of live coaching and passing all mock exam simulations. Verifiable credential with digital verification hash.
-              </p>
-
-              <div className="pt-2">
-                <button
-                  onClick={() => showToast('Sample completion certificate downloaded!')}
-                  className="px-6 py-3 rounded-xl bg-gradient-to-r from-[#102a4e] via-[#163a6b] to-[#b58b42] hover:opacity-95 text-white text-xs font-bold transition-all cursor-pointer shadow-md"
-                >
-                  Download Sample Certificate PDF
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
       </main>
     </div>
   );

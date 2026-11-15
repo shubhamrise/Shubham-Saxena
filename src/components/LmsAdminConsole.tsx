@@ -1,15 +1,13 @@
 import React, { useState } from 'react';
-import { ManagedLearner, LmsAdminUser, EnquiryLead, LiveClassItem, StudentDoubtItem } from '../types';
+import { ManagedLearner, LmsAdminUser, EnquiryLead, CrmCallLog } from '../types';
 import {
   ShieldCheck,
-  ShieldAlert,
   UserCheck,
   UserX,
   Search,
   Plus,
   Trash2,
   Edit3,
-  RotateCcw,
   CheckCircle2,
   Clock,
   ArrowLeft,
@@ -22,17 +20,11 @@ import {
   AlertTriangle,
   Mail,
   Phone,
+  PhoneCall,
   FileSpreadsheet,
   Download,
   ExternalLink,
   MessageSquare,
-  User,
-  Send,
-  Calendar,
-  Layers,
-  FileText,
-  FileQuestion,
-  Video,
   Sun,
   Moon
 } from 'lucide-react';
@@ -44,29 +36,62 @@ import {
   getFormspreeId,
   setFormspreeId
 } from '../services/enquiryService';
-import {
-  LmsModule,
-  LmsMcqQuestion,
-  LmsResource,
-  LMS_MODULES,
-  LMS_TEST_BANK_QUESTIONS,
-  LMS_RESOURCES,
-  UPCOMING_LIVE_CLASSES
-} from '../data/lmsData';
-import { CurriculumEditor } from './admin/CurriculumEditor';
-import { TestBankEditor } from './admin/TestBankEditor';
-import { LiveClassesEditor } from './admin/LiveClassesEditor';
-import { ResourcesEditor } from './admin/ResourcesEditor';
-import { StudentDoubtsEditor } from './admin/StudentDoubtsEditor';
+import { CrmCallLogEditor } from './admin/CrmCallLogEditor';
+
+const INITIAL_CRM_CALL_LOGS: CrmCallLog[] = [
+  {
+    id: 'crm-1',
+    studentName: 'Shubham Saxena',
+    phone: '+91 63960 18626',
+    email: 'shubhamsaxena787787@gmail.com',
+    direction: 'outbound',
+    callStatus: 'Connected',
+    callDateTime: '2026-11-14T16:30',
+    durationSeconds: 512,
+    responseSummary: 'Interested in Nov 2026 Live Interactive cohort; requested GIAS 2025 syllabus overview and batch timings.',
+    interestLevel: 'Hot / Ready to Enroll',
+    reconnectAgain: true,
+    nextFollowUpDate: 'Nov 16, 4:00 PM IST',
+    feedback: 'Candidate is a qualified CA exploring CIA Challenge / 3-Part options. Positive conversation; asked for a follow-up call after reviewing weekend schedule.',
+    handledBy: 'CA Gurvinder Pal Singh (Lead Director)'
+  },
+  {
+    id: 'crm-2',
+    studentName: 'Rohit Verma',
+    phone: '+91 98234 11223',
+    email: 'rohit.verma@example.com',
+    direction: 'inbound',
+    callStatus: 'Connected',
+    callDateTime: '2026-11-13T11:45',
+    durationSeconds: 325,
+    responseSummary: 'Confirmed LMS login credentials and inquired about Part 1 practice test bank target score.',
+    interestLevel: 'Support / Existing Student',
+    reconnectAgain: false,
+    feedback: 'Guided student through the Readiness Index and video masterclasses section. Issue resolved on the call.',
+    handledBy: 'CA Gurvinder Pal Singh (Lead Director)'
+  },
+  {
+    id: 'crm-3',
+    studentName: 'Ananya Iyer',
+    phone: '+91 98450 67890',
+    email: 'ananya.iyer@example.com',
+    direction: 'outbound',
+    callStatus: 'Callback Requested',
+    callDateTime: '2026-11-12T18:10',
+    durationSeconds: 138,
+    responseSummary: 'Busy in office audit review; asked to reconnect tomorrow evening regarding enrollment confirmation.',
+    interestLevel: 'Warm / Follow-up',
+    reconnectAgain: true,
+    nextFollowUpDate: 'Nov 16, 6:30 PM IST',
+    feedback: 'Short call. Candidate requested an evening slot after 6:00 PM IST to finalize batch onboarding.',
+    handledBy: 'BNC Admissions Desk'
+  }
+];
 
 export type AdminConsoleTab =
   | 'learners'
-  | 'curriculum'
-  | 'testbank'
-  | 'liveclasses'
-  | 'resources'
-  | 'doubts'
-  | 'leads';
+  | 'leads'
+  | 'crm';
 
 interface LmsAdminConsoleProps {
   adminUser: LmsAdminUser;
@@ -76,16 +101,6 @@ interface LmsAdminConsoleProps {
   onSwitchToStudentView: (learner?: ManagedLearner) => void;
   onBackToWebsite: () => void;
   onShowToast: (msg: string) => void;
-  modules?: LmsModule[];
-  onUpdateModules?: (updated: LmsModule[]) => void;
-  testBank?: LmsMcqQuestion[];
-  onUpdateTestBank?: (updated: LmsMcqQuestion[]) => void;
-  liveClasses?: LiveClassItem[];
-  onUpdateLiveClasses?: (updated: LiveClassItem[]) => void;
-  resources?: LmsResource[];
-  onUpdateResources?: (updated: LmsResource[]) => void;
-  doubts?: StudentDoubtItem[];
-  onUpdateDoubts?: (updated: StudentDoubtItem[]) => void;
 }
 
 export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
@@ -96,16 +111,6 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
   onSwitchToStudentView,
   onBackToWebsite,
   onShowToast,
-  modules,
-  onUpdateModules,
-  testBank,
-  onUpdateTestBank,
-  liveClasses,
-  onUpdateLiveClasses,
-  resources,
-  onUpdateResources,
-  doubts,
-  onUpdateDoubts,
 }) => {
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     try {
@@ -131,113 +136,23 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingLearner, setEditingLearner] = useState<ManagedLearner | null>(null);
 
-  // LMS Data States for Admin Editing
-  const [modulesState, setModulesState] = useState<LmsModule[]>(() => {
-    if (modules && modules.length > 0) return modules;
+  // CRM Phone Call Logs state
+  const [crmCallLogs, setCrmCallLogs] = useState<CrmCallLog[]>(() => {
     try {
-      const saved = localStorage.getItem('bnc_lms_modules');
+      const saved = localStorage.getItem('bnc_crm_call_logs');
       if (saved) return JSON.parse(saved);
     } catch {}
-    return LMS_MODULES;
+    return INITIAL_CRM_CALL_LOGS;
   });
 
-  const [testBankState, setTestBankState] = useState<LmsMcqQuestion[]>(() => {
-    if (testBank && testBank.length > 0) return testBank;
+  const handleUpdateCallLogs = (updated: CrmCallLog[]) => {
+    setCrmCallLogs(updated);
     try {
-      const saved = localStorage.getItem('bnc_lms_test_bank');
-      if (saved) return JSON.parse(saved);
-    } catch {}
-    return LMS_TEST_BANK_QUESTIONS;
-  });
-
-  const [liveClassesState, setLiveClassesState] = useState<LiveClassItem[]>(() => {
-    if (liveClasses && liveClasses.length > 0) return liveClasses;
-    try {
-      const saved = localStorage.getItem('bnc_lms_live_classes');
-      if (saved) return JSON.parse(saved);
-    } catch {}
-    return UPCOMING_LIVE_CLASSES;
-  });
-
-  const [resourcesState, setResourcesState] = useState<LmsResource[]>(() => {
-    if (resources && resources.length > 0) return resources;
-    try {
-      const saved = localStorage.getItem('bnc_lms_resources');
-      if (saved) return JSON.parse(saved);
-    } catch {}
-    return LMS_RESOURCES;
-  });
-
-  const [doubtsState, setDoubtsState] = useState<StudentDoubtItem[]>(() => {
-    if (doubts && doubts.length > 0) return doubts;
-    try {
-      const saved = localStorage.getItem('bnc_lms_user_doubts');
-      if (saved) return JSON.parse(saved);
-    } catch {}
-    return [
-      {
-        id: 'd-1',
-        question: 'In GIAS Standard 2.1, does consulting on an ERP migration immediately disqualify the team from conducting assurance on the same system later?',
-        time: 'Yesterday at 4:15 PM',
-        status: 'Answered by CA Gurvinder Pal Singh',
-        reply: 'Yes, if the internal audit team designed or implemented operating controls during the migration, independence is impaired for a minimum of 1 year. If advisory was strictly limited to evaluating design without management decision-making, assurance can proceed with disclosure to the Audit Committee.',
-        studentName: 'Rohit Verma'
-      }
-    ];
-  });
-
-  // Updaters for Admin
-  const handleUpdateModules = (updated: LmsModule[]) => {
-    setModulesState(updated);
-    try {
-      localStorage.setItem('bnc_lms_modules', JSON.stringify(updated));
+      localStorage.setItem('bnc_crm_call_logs', JSON.stringify(updated));
     } catch (e) {
       console.warn(e);
     }
-    if (onUpdateModules) onUpdateModules(updated);
   };
-
-  const handleUpdateTestBank = (updated: LmsMcqQuestion[]) => {
-    setTestBankState(updated);
-    try {
-      localStorage.setItem('bnc_lms_test_bank', JSON.stringify(updated));
-    } catch (e) {
-      console.warn(e);
-    }
-    if (onUpdateTestBank) onUpdateTestBank(updated);
-  };
-
-  const handleUpdateLiveClasses = (updated: LiveClassItem[]) => {
-    setLiveClassesState(updated);
-    try {
-      localStorage.setItem('bnc_lms_live_classes', JSON.stringify(updated));
-    } catch (e) {
-      console.warn(e);
-    }
-    if (onUpdateLiveClasses) onUpdateLiveClasses(updated);
-  };
-
-  const handleUpdateResources = (updated: LmsResource[]) => {
-    setResourcesState(updated);
-    try {
-      localStorage.setItem('bnc_lms_resources', JSON.stringify(updated));
-    } catch (e) {
-      console.warn(e);
-    }
-    if (onUpdateResources) onUpdateResources(updated);
-  };
-
-  const handleUpdateDoubts = (updated: StudentDoubtItem[]) => {
-    setDoubtsState(updated);
-    try {
-      localStorage.setItem('bnc_lms_user_doubts', JSON.stringify(updated));
-    } catch (e) {
-      console.warn(e);
-    }
-    if (onUpdateDoubts) onUpdateDoubts(updated);
-  };
-
-  const totalLessonsCount = modulesState.reduce((acc, m) => acc + m.lessons.length, 0);
 
   // Email Delivery Integration Settings
   const [web3FormsInput, setWeb3FormsInput] = useState(getWeb3FormsKey);
@@ -600,10 +515,10 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
       </div>
 
       {/* Top Admin Header Bar */}
-      <header className={`relative z-10 backdrop-blur-md border-b px-4 sm:px-6 lg:px-8 py-3.5 shadow-xs transition-colors ${
+      <header className={`relative z-10 border-b px-4 sm:px-6 lg:px-8 py-3.5 shadow-xs transition-colors ${
         theme === 'light'
-          ? 'bg-white/95 border-slate-200'
-          : 'bg-[#07172b]/95 border-sky-950 shadow-md'
+          ? 'bg-white border-slate-200'
+          : 'bg-[#07172b]/95 border-sky-950 shadow-md backdrop-blur-md'
       }`}>
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-3">
@@ -715,81 +630,6 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
 
           <button
             type="button"
-            onClick={() => setConsoleTab('curriculum')}
-            className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap shrink-0 ${
-              consoleTab === 'curriculum'
-                ? 'bg-gradient-to-r from-[#102a4e] via-[#163a6b] to-[#b58b42] text-white shadow-xs font-bold'
-                : theme === 'light'
-                ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
-            }`}
-          >
-            <BookOpen className="w-4 h-4 text-sky-600" />
-            <span>Curriculum Lessons ({totalLessonsCount})</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setConsoleTab('testbank')}
-            className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap shrink-0 ${
-              consoleTab === 'testbank'
-                ? 'bg-gradient-to-r from-[#102a4e] via-[#163a6b] to-[#b58b42] text-white shadow-xs font-bold'
-                : theme === 'light'
-                ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
-            }`}
-          >
-            <FileQuestion className="w-4 h-4 text-[#b58b42]" />
-            <span>MCQ Test Banks ({testBankState.length})</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setConsoleTab('liveclasses')}
-            className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap shrink-0 ${
-              consoleTab === 'liveclasses'
-                ? 'bg-gradient-to-r from-[#102a4e] via-[#163a6b] to-[#b58b42] text-white shadow-xs font-bold'
-                : theme === 'light'
-                ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
-            }`}
-          >
-            <Calendar className="w-4 h-4 text-emerald-600" />
-            <span>Live Masterclasses ({liveClassesState.length})</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setConsoleTab('resources')}
-            className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap shrink-0 ${
-              consoleTab === 'resources'
-                ? 'bg-gradient-to-r from-[#102a4e] via-[#163a6b] to-[#b58b42] text-white shadow-xs font-bold'
-                : theme === 'light'
-                ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
-            }`}
-          >
-            <FileText className="w-4 h-4 text-teal-600" />
-            <span>Study Downloads ({resourcesState.length})</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setConsoleTab('doubts')}
-            className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap shrink-0 ${
-              consoleTab === 'doubts'
-                ? 'bg-gradient-to-r from-[#102a4e] via-[#163a6b] to-[#b58b42] text-white shadow-xs font-bold'
-                : theme === 'light'
-                ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
-            }`}
-          >
-            <MessageSquare className="w-4 h-4 text-purple-600" />
-            <span>Student Doubts ({doubtsState.filter((d) => !d.reply).length} pending)</span>
-          </button>
-
-          <button
-            type="button"
             onClick={() => setConsoleTab('leads')}
             className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap shrink-0 ${
               consoleTab === 'leads'
@@ -802,6 +642,21 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
             <Mail className="w-4 h-4 text-sky-600" />
             <span>Enquiries & Leads ({leads.length})</span>
           </button>
+
+          <button
+            type="button"
+            onClick={() => setConsoleTab('crm')}
+            className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap shrink-0 ${
+              consoleTab === 'crm'
+                ? 'bg-gradient-to-r from-[#102a4e] via-[#163a6b] to-[#b58b42] text-white shadow-xs font-bold'
+                : theme === 'light'
+                ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+            }`}
+          >
+            <PhoneCall className="w-4 h-4 text-emerald-600" />
+            <span>Student Call CRM ({crmCallLogs.length})</span>
+          </button>
         </div>
 
         {consoleTab === 'learners' && (
@@ -809,7 +664,7 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
             {/* Banner */}
             <div className={`flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-6 rounded-3xl border shadow-xs transition-colors ${
               theme === 'light'
-                ? 'bg-gradient-to-r from-slate-50 via-sky-50/40 to-slate-50 border-slate-200'
+                ? 'bg-gradient-to-r from-white via-sky-50 to-white border-slate-200'
                 : 'bg-gradient-to-r from-[#0b1d33] via-[#091b30] to-[#122338] border-sky-800/60 shadow-xl'
             }`}>
               <div>
@@ -870,7 +725,7 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
 
               <div className={`p-5 rounded-2xl border shadow-xs ${
                 theme === 'light'
-                  ? 'bg-emerald-50/70 border-emerald-200'
+                  ? 'bg-emerald-50 border-emerald-200'
                   : 'bg-emerald-950/40 border-emerald-500/40 shadow-lg'
               }`}>
                 <div className={`flex items-center justify-between text-xs font-bold uppercase ${theme === 'light' ? 'text-emerald-800' : 'text-emerald-400'}`}>
@@ -878,12 +733,12 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
                   <UserCheck className="w-4 h-4 text-emerald-600" />
                 </div>
                 <div className={`text-2xl sm:text-3xl font-black mt-2 ${theme === 'light' ? 'text-emerald-700' : 'text-emerald-300'}`}>{activeCount}</div>
-                <div className={`text-[11px] mt-1 ${theme === 'light' ? 'text-emerald-700/80' : 'text-emerald-300/80'}`}>Active paid learners authorized</div>
+                <div className={`text-[11px] mt-1 ${theme === 'light' ? 'text-emerald-700' : 'text-emerald-300/80'}`}>Active paid learners authorized</div>
               </div>
 
               <div className={`p-5 rounded-2xl border shadow-xs ${
                 theme === 'light'
-                  ? 'bg-rose-50/70 border-rose-200'
+                  ? 'bg-rose-50 border-rose-200'
                   : 'bg-rose-950/40 border-rose-500/40 shadow-lg'
               }`}>
                 <div className={`flex items-center justify-between text-xs font-bold uppercase ${theme === 'light' ? 'text-rose-800' : 'text-rose-400'}`}>
@@ -891,12 +746,12 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
                   <UserX className="w-4 h-4 text-rose-600" />
                 </div>
                 <div className={`text-2xl sm:text-3xl font-black mt-2 ${theme === 'light' ? 'text-rose-700' : 'text-rose-300'}`}>{revokedCount}</div>
-                <div className={`text-[11px] mt-1 ${theme === 'light' ? 'text-rose-700/80' : 'text-rose-300/80'}`}>Suspended / fee pending accounts</div>
+                <div className={`text-[11px] mt-1 ${theme === 'light' ? 'text-rose-700' : 'text-rose-300/80'}`}>Suspended / fee pending accounts</div>
               </div>
 
               <div className={`p-5 rounded-2xl border shadow-xs ${
                 theme === 'light'
-                  ? 'bg-amber-50/70 border-amber-200'
+                  ? 'bg-amber-50 border-amber-200'
                   : 'bg-amber-950/40 border-amber-500/40 shadow-lg'
               }`}>
                 <div className={`flex items-center justify-between text-xs font-bold uppercase ${theme === 'light' ? 'text-amber-800' : 'text-[#f1bd5b]'}`}>
@@ -904,7 +759,7 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
                   <Clock className="w-4 h-4 text-[#b58b42]" />
                 </div>
                 <div className={`text-2xl sm:text-3xl font-black mt-2 ${theme === 'light' ? 'text-amber-800' : 'text-[#f1bd5b]'}`}>{pendingCount}</div>
-                <div className={`text-[11px] mt-1 ${theme === 'light' ? 'text-amber-800/80' : 'text-[#f1bd5b]/80'}`}>Pending finance approval</div>
+                <div className={`text-[11px] mt-1 ${theme === 'light' ? 'text-amber-800' : 'text-[#f1bd5b]/80'}`}>Pending finance approval</div>
               </div>
             </div>
 
@@ -993,7 +848,7 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
                           <tr
                             key={learner.id}
                             className={`transition-colors group ${
-                              theme === 'light' ? 'hover:bg-slate-50/80' : 'hover:bg-slate-900/50'
+                              theme === 'light' ? 'hover:bg-slate-50' : 'hover:bg-slate-900/50'
                             }`}
                           >
                             {/* Learner Profile */}
@@ -1191,43 +1046,15 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
           </>
         )}
 
-    {consoleTab === 'curriculum' && (
-      <CurriculumEditor
-        modules={modulesState}
-        onUpdateModules={handleUpdateModules}
+    {consoleTab === 'crm' && (
+      <CrmCallLogEditor
+        callLogs={crmCallLogs}
+        onUpdateCallLogs={handleUpdateCallLogs}
+        learners={learners}
+        leads={leads}
+        adminName={adminUser.name}
         onShowToast={onShowToast}
-      />
-    )}
-
-    {consoleTab === 'testbank' && (
-      <TestBankEditor
-        questions={testBankState}
-        onUpdateQuestions={handleUpdateTestBank}
-        onShowToast={onShowToast}
-      />
-    )}
-
-    {consoleTab === 'liveclasses' && (
-      <LiveClassesEditor
-        liveClasses={liveClassesState}
-        onUpdateLiveClasses={handleUpdateLiveClasses}
-        onShowToast={onShowToast}
-      />
-    )}
-
-    {consoleTab === 'resources' && (
-      <ResourcesEditor
-        resources={resourcesState}
-        onUpdateResources={handleUpdateResources}
-        onShowToast={onShowToast}
-      />
-    )}
-
-    {consoleTab === 'doubts' && (
-      <StudentDoubtsEditor
-        doubts={doubtsState}
-        onUpdateDoubts={handleUpdateDoubts}
-        onShowToast={onShowToast}
+        theme={theme}
       />
     )}
 
@@ -1235,16 +1062,28 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
       /* ================= ENQUIRIES & BROCHURE LEADS VIEW ================= */
       <div className="space-y-6">
         {/* Leads Overview Banner */}
-        <div className="p-6 rounded-3xl bg-gradient-to-r from-[#0b1d33] via-[#091b30] to-[#122338] border border-sky-800/60 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div className={`p-6 rounded-3xl border shadow-xs transition-colors flex flex-col md:flex-row items-start md:items-center justify-between gap-4 ${
+          theme === 'light'
+            ? 'bg-gradient-to-r from-white via-sky-50 to-white border-slate-200'
+            : 'bg-gradient-to-r from-[#0b1d33] via-[#091b30] to-[#122338] border-sky-800/60 shadow-xl'
+        }`}>
           <div>
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#b58b42]/20 text-[#f1bd5b] border border-[#b58b42]/40 text-[10px] font-bold uppercase tracking-wider mb-2">
+            <div className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border text-[10px] font-bold uppercase tracking-wider mb-2 ${
+              theme === 'light'
+                ? 'bg-amber-50 text-[#b58b42] border-amber-200'
+                : 'bg-[#b58b42]/20 text-[#f1bd5b] border-[#b58b42]/40'
+            }`}>
               <Mail className="w-3.5 h-3.5" />
               <span>Incoming Leads Desk · Target: info@bncglobal.in</span>
             </div>
-            <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+            <h2 className={`text-xl sm:text-2xl font-black tracking-tight ${
+              theme === 'light' ? 'text-slate-900' : 'text-white'
+            }`}>
               Enquiries & Brochure Download Leads
             </h2>
-            <p className="text-xs sm:text-sm text-slate-300 mt-1 max-w-2xl leading-relaxed">
+            <p className={`text-xs sm:text-sm mt-1 max-w-2xl leading-relaxed ${
+              theme === 'light' ? 'text-slate-600' : 'text-slate-300'
+            }`}>
               Real-time directory of candidates who submitted inquiries or downloaded the 10-page BNC Global CIA® Student Brochure.
             </p>
           </div>
@@ -1253,7 +1092,7 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
             <button
               type="button"
               onClick={handleExportLeadsCsv}
-              className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-sky-700 to-[#b58b42] hover:from-sky-800 hover:to-[#9e7735] text-white text-xs font-bold flex items-center gap-2 shadow-md transition-all cursor-pointer"
+              className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#102a4e] to-[#b58b42] hover:opacity-95 text-white text-xs font-bold flex items-center gap-2 shadow-sm transition-all cursor-pointer"
             >
               <Download className="w-4 h-4" />
               <span>Export CSV ({leads.length})</span>
@@ -1262,16 +1101,24 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
         </div>
 
         {/* Permanent Form Activation & Multi-Provider Hub for info@bncglobal.in */}
-        <div className="p-6 rounded-3xl bg-gradient-to-r from-[#071a30] via-[#0b2342] to-[#102c4e] border-2 border-[#b58b42]/80 shadow-2xl space-y-6">
+        <div className={`p-6 rounded-3xl border-2 border-[#b58b42]/70 space-y-6 transition-colors ${
+          theme === 'light'
+            ? 'bg-white shadow-md'
+            : 'bg-gradient-to-r from-[#071a30] via-[#0b2342] to-[#102c4e] shadow-2xl'
+        }`}>
           {/* Outage Diagnosis Banner for FormSubmit 522 */}
-          <div className="p-4 rounded-2xl bg-amber-950/40 border border-amber-500/50 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 text-xs">
+          <div className={`p-4 rounded-2xl border flex flex-col md:flex-row items-start md:items-center justify-between gap-3 text-xs ${
+            theme === 'light'
+              ? 'bg-amber-50 border-amber-300 text-amber-950'
+              : 'bg-amber-950/40 border-amber-500/50 text-amber-100'
+          }`}>
             <div className="flex items-start gap-2.5">
-              <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+              <AlertTriangle className={`w-5 h-5 shrink-0 mt-0.5 ${theme === 'light' ? 'text-amber-600' : 'text-amber-400'}`} />
               <div>
-                <div className="font-bold text-amber-200">
+                <div className={`font-bold ${theme === 'light' ? 'text-amber-900' : 'text-amber-200'}`}>
                   Third-Party FormSubmit Outage Detected (Cloudflare Error 522)
                 </div>
-                <div className="text-amber-100/80 text-[11px] mt-0.5 leading-relaxed">
+                <div className={`text-[11px] mt-0.5 leading-relaxed ${theme === 'light' ? 'text-amber-800' : 'text-amber-100/80'}`}>
                   As shown in your browser, <strong>formsubmit.co's host servers are currently offline</strong> (Error 522 Connection Timed Out). To ensure you receive leads without relying on third-party server outages, you can activate our permanent <strong>Web3Forms</strong> integration below or use the 1-click mail links!
                 </div>
               </div>
@@ -1280,7 +1127,7 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
               href="https://web3forms.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="shrink-0 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-[#b58b42] text-slate-950 font-bold text-xs shadow-md hover:from-amber-400 hover:to-amber-500 transition-all flex items-center gap-1.5 cursor-pointer"
+              className="shrink-0 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-[#b58b42] text-slate-950 font-bold text-xs shadow-sm hover:from-amber-400 hover:to-amber-500 transition-all flex items-center gap-1.5 cursor-pointer"
             >
               <ExternalLink className="w-3.5 h-3.5" />
               <span>Get Free Web3Forms Key</span>
@@ -1289,24 +1136,34 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
 
           <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
             <div className="flex items-start gap-3.5">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#b58b42] to-amber-400 text-slate-950 flex items-center justify-center font-black shadow-lg shrink-0">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#b58b42] to-amber-400 text-slate-950 flex items-center justify-center font-black shadow-md shrink-0">
                 <Mail className="w-6 h-6 text-slate-950" />
               </div>
               <div>
                 <div className="flex flex-wrap items-center gap-2 mb-1">
-                  <span className="px-2.5 py-0.5 rounded-full bg-emerald-400/20 text-emerald-300 border border-emerald-500/50 text-[10px] font-bold uppercase tracking-wider">
+                  <span className={`px-2.5 py-0.5 rounded-full border text-[10px] font-bold uppercase tracking-wider ${
+                    theme === 'light'
+                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                      : 'bg-emerald-400/20 text-emerald-300 border-emerald-500/50'
+                  }`}>
                     Permanent Delivery Gateways
                   </span>
-                  <span className="text-xs text-sky-300 font-semibold flex items-center gap-1">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                  <span className={`text-xs font-semibold flex items-center gap-1 ${
+                    theme === 'light' ? 'text-sky-700' : 'text-sky-300'
+                  }`}>
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
                     Target Recipient: info@bncglobal.in
                   </span>
                 </div>
-                <h3 className="text-lg sm:text-xl font-black text-white">
+                <h3 className={`text-lg sm:text-xl font-black ${
+                  theme === 'light' ? 'text-slate-900' : 'text-white'
+                }`}>
                   Permanent Email Forwarding Hub
                 </h3>
-                <p className="text-xs text-slate-300 mt-1 max-w-2xl leading-relaxed">
-                  Connect a free <strong>Web3Forms Access Key</strong> or <strong>Formspree ID</strong> to deliver every candidate enquiry directly to <strong className="text-[#f1bd5b]">info@bncglobal.in</strong> forever with 99.99% uptime.
+                <p className={`text-xs mt-1 max-w-2xl leading-relaxed ${
+                  theme === 'light' ? 'text-slate-600' : 'text-slate-300'
+                }`}>
+                  Connect a free <strong>Web3Forms Access Key</strong> or <strong>Formspree ID</strong> to deliver every candidate enquiry directly to <strong className="text-[#b58b42]">info@bncglobal.in</strong> forever with 99.99% uptime.
                 </p>
               </div>
             </div>
@@ -1318,7 +1175,7 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
                   await sendTestEnquiryToAdmin();
                   onShowToast('✓ Dispatched test inquiry! Check console and inbox.');
                 }}
-                className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-sky-700 to-[#b58b42] hover:from-sky-800 hover:to-[#9e7735] text-white text-xs font-bold transition-all cursor-pointer flex items-center gap-2 shadow-md"
+                className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#102a4e] to-[#b58b42] hover:opacity-95 text-white text-xs font-bold transition-all cursor-pointer flex items-center gap-2 shadow-sm"
                 title="Send a sample lead to test delivery"
               >
                 <Sparkles className="w-4 h-4 text-[#f1bd5b]" />
@@ -1331,7 +1188,11 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
                   triggerFormSubmitActivation();
                   onShowToast('Opened FormSubmit activation window in new tab.');
                 }}
-                className="px-3.5 py-2.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-300 text-xs font-semibold border border-slate-700 transition-colors cursor-pointer"
+                className={`px-3.5 py-2.5 rounded-xl text-xs font-semibold border transition-colors cursor-pointer ${
+                  theme === 'light'
+                    ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300'
+                    : 'bg-slate-900/90 hover:bg-slate-800 text-slate-300 border-slate-700'
+                }`}
                 title="Retry FormSubmit activation link"
               >
                 Retry FormSubmit (If online)
@@ -1339,7 +1200,11 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
 
               <a
                 href="mailto:info@bncglobal.in?subject=BNC%20ELEVATE%20Admissions%20Test&body=Admissions%20dispatch%20test"
-                className="px-3.5 py-2.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white text-xs font-semibold border border-slate-700 transition-colors"
+                className={`px-3.5 py-2.5 rounded-xl text-xs font-semibold border transition-colors ${
+                  theme === 'light'
+                    ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300'
+                    : 'bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white border-slate-700'
+                }`}
               >
                 Open Mail App
               </a>
@@ -1349,23 +1214,39 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
           {/* Web3Forms & Formspree Configuration Card */}
           <form
             onSubmit={handleSaveEmailConfig}
-            className="p-5 rounded-2xl bg-slate-950/80 border border-sky-900/80 space-y-4"
+            className={`p-5 rounded-2xl border space-y-4 ${
+              theme === 'light'
+                ? 'bg-slate-50 border-slate-200'
+                : 'bg-slate-950/80 border-sky-900/80'
+            }`}
           >
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pb-3 border-b border-slate-800">
+            <div className={`flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pb-3 border-b ${
+              theme === 'light' ? 'border-slate-200' : 'border-slate-800'
+            }`}>
               <div>
-                <div className="text-xs font-bold text-white flex items-center gap-2">
+                <div className={`text-xs font-bold flex items-center gap-2 ${
+                  theme === 'light' ? 'text-slate-900' : 'text-white'
+                }`}>
                   <span>Permanent Free Access Keys (Zero Outages)</span>
                   {web3FormsInput ? (
-                    <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[10px] font-bold border border-emerald-500/40">
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
+                      theme === 'light'
+                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                        : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                    }`}>
                       Web3Forms Active ✓
                     </span>
                   ) : (
-                    <span className="px-2 py-0.5 rounded bg-amber-500/20 text-[#f1bd5b] text-[10px] font-bold border border-amber-500/40">
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
+                      theme === 'light'
+                        ? 'bg-amber-50 text-[#b58b42] border-amber-200'
+                        : 'bg-amber-500/20 text-[#f1bd5b] border-amber-500/40'
+                    }`}>
                       Setup Recommended
                     </span>
                   )}
                 </div>
-                <div className="text-[11px] text-slate-400 mt-0.5">
+                <div className={`text-[11px] mt-0.5 ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>
                   Web3Forms emails the key instantly to info@bncglobal.in and forwards submissions without Cloudflare errors.
                 </div>
               </div>
@@ -1374,7 +1255,7 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
                 href="https://web3forms.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs text-[#f1bd5b] hover:text-amber-300 underline font-semibold flex items-center gap-1"
+                className="text-xs text-[#b58b42] hover:underline font-semibold flex items-center gap-1"
               >
                 <span>Get Free Key at Web3Forms</span>
                 <ExternalLink className="w-3 h-3" />
@@ -1383,7 +1264,9 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className={`block text-xs font-semibold mb-1 ${
+                  theme === 'light' ? 'text-slate-700' : 'text-slate-300'
+                }`}>
                   Web3Forms Access Key (Recommended)
                 </label>
                 <input
@@ -1391,15 +1274,21 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
                   value={web3FormsInput}
                   onChange={(e) => setWeb3FormsInput(e.target.value)}
                   placeholder="e.g. 1a2b3c4d-5e6f-7g8h-9i0j-k1l2m3n4o5p6"
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white placeholder-slate-500 text-xs font-mono focus:outline-none focus:border-[#f1bd5b] transition-all"
+                  className={`w-full px-3.5 py-2.5 rounded-xl border text-xs font-mono transition-all ${
+                    theme === 'light'
+                      ? 'bg-white border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-sky-600 focus:ring-1 focus:ring-sky-600'
+                      : 'bg-slate-900 border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-[#f1bd5b]'
+                  }`}
                 />
-                <p className="text-[10px] text-slate-500 mt-1">
+                <p className={`text-[10px] mt-1 ${theme === 'light' ? 'text-slate-500' : 'text-slate-500'}`}>
                   Enter info@bncglobal.in at web3forms.com to receive your permanent free access key.
                 </p>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className={`block text-xs font-semibold mb-1 ${
+                  theme === 'light' ? 'text-slate-700' : 'text-slate-300'
+                }`}>
                   Formspree Form ID (Optional Backup)
                 </label>
                 <input
@@ -1407,21 +1296,25 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
                   value={formspreeInput}
                   onChange={(e) => setFormspreeInput(e.target.value)}
                   placeholder="e.g. xpzgvykl"
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white placeholder-slate-500 text-xs font-mono focus:outline-none focus:border-[#f1bd5b] transition-all"
+                  className={`w-full px-3.5 py-2.5 rounded-xl border text-xs font-mono transition-all ${
+                    theme === 'light'
+                      ? 'bg-white border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-sky-600 focus:ring-1 focus:ring-sky-600'
+                      : 'bg-slate-900 border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-[#f1bd5b]'
+                  }`}
                 />
-                <p className="text-[10px] text-slate-500 mt-1">
+                <p className={`text-[10px] mt-1 ${theme === 'light' ? 'text-slate-500' : 'text-slate-500'}`}>
                   Optional Formspree endpoint ID from formspree.io.
                 </p>
               </div>
             </div>
 
             <div className="flex items-center justify-between pt-2">
-              <span className="text-[11px] text-emerald-400 font-medium">
+              <span className="text-[11px] text-emerald-600 font-medium">
                 {isSavedKeyFeedback && '✓ Configuration saved to browser storage! Ready for dispatch.'}
               </span>
               <button
                 type="submit"
-                className="px-5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white text-xs font-bold transition-all cursor-pointer shadow-md flex items-center gap-1.5"
+                className="px-5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white text-xs font-bold transition-all cursor-pointer shadow-sm flex items-center gap-1.5"
               >
                 <Check className="w-3.5 h-3.5" />
                 <span>Save Email Gateway Key</span>
@@ -1429,7 +1322,6 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
             </div>
           </form>
         </div>
-
 
         {/* Search Input for Leads */}
         <div className="relative">
@@ -1439,16 +1331,28 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
             value={leadSearchTerm}
             onChange={(e) => setLeadSearchTerm(e.target.value)}
             placeholder="Search leads by candidate name, email, phone, or program of interest..."
-            className="w-full pl-11 pr-4 py-3 rounded-2xl bg-[#091729]/95 border border-sky-900/60 text-white placeholder-slate-500 text-xs sm:text-sm focus:outline-none focus:border-[#f1bd5b] transition-all shadow-md"
+            className={`w-full pl-11 pr-4 py-3 rounded-2xl border text-xs sm:text-sm transition-all shadow-xs ${
+              theme === 'light'
+                ? 'bg-white border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-sky-600 focus:ring-1 focus:ring-sky-600'
+                : 'bg-[#091729]/95 border-sky-900/60 text-white placeholder-slate-500 focus:outline-none focus:border-[#f1bd5b] shadow-md'
+            }`}
           />
         </div>
 
         {/* Leads Table */}
-        <div className="bg-[#091729]/95 border border-sky-900/60 rounded-3xl shadow-xl overflow-hidden">
+        <div className={`border rounded-3xl overflow-hidden transition-colors ${
+          theme === 'light'
+            ? 'bg-white border-slate-200 shadow-xs'
+            : 'bg-[#091729]/95 border-sky-900/60 shadow-xl'
+        }`}>
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-sky-950 bg-slate-900/90 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                <tr className={`border-b text-[11px] font-bold uppercase tracking-wider ${
+                  theme === 'light'
+                    ? 'border-slate-200 bg-slate-50 text-slate-500'
+                    : 'border-sky-950 bg-slate-900/90 text-slate-400'
+                }`}>
                   <th className="py-3.5 px-6">Candidate</th>
                   <th className="py-3.5 px-6">Contact Channels</th>
                   <th className="py-3.5 px-6">Qualification & Program</th>
@@ -1457,37 +1361,49 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
                   <th className="py-3.5 px-6 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-sky-950/60 text-xs">
+              <tbody className={`divide-y text-xs ${
+                theme === 'light' ? 'divide-slate-100' : 'divide-sky-950/60'
+              }`}>
                 {filteredLeads.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="py-12 text-center text-slate-400">
+                    <td colSpan={6} className={`py-12 text-center ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>
                       No candidate inquiries match the current search.
                     </td>
                   </tr>
                 ) : (
                   filteredLeads.map((lead) => (
-                    <tr key={lead.id} className="hover:bg-slate-900/50 transition-colors group">
+                    <tr key={lead.id} className={`transition-colors group ${
+                      theme === 'light' ? 'hover:bg-slate-50' : 'hover:bg-slate-900/50'
+                    }`}>
                       {/* Name */}
                       <td className="py-4 px-6">
-                        <div className="font-bold text-white group-hover:text-[#f1bd5b] transition-colors">
+                        <div className={`font-bold transition-colors ${
+                          theme === 'light'
+                            ? 'text-slate-900 group-hover:text-sky-800'
+                            : 'text-white group-hover:text-[#f1bd5b]'
+                        }`}>
                           {lead.name}
                         </div>
-                        <span className="inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-sky-950 text-sky-300 border border-sky-800/40">
+                        <span className={`inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-semibold border ${
+                          theme === 'light'
+                            ? 'bg-sky-50 text-sky-800 border-sky-200'
+                            : 'bg-sky-950 text-sky-300 border-sky-800/40'
+                        }`}>
                           {lead.status}
                         </span>
                       </td>
 
                       {/* Contact */}
                       <td className="py-4 px-6 space-y-1">
-                        <div className="flex items-center gap-1.5 text-slate-300 font-mono">
-                          <Mail className="w-3.5 h-3.5 text-sky-400 shrink-0" />
-                          <a href={`mailto:${lead.email}`} className="hover:text-[#f1bd5b] transition-colors">
+                        <div className={`flex items-center gap-1.5 font-mono ${theme === 'light' ? 'text-slate-700' : 'text-slate-300'}`}>
+                          <Mail className="w-3.5 h-3.5 text-sky-600 shrink-0" />
+                          <a href={`mailto:${lead.email}`} className="hover:text-[#b58b42] transition-colors">
                             {lead.email}
                           </a>
                         </div>
-                        <div className="flex items-center gap-1.5 text-slate-300">
-                          <Phone className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                          <a href={`tel:${lead.phone}`} className="hover:text-emerald-300 font-semibold">
+                        <div className={`flex items-center gap-1.5 ${theme === 'light' ? 'text-slate-700' : 'text-slate-300'}`}>
+                          <Phone className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                          <a href={`tel:${lead.phone}`} className="hover:text-emerald-700 font-semibold">
                             {lead.phone}
                           </a>
                         </div>
@@ -1495,15 +1411,15 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
 
                       {/* Qualification & Program */}
                       <td className="py-4 px-6">
-                        <div className="font-semibold text-slate-200">{lead.program || 'All Packages'}</div>
-                        <div className="text-[11px] text-slate-400 mt-0.5">{lead.qualification || "Bachelor's Degree"}</div>
+                        <div className={`font-semibold ${theme === 'light' ? 'text-slate-900' : 'text-slate-200'}`}>{lead.program || 'All Packages'}</div>
+                        <div className={`text-[11px] mt-0.5 ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>{lead.qualification || "Bachelor's Degree"}</div>
                       </td>
 
                       {/* Source & Brochure */}
                       <td className="py-4 px-6">
-                        <div className="text-slate-300 text-[11px]">{lead.source}</div>
+                        <div className={`text-[11px] ${theme === 'light' ? 'text-slate-700' : 'text-slate-300'}`}>{lead.source}</div>
                         {lead.brochureDownloaded && (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-400 mt-1">
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 mt-1">
                             <CheckCircle2 className="w-3 h-3" />
                             <span>Brochure Downloaded</span>
                           </span>
@@ -1511,7 +1427,7 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
                       </td>
 
                       {/* Timestamp */}
-                      <td className="py-4 px-6 text-slate-400 text-[11px]">
+                      <td className={`py-4 px-6 text-[11px] ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>
                         {lead.submittedAt}
                       </td>
 
@@ -1523,7 +1439,11 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
                           )}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex p-1.5 rounded-lg bg-emerald-950 hover:bg-emerald-900 text-emerald-300 border border-emerald-700/50 transition-colors"
+                          className={`inline-flex p-1.5 rounded-lg border transition-colors ${
+                            theme === 'light'
+                              ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200'
+                              : 'bg-emerald-950 hover:bg-emerald-900 text-emerald-300 border-emerald-700/50'
+                          }`}
                           title="Chat on WhatsApp"
                         >
                           <MessageSquare className="w-4 h-4" />
@@ -1532,7 +1452,11 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
                           href={`mailto:${lead.email}?subject=${encodeURIComponent(`[BNC ELEVATE] CIA Coaching Guidance for ${lead.name}`)}&body=${encodeURIComponent(
                             `Dear ${lead.name},\n\nThank you for reaching out to BNC ELEVATE.\n\nWe have received your enquiry regarding ${lead.program || 'our CIA Coaching Program'}.\n\nPlease let us know your preferred time for a 1-on-1 counseling call with CA Gurvinder Pal Singh.\n\nWarm regards,\nCA Gurvinder Pal Singh\nDirector & Senior Faculty, BNC Global\ninfo@bncglobal.in | +91 63960 18626`
                           )}`}
-                          className="inline-flex p-1.5 rounded-lg bg-sky-950 hover:bg-sky-900 text-sky-300 border border-sky-700/50 transition-colors"
+                          className={`inline-flex p-1.5 rounded-lg border transition-colors ${
+                            theme === 'light'
+                              ? 'bg-sky-50 hover:bg-sky-100 text-sky-700 border-sky-200'
+                              : 'bg-sky-950 hover:bg-sky-900 text-sky-300 border-sky-700/50'
+                          }`}
                           title="Email Candidate"
                         >
                           <Mail className="w-4 h-4" />
@@ -1540,7 +1464,11 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
                         <button
                           type="button"
                           onClick={() => handleConvertLeadToLearner(lead)}
-                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#b58b42]/20 hover:bg-[#b58b42]/30 text-[#f1bd5b] border border-[#b58b42]/50 text-xs font-bold transition-colors cursor-pointer"
+                          className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border text-xs font-bold transition-colors cursor-pointer ${
+                            theme === 'light'
+                              ? 'bg-amber-50 hover:bg-amber-100 text-[#8d6928] border-amber-300'
+                              : 'bg-[#b58b42]/20 hover:bg-[#b58b42]/30 text-[#f1bd5b] border-[#b58b42]/50'
+                          }`}
                           title="Convert to Enrolled Learner"
                         >
                           <Plus className="w-3.5 h-3.5" />
@@ -1549,7 +1477,11 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
                         <button
                           type="button"
                           onClick={() => handleDeleteLead(lead.id)}
-                          className="inline-flex p-1.5 rounded-lg bg-slate-800 hover:bg-rose-950 text-slate-400 hover:text-rose-400 transition-colors cursor-pointer"
+                          className={`inline-flex p-1.5 rounded-lg transition-colors cursor-pointer ${
+                            theme === 'light'
+                              ? 'bg-slate-100 hover:bg-rose-50 text-slate-500 hover:text-rose-600'
+                              : 'bg-slate-800 hover:bg-rose-950 text-slate-400 hover:text-rose-400'
+                          }`}
                           title="Delete Lead"
                         >
                           <Trash2 className="w-4 h-4" />
