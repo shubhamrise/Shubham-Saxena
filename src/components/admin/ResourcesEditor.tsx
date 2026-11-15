@@ -30,6 +30,7 @@ export const ResourcesEditor: React.FC<ResourcesEditorProps> = ({
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingResource, setEditingResource] = useState<LmsResource | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   // Form State
   const [title, setTitle] = useState('');
@@ -96,10 +97,10 @@ export const ResourcesEditor: React.FC<ResourcesEditorProps> = ({
     setIsModalOpen(false);
   };
 
-  const handleDelete = (id: string, resTitle: string) => {
-    if (!confirm(`Are you sure you want to remove "${resTitle}" from student study downloads?`)) return;
+  const handleDelete = (id: string, _resTitle: string) => {
     const updated = resources.filter((r) => r.id !== id);
     onUpdateResources(updated);
+    setConfirmDeleteId(null);
     onShowToast(`✓ Resource removed.`);
   };
 
@@ -201,13 +202,33 @@ export const ResourcesEditor: React.FC<ResourcesEditorProps> = ({
                 >
                   <Edit3 className="w-3.5 h-3.5" />
                 </button>
-                <button
-                  onClick={() => handleDelete(item.id, item.title)}
-                  className="p-2 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 transition-colors cursor-pointer"
-                  title="Delete Resource"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
+                {confirmDeleteId === item.id ? (
+                  <div className="inline-flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(item.id, item.title)}
+                      className="px-3 py-1 rounded-full bg-rose-600 hover:bg-rose-700 text-white text-[11px] font-bold cursor-pointer shadow-xs transition-colors whitespace-nowrap"
+                    >
+                      Confirm Delete
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setConfirmDeleteId(null)}
+                      className="px-3 py-1 rounded-full bg-slate-200 hover:bg-slate-300 text-slate-700 text-[11px] font-semibold cursor-pointer transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setConfirmDeleteId(item.id)}
+                    className="p-2 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 transition-colors cursor-pointer"
+                    title="Delete Resource"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                )}
               </div>
             </div>
           </div>

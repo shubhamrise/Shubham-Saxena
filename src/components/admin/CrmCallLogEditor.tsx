@@ -614,12 +614,12 @@ export const CrmCallLogEditor: React.FC<CrmCallLogEditorProps> = ({
                     : 'bg-[#061220] border-sky-950 text-slate-400'
                 }`}
               >
-                <th className="py-4 px-5">Student & Phone</th>
-                <th className="py-4 px-5">Call Direction & Duration</th>
-                <th className="py-4 px-5">Student Response</th>
-                <th className="py-4 px-5 text-center">Reconnect Again?</th>
-                <th className="py-4 px-5">Feedback & Counselor Notes</th>
-                <th className="py-4 px-5 text-right">Actions</th>
+                <th className="py-3.5 pl-5 pr-3">Student & Phone</th>
+                <th className="py-3.5 px-3">Call Direction & Duration</th>
+                <th className="py-3.5 px-3">Student Response</th>
+                <th className="py-3.5 px-3 text-center">Reconnect Again?</th>
+                <th className="py-3.5 px-3">Feedback & Counselor Notes</th>
+                <th className="py-3.5 pl-3 pr-5 text-right">Actions</th>
               </tr>
             </thead>
             <tbody
@@ -649,7 +649,7 @@ export const CrmCallLogEditor: React.FC<CrmCallLogEditorProps> = ({
                     }`}
                   >
                     {/* Student & Phone */}
-                    <td className="py-4 px-5 min-w-[200px]">
+                    <td className="py-3.5 pl-5 pr-3 min-w-[165px]">
                       <div
                         className={`font-bold text-sm ${
                           theme === 'light' ? 'text-slate-900' : 'text-white'
@@ -701,7 +701,7 @@ export const CrmCallLogEditor: React.FC<CrmCallLogEditorProps> = ({
                     </td>
 
                     {/* Call Direction & Duration */}
-                    <td className="py-4 px-5 min-w-[180px] space-y-1.5">
+                    <td className="py-3.5 px-3 min-w-[145px] space-y-1.5">
                       <span
                         className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide border ${
                           log.direction === 'outbound'
@@ -755,7 +755,7 @@ export const CrmCallLogEditor: React.FC<CrmCallLogEditorProps> = ({
                     </td>
 
                     {/* Student Response */}
-                    <td className="py-4 px-5 min-w-[210px] max-w-[260px] space-y-1.5">
+                    <td className="py-3.5 px-3 min-w-[175px] max-w-[220px] space-y-1.5">
                       <span
                         className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold border ${
                           log.interestLevel.startsWith('Hot')
@@ -787,7 +787,7 @@ export const CrmCallLogEditor: React.FC<CrmCallLogEditorProps> = ({
                     </td>
 
                     {/* Reconnect Again? */}
-                    <td className="py-4 px-5 text-center min-w-[160px]">
+                    <td className="py-3.5 px-3 text-center min-w-[135px]">
                       <button
                         type="button"
                         onClick={() => handleToggleReconnect(log.id)}
@@ -828,7 +828,7 @@ export const CrmCallLogEditor: React.FC<CrmCallLogEditorProps> = ({
                     </td>
 
                     {/* Feedback */}
-                    <td className="py-4 px-5 min-w-[220px] max-w-[280px]">
+                    <td className="py-3.5 px-3 min-w-[180px] max-w-[240px]">
                       <div
                         className={`p-3 rounded-xl border text-xs leading-relaxed ${
                           theme === 'light'
@@ -841,55 +841,56 @@ export const CrmCallLogEditor: React.FC<CrmCallLogEditorProps> = ({
                     </td>
 
                     {/* Actions */}
-                    <td className="py-4 px-5 text-right whitespace-nowrap">
-                      <div className="inline-flex items-center gap-1.5">
-                        <button
-                          type="button"
-                          onClick={() => openEditModal(log)}
-                          className={`p-1.5 rounded-lg border transition-colors cursor-pointer ${
-                            theme === 'light'
-                              ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
-                              : 'bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border-transparent'
-                          }`}
-                          title="Edit call log & feedback"
-                        >
-                          <Edit3 className="w-4 h-4 text-[#b58b42]" />
-                        </button>
-
+                    <td className="py-3.5 pl-3 pr-5 text-right">
+                      <div className="inline-flex flex-wrap items-center justify-end gap-1.5">
                         {confirmDeleteId === log.id ? (
-                          <div className="inline-flex items-center gap-1">
+                          <div className="inline-flex items-center gap-1.5">
                             <button
                               type="button"
                               onClick={() => handleDeleteCallLog(log.id)}
-                              className="px-2 py-1 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-[10px] font-bold cursor-pointer"
+                              className="px-3 py-1 rounded-full bg-rose-600 hover:bg-rose-700 text-white text-[11px] font-bold cursor-pointer shadow-xs transition-colors whitespace-nowrap"
                             >
-                              Delete
+                              Confirm Delete
                             </button>
                             <button
                               type="button"
                               onClick={() => setConfirmDeleteId(null)}
-                              className={`px-2 py-1 rounded-lg text-[10px] font-semibold cursor-pointer ${
+                              className={`px-3 py-1 rounded-full text-[11px] font-semibold cursor-pointer transition-colors whitespace-nowrap ${
                                 theme === 'light'
-                                  ? 'bg-slate-200 text-slate-700'
-                                  : 'bg-slate-700 text-slate-200'
+                                  ? 'bg-slate-200 hover:bg-slate-300 text-slate-700'
+                                  : 'bg-slate-700 hover:bg-slate-600 text-slate-200'
                               }`}
                             >
                               Cancel
                             </button>
                           </div>
                         ) : (
-                          <button
-                            type="button"
-                            onClick={() => setConfirmDeleteId(log.id)}
-                            className={`p-1.5 rounded-lg border transition-colors cursor-pointer ${
-                              theme === 'light'
-                                ? 'bg-slate-100 hover:bg-rose-50 text-slate-500 hover:text-rose-700 border-slate-200'
-                                : 'bg-slate-800 hover:bg-rose-950 text-slate-400 hover:text-rose-400 border-transparent'
-                            }`}
-                            title="Delete call log"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => openEditModal(log)}
+                              className={`p-1.5 rounded-lg border transition-colors cursor-pointer ${
+                                theme === 'light'
+                                  ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
+                                  : 'bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border-transparent'
+                              }`}
+                              title="Edit call log & feedback"
+                            >
+                              <Edit3 className="w-4 h-4 text-[#b58b42]" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setConfirmDeleteId(log.id)}
+                              className={`p-1.5 rounded-lg border transition-colors cursor-pointer ${
+                                theme === 'light'
+                                  ? 'bg-slate-100 hover:bg-rose-50 text-slate-500 hover:text-rose-700 border-slate-200'
+                                  : 'bg-slate-800 hover:bg-rose-950 text-slate-400 hover:text-rose-400 border-transparent'
+                              }`}
+                              title="Delete call log"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </>
                         )}
                       </div>
                     </td>

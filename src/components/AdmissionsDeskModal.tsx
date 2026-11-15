@@ -21,6 +21,7 @@ interface LeadRecord {
 export const AdmissionsDeskModal: React.FC<AdmissionsDeskModalProps> = ({ isOpen, onClose }) => {
   const [leads, setLeads] = useState<LeadRecord[]>([]);
   const [filter, setFilter] = useState<'all' | 'Enrollment' | 'Consultation' | 'Quick Callback'>('all');
+  const [confirmClear, setConfirmClear] = useState(false);
 
   const loadLeads = () => {
     const records: LeadRecord[] = [];
@@ -118,12 +119,11 @@ export const AdmissionsDeskModal: React.FC<AdmissionsDeskModalProps> = ({ isOpen
   };
 
   const handleClearHistory = () => {
-    if (window.confirm('Are you sure you want to clear stored lead history from this browser?')) {
-      localStorage.removeItem('bnc_orders');
-      localStorage.removeItem('bnc_inquiries');
-      localStorage.removeItem('bnc_hero_enquiries');
-      setLeads([]);
-    }
+    localStorage.removeItem('bnc_orders');
+    localStorage.removeItem('bnc_inquiries');
+    localStorage.removeItem('bnc_hero_enquiries');
+    setLeads([]);
+    setConfirmClear(false);
   };
 
   if (!isOpen) return null;
@@ -200,13 +200,33 @@ export const AdmissionsDeskModal: React.FC<AdmissionsDeskModalProps> = ({ isOpen
           </div>
 
           {leads.length > 0 && (
-            <button
-              onClick={handleClearHistory}
-              className="inline-flex items-center gap-1 text-[11px] text-red-600 hover:text-red-800 transition-colors cursor-pointer"
-            >
-              <Trash2 className="w-3 h-3" />
-              <span>Clear History</span>
-            </button>
+            confirmClear ? (
+              <div className="inline-flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={handleClearHistory}
+                  className="px-3 py-1 rounded-full bg-rose-600 hover:bg-rose-700 text-white text-[11px] font-bold cursor-pointer shadow-xs transition-colors whitespace-nowrap"
+                >
+                  Confirm Delete
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setConfirmClear(false)}
+                  className="px-3 py-1 rounded-full bg-slate-200 hover:bg-slate-300 text-slate-700 text-[11px] font-semibold cursor-pointer transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setConfirmClear(true)}
+                className="inline-flex items-center gap-1 text-[11px] text-red-600 hover:text-red-800 transition-colors cursor-pointer"
+              >
+                <Trash2 className="w-3 h-3" />
+                <span>Clear History</span>
+              </button>
+            )
           )}
         </div>
 

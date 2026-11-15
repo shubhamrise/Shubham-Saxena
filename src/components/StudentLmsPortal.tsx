@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   LMS_MODULES,
   LmsLesson,
@@ -43,6 +43,7 @@ import {
 } from 'lucide-react';
 import { LmsAdminConsole } from './LmsAdminConsole';
 import { ManagedLearner, LmsAdminUser } from '../types';
+import { getLessonVideo, resolveVideoPlaybackSource } from '../utils/videoStorage';
 
 export interface AuthenticatedStudent {
   name: string;
@@ -213,20 +214,31 @@ export const StudentLmsPortal: React.FC<StudentLmsPortalProps> = ({
   const [activeTab, setActiveTab] = useState<'curriculum' | 'ailab'>('curriculum');
   const [selectedPart, setSelectedPart] = useState<'all' | 'part-1' | 'part-2' | 'part-3' | 'ai-lab'>('part-1');
 
-  // LMS Data States
-  const [lmsModules] = useState<LmsModule[]>(() => {
+  // LMS Data States (synced with Admin Video Uploads)
+  const [lmsModules, setLmsModules] = useState<LmsModule[]>(() => {
     try {
       const saved = localStorage.getItem('bnc_lms_modules');
       if (saved) return JSON.parse(saved);
     } catch {}
     return LMS_MODULES;
   });
+
+  const handleUpdateModules = (updated: LmsModule[]) => {
+    setLmsModules(updated);
+    try {
+      localStorage.setItem('bnc_lms_modules', JSON.stringify(updated));
+    } catch (e) {
+      console.warn(e);
+    }
+  };
   
   // Video Player state
   const [activeLesson, setActiveLesson] = useState<LmsLesson>(lmsModules[0]?.lessons[0] || LMS_MODULES[0].lessons[0]);
   const [isPlaying, setIsPlaying] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState<number>(1);
   const [playerProgress, setPlayerProgress] = useState(35); // 35% viewed
+  const [loadedVideoUrl, setLoadedVideoUrl] = useState<string | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
   const [completedLessons, setCompletedLessons] = useState<string[]>(() => {
     try {
       const stored = localStorage.getItem('bnc_lms_completed_lessons');
@@ -464,6 +476,61 @@ export const StudentLmsPortal: React.FC<StudentLmsPortalProps> = ({
     setStudentNote(savedNotes[activeLesson.id] || '');
   }, [activeLesson.id, savedNotes]);
 
+  // Keep activeLesson updated when Admin uploads a video or modifies lesson details
+  useEffect(() => {
+    const allLessons = lmsModules.flatMap((m) => m.lessons);
+    const updatedMatch = allLessons.find((l) => l.id === activeLesson.id);
+    if (updatedMatch) {
+      if (
+        updatedMatch.videoUrl !== activeLesson.videoUrl ||
+        updatedMatch.title !== activeLesson.title ||
+        updatedMatch.duration !== activeLesson.duration
+      ) {
+        setActiveLesson(updatedMatch);
+      }
+    } else if (allLessons.length > 0) {
+      setActiveLesson(allLessons[0]);
+    }
+  }, [lmsModules]);
+
+  // Resolve IndexedDB or URL video source for activeLesson
+  useEffect(() => {
+    let active = true;
+    let createdBlobUrl: string | null = null;
+    const srcInfo = resolveVideoPlaybackSource(activeLesson.videoUrl);
+
+    if (srcInfo.kind === 'idb' && srcInfo.idbLessonId) {
+      setLoadedVideoUrl(null);
+      getLessonVideo(srcInfo.idbLessonId).then((stored) => {
+        if (!active) return;
+        if (stored) {
+          createdBlobUrl = URL.createObjectURL(stored.blob);
+          setLoadedVideoUrl(createdBlobUrl);
+        } else {
+          setLoadedVideoUrl(null);
+        }
+      });
+    } else if (srcInfo.embedUrl) {
+      setLoadedVideoUrl(srcInfo.embedUrl);
+    } else {
+      setLoadedVideoUrl(null);
+    }
+
+    return () => {
+      active = false;
+      if (createdBlobUrl) {
+        URL.revokeObjectURL(createdBlobUrl);
+      }
+    };
+  }, [activeLesson.id, activeLesson.videoUrl]);
+
+  // Apply playbackSpeed to real HTML5 video element when mounted
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.playbackRate = playbackSpeed;
+    }
+  }, [playbackSpeed, loadedVideoUrl]);
+
   // Run AI Audit tool
   const handleRunAiAudit = () => {
     setIsAiGenerating(true);
@@ -551,6 +618,8 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
         adminUser={adminUser}
         learners={managedLearners}
         onUpdateLearners={handleUpdateLearners}
+        modules={lmsModules}
+        onUpdateModules={handleUpdateModules}
         onLogoutAdmin={handleLogoutAdmin}
         onSwitchToStudentView={(learner) => {
           if (learner) {
@@ -1316,34 +1385,65 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
       </header>
 
       {/* LMS Primary Navigation Sub-Bar */}
-      <div className={`${theme === 'light' ? 'bg-white border-slate-200 shadow-xs' : 'bg-[#0b1b30]/95 backdrop-blur-md border-sky-950/80'} border-b px-4 sm:px-6 lg:px-8 py-2 relative z-30`}>
-        <div className="max-w-7xl mx-auto flex items-center justify-between overflow-x-auto gap-2 text-xs font-semibold scrollbar-none">
-          <div className="flex items-center gap-1">
+      <div className={`${theme === 'light' ? 'bg-white border-slate-200 shadow-xs' : 'bg-[#0b1b30]/95 backdrop-blur-md border-sky-950/80'} border-b px-4 sm:px-6 lg:px-8 py-2.5 relative z-30`}>
+        <div className="max-w-7xl mx-auto flex items-center justify-between overflow-x-auto gap-3 scrollbar-none">
+          <div className="flex items-center gap-2.5">
             <button
               onClick={() => setActiveTab('curriculum')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all cursor-pointer whitespace-nowrap ${
+              className={`group flex items-center gap-2.5 px-5 py-2.5 rounded-2xl text-sm font-extrabold tracking-tight transition-all cursor-pointer whitespace-nowrap ${
                 activeTab === 'curriculum'
-                  ? 'bg-gradient-to-r from-[#102a4e] via-[#163a6b] to-[#b58b42] text-white shadow-sm font-bold'
+                  ? 'bg-gradient-to-r from-[#0e2444] via-[#163a6b] to-[#b58b42] text-white shadow-md ring-1 ring-[#f1bd5b]/40'
                   : theme === 'light'
-                  ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                  ? 'bg-slate-50 hover:bg-slate-100 text-slate-800 border border-slate-200'
+                  : 'bg-slate-900/70 hover:bg-slate-800 text-slate-200 border border-sky-900/60'
               }`}
             >
-              <Video className="w-4 h-4 text-[#b58b42]" />
-              <span>Video Masterclasses ({totalLessonsCount})</span>
+              <span
+                className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
+                  activeTab === 'curriculum'
+                    ? 'bg-white/15 text-[#f7cd76]'
+                    : theme === 'light'
+                    ? 'bg-amber-100 text-[#9c742e]'
+                    : 'bg-amber-500/15 text-[#f1bd5b]'
+                }`}
+              >
+                <Video className="w-4 h-4" />
+              </span>
+              <span>Video Masterclasses</span>
+              <span
+                className={`px-2 py-0.5 rounded-lg text-xs font-black tabular-nums ${
+                  activeTab === 'curriculum'
+                    ? 'bg-white/20 text-white'
+                    : theme === 'light'
+                    ? 'bg-white text-slate-700 border border-slate-200'
+                    : 'bg-slate-800 text-slate-300 border border-slate-700'
+                }`}
+              >
+                {totalLessonsCount}
+              </span>
             </button>
 
             <button
               onClick={() => setActiveTab('ailab')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all cursor-pointer whitespace-nowrap ${
+              className={`group flex items-center gap-2.5 px-5 py-2.5 rounded-2xl text-sm font-extrabold tracking-tight transition-all cursor-pointer whitespace-nowrap ${
                 activeTab === 'ailab'
-                  ? 'bg-gradient-to-r from-[#102a4e] via-[#163a6b] to-[#b58b42] text-white shadow-sm font-bold ring-1 ring-amber-400/30'
+                  ? 'bg-gradient-to-r from-[#0e2444] via-[#163a6b] to-[#b58b42] text-white shadow-md ring-1 ring-amber-400/40'
                   : theme === 'light'
-                  ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                  ? 'bg-slate-50 hover:bg-slate-100 text-slate-800 border border-slate-200'
+                  : 'bg-slate-900/70 hover:bg-slate-800 text-slate-200 border border-sky-900/60'
               }`}
             >
-              <Sparkles className="w-4 h-4 text-amber-500" />
+              <span
+                className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
+                  activeTab === 'ailab'
+                    ? 'bg-white/15 text-amber-300'
+                    : theme === 'light'
+                    ? 'bg-amber-100 text-amber-700'
+                    : 'bg-amber-500/15 text-amber-300'
+                }`}
+              >
+                <Sparkles className="w-4 h-4" />
+              </span>
               <span>AI Audit Lab Sandbox</span>
             </button>
           </div>
@@ -1360,105 +1460,187 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
             {/* Center / Left (8 Cols): Video Player & Active Lecture Overview */}
             <div className="lg:col-span-8 space-y-6">
               {/* HD Video Player Container */}
-              <div className="relative rounded-3xl overflow-hidden bg-slate-950 border border-slate-800 shadow-2xl">
-                {/* Simulated High-Res Video Screen */}
-                <div className="relative aspect-video bg-gradient-to-br from-slate-900 via-[#0a182c] to-black flex flex-col justify-between p-6 overflow-hidden">
-                  {/* Subtle Background Backdrop Graphics */}
-                  <div className="absolute inset-0 opacity-20 pointer-events-none bg-[radial-gradient(#38bdf8_1px,transparent_1px)] [background-size:24px_24px]" />
+              {(() => {
+                const playbackInfo = resolveVideoPlaybackSource(activeLesson.videoUrl);
+                const hasPlayableVideo =
+                  (playbackInfo.kind === 'iframe' && Boolean(loadedVideoUrl)) ||
+                  ((playbackInfo.kind === 'idb' || playbackInfo.kind === 'direct') && Boolean(loadedVideoUrl));
 
-                  {/* Top Overlay Badge */}
-                  <div className="relative z-10 flex items-center justify-between">
-                    <span className="px-3 py-1 rounded-full bg-slate-900/80 backdrop-blur-md border border-slate-700 text-[10px] font-bold text-[#f1bd5b] uppercase tracking-wider flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                      1080p Full HD Masterclass · {activeLesson.instructor}
-                    </span>
-                    <span className="text-xs font-mono text-slate-400 bg-black/60 px-2.5 py-1 rounded-md">
-                      {activeLesson.duration}
-                    </span>
-                  </div>
-
-                  {/* Center Video Slide Content */}
-                  <div className="relative z-10 my-auto text-center max-w-xl mx-auto px-4">
-                    <div className="text-xs uppercase tracking-widest text-[#f1bd5b] font-bold mb-1">
-                      {activeLesson.domain}
-                    </div>
-                    <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight leading-snug">
-                      {activeLesson.title}
-                    </h3>
-                    <p className="text-xs text-slate-300 mt-2 line-clamp-2">
-                      {activeLesson.description}
-                    </p>
-
-                    {/* Central Play/Pause Trigger */}
-                    <button
-                      onClick={() => {
-                        setIsPlaying(!isPlaying);
-                        showToast(isPlaying ? 'Playback paused' : 'Resuming lecture streaming...');
-                      }}
-                      className="mt-6 inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-sky-600 to-[#b58b42] text-white shadow-xl hover:scale-105 active:scale-95 transition-all cursor-pointer"
-                    >
-                      {isPlaying ? <Pause className="w-7 h-7" /> : <Play className="w-7 h-7 ml-1" />}
-                    </button>
-                  </div>
-
-                  {/* Bottom Video Controls Bar */}
-                  <div className="relative z-10 space-y-2 pt-4 bg-gradient-to-t from-black/90 via-black/40 to-transparent">
-                    {/* Scrubbing Bar */}
-                    <div
-                      onClick={(e) => {
-                        const rect = e.currentTarget.getBoundingClientRect();
-                        const clickX = e.clientX - rect.left;
-                        const newPct = Math.round((clickX / rect.width) * 100);
-                        setPlayerProgress(newPct);
-                      }}
-                      className="w-full h-1.5 rounded-full bg-slate-700 cursor-pointer overflow-hidden relative group"
-                    >
-                      <div
-                        className="h-full bg-gradient-to-r from-sky-400 to-[#f1bd5b] relative"
-                        style={{ width: `${playerProgress}%` }}
-                      >
-                        <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                if (hasPlayableVideo && playbackInfo.kind === 'iframe' && loadedVideoUrl) {
+                  return (
+                    <div className="relative rounded-3xl overflow-hidden bg-slate-950 border border-slate-800 shadow-2xl">
+                      <div className="px-5 py-3 bg-[#081526] border-b border-slate-800 flex flex-wrap items-center justify-between gap-2">
+                        <span className="text-[11px] font-bold text-[#f1bd5b] flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                          <span>{activeLesson.title} · {activeLesson.instructor}</span>
+                        </span>
+                        <span className="text-[11px] font-mono text-slate-300 bg-slate-900 px-2.5 py-0.5 rounded">
+                          {activeLesson.duration}
+                        </span>
+                      </div>
+                      <div className="aspect-video bg-black">
+                        <iframe
+                          key={activeLesson.id}
+                          src={loadedVideoUrl}
+                          title={activeLesson.title}
+                          className="w-full h-full"
+                          allow="autoplay; fullscreen; picture-in-picture"
+                          allowFullScreen
+                        />
                       </div>
                     </div>
+                  );
+                }
 
-                    <div className="flex items-center justify-between text-xs text-slate-300">
-                      <div className="flex items-center gap-3">
-                        <button
-                          onClick={() => setIsPlaying(!isPlaying)}
-                          className="hover:text-white transition-colors cursor-pointer"
-                        >
-                          {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                        </button>
-                        <Volume2 className="w-4 h-4 text-slate-400" />
-                        <span className="font-mono text-[11px] text-slate-400">
-                          {Math.floor((activeLesson.durationMinutes * playerProgress) / 100)}m / {activeLesson.duration}
+                if (hasPlayableVideo && (playbackInfo.kind === 'idb' || playbackInfo.kind === 'direct') && loadedVideoUrl) {
+                  return (
+                    <div className="relative rounded-3xl overflow-hidden bg-slate-950 border border-slate-800 shadow-2xl">
+                      <div className="px-5 py-3 bg-[#081526] border-b border-slate-800 flex flex-wrap items-center justify-between gap-2">
+                        <span className="text-[11px] font-bold text-[#f1bd5b] flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                          <span>{activeLesson.title} · {activeLesson.instructor}</span>
+                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] text-slate-400 font-bold uppercase mr-1">Speed:</span>
+                          {[1, 1.25, 1.5, 2].map((spd) => (
+                            <button
+                              key={spd}
+                              type="button"
+                              onClick={() => {
+                                setPlaybackSpeed(spd);
+                                if (videoRef.current) videoRef.current.playbackRate = spd;
+                                showToast(`Playback speed set to ${spd}x`);
+                              }}
+                              className={`px-2 py-0.5 rounded text-[11px] font-bold cursor-pointer transition-colors ${
+                                playbackSpeed === spd
+                                  ? 'bg-[#b58b42] text-white'
+                                  : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                              }`}
+                            >
+                              {spd}x
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="aspect-video bg-black">
+                        <video
+                          ref={videoRef}
+                          key={loadedVideoUrl}
+                          src={loadedVideoUrl}
+                          controls
+                          playsInline
+                          controlsList="nodownload"
+                          onLoadedMetadata={() => {
+                            if (videoRef.current) {
+                              videoRef.current.playbackRate = playbackSpeed;
+                            }
+                          }}
+                          className="w-full h-full object-contain"
+                        />
+                      </div>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className="relative rounded-3xl overflow-hidden bg-slate-950 border border-slate-800 shadow-2xl">
+                    {/* Masterclass Preview Screen (When Admin Has Not Uploaded Video Yet) */}
+                    <div className="relative aspect-video bg-gradient-to-br from-slate-900 via-[#0a182c] to-black flex flex-col justify-between p-6 overflow-hidden">
+                      <div className="absolute inset-0 opacity-20 pointer-events-none bg-[radial-gradient(#38bdf8_1px,transparent_1px)] [background-size:24px_24px]" />
+
+                      {/* Top Overlay Badge */}
+                      <div className="relative z-10 flex items-center justify-between">
+                        <span className="px-3 py-1 rounded-full bg-slate-900/80 backdrop-blur-md border border-slate-700 text-[10px] font-bold text-[#f1bd5b] uppercase tracking-wider flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                          1080p Full HD Masterclass · {activeLesson.instructor}
+                        </span>
+                        <span className="text-xs font-mono text-slate-400 bg-black/60 px-2.5 py-1 rounded-md">
+                          {activeLesson.duration}
                         </span>
                       </div>
 
-                      {/* Speed selectors */}
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] text-slate-400 font-bold uppercase">Speed:</span>
-                        {[1, 1.25, 1.5, 2].map((spd) => (
-                          <button
-                            key={spd}
-                            onClick={() => {
-                              setPlaybackSpeed(spd);
-                              showToast(`Playback speed set to ${spd}x`);
-                            }}
-                            className={`px-2 py-0.5 rounded text-[11px] font-bold cursor-pointer transition-colors ${
-                              playbackSpeed === spd
-                                ? 'bg-[#b58b42] text-white'
-                                : 'text-slate-400 hover:text-white hover:bg-slate-800'
-                            }`}
+                      {/* Center Video Slide Content */}
+                      <div className="relative z-10 my-auto text-center max-w-xl mx-auto px-4">
+                        <div className="text-xs uppercase tracking-widest text-[#f1bd5b] font-bold mb-1">
+                          {activeLesson.domain}
+                        </div>
+                        <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight leading-snug">
+                          {activeLesson.title}
+                        </h3>
+                        <p className="text-xs text-slate-300 mt-2 line-clamp-2">
+                          {activeLesson.description}
+                        </p>
+
+                        <button
+                          onClick={() => {
+                            setIsPlaying(!isPlaying);
+                            showToast(isPlaying ? 'Playback paused' : 'Resuming lecture streaming...');
+                          }}
+                          className="mt-6 inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-sky-600 to-[#b58b42] text-white shadow-xl hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                        >
+                          {isPlaying ? <Pause className="w-7 h-7" /> : <Play className="w-7 h-7 ml-1" />}
+                        </button>
+                      </div>
+
+                      {/* Bottom Video Controls Bar */}
+                      <div className="relative z-10 space-y-2 pt-4 bg-gradient-to-t from-black/90 via-black/40 to-transparent">
+                        <div
+                          onClick={(e) => {
+                            const rect = e.currentTarget.getBoundingClientRect();
+                            const clickX = e.clientX - rect.left;
+                            const newPct = Math.round((clickX / rect.width) * 100);
+                            setPlayerProgress(newPct);
+                          }}
+                          className="w-full h-1.5 rounded-full bg-slate-700 cursor-pointer overflow-hidden relative group"
+                        >
+                          <div
+                            className="h-full bg-gradient-to-r from-sky-400 to-[#f1bd5b] relative"
+                            style={{ width: `${playerProgress}%` }}
                           >
-                            {spd}x
-                          </button>
-                        ))}
+                            <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between text-xs text-slate-300">
+                          <div className="flex items-center gap-3">
+                            <button
+                              onClick={() => setIsPlaying(!isPlaying)}
+                              className="hover:text-white transition-colors cursor-pointer"
+                            >
+                              {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                            </button>
+                            <Volume2 className="w-4 h-4 text-slate-400" />
+                            <span className="font-mono text-[11px] text-slate-400">
+                              {Math.floor((activeLesson.durationMinutes * playerProgress) / 100)}m / {activeLesson.duration}
+                            </span>
+                          </div>
+
+                          {/* Speed selectors */}
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] text-slate-400 font-bold uppercase">Speed:</span>
+                            {[1, 1.25, 1.5, 2].map((spd) => (
+                              <button
+                                key={spd}
+                                onClick={() => {
+                                  setPlaybackSpeed(spd);
+                                  showToast(`Playback speed set to ${spd}x`);
+                                }}
+                                className={`px-2 py-0.5 rounded text-[11px] font-bold cursor-pointer transition-colors ${
+                                  playbackSpeed === spd
+                                    ? 'bg-[#b58b42] text-white'
+                                    : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                                }`}
+                              >
+                                {spd}x
+                              </button>
+                            ))}
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              </div>
+                );
+              })()}
 
               {/* Lesson Action Controls */}
               <div className={`flex flex-wrap items-center justify-between gap-4 p-5 rounded-2xl border ${

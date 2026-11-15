@@ -24,9 +24,12 @@ import {
   Download,
   MessageSquare,
   Sun,
-  Moon
+  Moon,
+  Video
 } from 'lucide-react';
+import { LmsModule } from '../data/lmsData';
 import { CrmCallLogEditor } from './admin/CrmCallLogEditor';
+import { CurriculumEditor } from './admin/CurriculumEditor';
 
 const INITIAL_CRM_CALL_LOGS: CrmCallLog[] = [
   {
@@ -80,6 +83,7 @@ const INITIAL_CRM_CALL_LOGS: CrmCallLog[] = [
 
 export type AdminConsoleTab =
   | 'learners'
+  | 'videos'
   | 'leads'
   | 'crm';
 
@@ -87,6 +91,8 @@ interface LmsAdminConsoleProps {
   adminUser: LmsAdminUser;
   learners: ManagedLearner[];
   onUpdateLearners: (updated: ManagedLearner[]) => void;
+  modules: LmsModule[];
+  onUpdateModules: (updated: LmsModule[]) => void;
   onLogoutAdmin: () => void;
   onSwitchToStudentView: (learner?: ManagedLearner) => void;
   onBackToWebsite: () => void;
@@ -97,6 +103,8 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
   adminUser,
   learners,
   onUpdateLearners,
+  modules,
+  onUpdateModules,
   onLogoutAdmin,
   onSwitchToStudentView,
   onBackToWebsite,
@@ -125,6 +133,9 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'revoked' | 'pending'>('all');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingLearner, setEditingLearner] = useState<ManagedLearner | null>(null);
+  const [confirmDeleteLearnerId, setConfirmDeleteLearnerId] = useState<string | null>(null);
+  const [confirmDeleteLeadId, setConfirmDeleteLeadId] = useState<string | null>(null);
+  const [addFormError, setAddFormError] = useState<string | null>(null);
 
   // CRM Phone Call Logs state
   const [crmCallLogs, setCrmCallLogs] = useState<CrmCallLog[]>(() => {
@@ -276,6 +287,7 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
     setNewPhone(lead.phone || '+91 ');
     setNewPackage(lead.program || 'Premium Live Interactive');
     setNewNotes(`Converted from inquiry lead (${lead.source})`);
+    setAddFormError(null);
     setIsAddModalOpen(true);
   };
 
@@ -358,8 +370,9 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
   // Add learner
   const handleAddLearner = (e: React.FormEvent) => {
     e.preventDefault();
+    setAddFormError(null);
     if (!newName.trim() || !newEmail.trim()) {
-      alert('Please provide student name and email.');
+      setAddFormError('Please provide both student name and email.');
       return;
     }
 
@@ -367,7 +380,7 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
 
     // Check duplicate email
     if (learners.some((l) => l.email.trim().toLowerCase() === newEmail.trim().toLowerCase())) {
-      alert(`Student email "${newEmail}" is already registered in the learner roster.`);
+      setAddFormError(`Student email "${newEmail}" is already registered in the learner roster.`);
       return;
     }
 
@@ -410,13 +423,12 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
     onShowToast(`Updated student profile for ${editingLearner.name}`);
   };
 
-  // Delete learner
+  // Delete learner (triggered after inline confirmation)
   const handleDeleteLearner = (id: string, name: string) => {
-    if (confirm(`Are you sure you want to remove learner "${name}" from the LMS database?`)) {
-      const updated = learners.filter((l) => l.id !== id);
-      onUpdateLearners(updated);
-      onShowToast(`Removed ${name} from learner roster.`);
-    }
+    const updated = learners.filter((l) => l.id !== id);
+    onUpdateLearners(updated);
+    setConfirmDeleteLearnerId(null);
+    onShowToast(`Removed ${name} from learner roster.`);
   };
 
   // Sync latest checkout orders from localStorage
@@ -579,54 +591,163 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
       <main className="relative z-10 flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         
         {/* Console Tab Switcher: Full LMS Administration */}
-        <div className={`flex items-center gap-1.5 p-1.5 rounded-2xl border w-full overflow-x-auto shadow-xs scrollbar-none transition-colors ${
-          theme === 'light'
-            ? 'bg-white border-slate-200'
-            : 'bg-slate-900/90 border-sky-800/80 shadow-xl'
-        }`}>
+        <div
+          className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 p-2.5 rounded-3xl border w-full transition-colors ${
+            theme === 'light'
+              ? 'bg-white border-slate-200 shadow-md'
+              : 'bg-[#091729] border-sky-800/80 shadow-xl'
+          }`}
+        >
           <button
             type="button"
             onClick={() => setConsoleTab('learners')}
-            className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap shrink-0 ${
+            className={`group px-4 py-3.5 rounded-2xl text-sm sm:text-[15px] font-extrabold tracking-tight transition-all cursor-pointer flex items-center justify-between gap-3 whitespace-nowrap ${
               consoleTab === 'learners'
-                ? 'bg-gradient-to-r from-[#102a4e] via-[#163a6b] to-[#b58b42] text-white shadow-xs font-bold'
+                ? 'bg-gradient-to-r from-[#0e2444] via-[#163a6b] to-[#b58b42] text-white shadow-lg ring-1 ring-[#f1bd5b]/40'
                 : theme === 'light'
-                ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+                ? 'bg-slate-50 hover:bg-slate-100 text-slate-800 border border-slate-200/90 hover:border-slate-300'
+                : 'bg-slate-900/70 hover:bg-slate-800 text-slate-200 border border-sky-900/60 hover:border-sky-700'
             }`}
           >
-            <UserCheck className="w-4 h-4 text-[#b58b42]" />
-            <span>Learners & Access ({learners.length})</span>
+            <span className="flex items-center gap-3 min-w-0">
+              <span
+                className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
+                  consoleTab === 'learners'
+                    ? 'bg-white/15 text-[#f7cd76]'
+                    : theme === 'light'
+                    ? 'bg-amber-100/90 text-[#9c742e]'
+                    : 'bg-amber-500/15 text-[#f1bd5b]'
+                }`}
+              >
+                <UserCheck className="w-[18px] h-[18px]" />
+              </span>
+              <span className="truncate">Learners & Access</span>
+            </span>
+            <span
+              className={`px-2.5 py-0.5 rounded-lg text-xs font-black tabular-nums shrink-0 ${
+                consoleTab === 'learners'
+                  ? 'bg-white/20 text-white'
+                  : theme === 'light'
+                  ? 'bg-white text-slate-700 border border-slate-200'
+                  : 'bg-slate-800 text-slate-300 border border-slate-700'
+              }`}
+            >
+              {learners.length}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setConsoleTab('videos')}
+            className={`group px-4 py-3.5 rounded-2xl text-sm sm:text-[15px] font-extrabold tracking-tight transition-all cursor-pointer flex items-center justify-between gap-3 whitespace-nowrap ${
+              consoleTab === 'videos'
+                ? 'bg-gradient-to-r from-[#0e2444] via-[#163a6b] to-[#b58b42] text-white shadow-lg ring-1 ring-[#f1bd5b]/40'
+                : theme === 'light'
+                ? 'bg-slate-50 hover:bg-slate-100 text-slate-800 border border-slate-200/90 hover:border-slate-300'
+                : 'bg-slate-900/70 hover:bg-slate-800 text-slate-200 border border-sky-900/60 hover:border-sky-700'
+            }`}
+          >
+            <span className="flex items-center gap-3 min-w-0">
+              <span
+                className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
+                  consoleTab === 'videos'
+                    ? 'bg-white/15 text-[#f7cd76]'
+                    : theme === 'light'
+                    ? 'bg-amber-100/90 text-[#9c742e]'
+                    : 'bg-amber-500/15 text-[#f1bd5b]'
+                }`}
+              >
+                <Video className="w-[18px] h-[18px]" />
+              </span>
+              <span className="truncate">Video Uploads</span>
+            </span>
+            <span
+              className={`px-2.5 py-0.5 rounded-lg text-xs font-black tabular-nums shrink-0 ${
+                consoleTab === 'videos'
+                  ? 'bg-white/20 text-white'
+                  : theme === 'light'
+                  ? 'bg-white text-slate-700 border border-slate-200'
+                  : 'bg-slate-800 text-slate-300 border border-slate-700'
+              }`}
+            >
+              {modules.reduce((acc, m) => acc + m.lessons.length, 0)}
+            </span>
           </button>
 
           <button
             type="button"
             onClick={() => setConsoleTab('leads')}
-            className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap shrink-0 ${
+            className={`group px-4 py-3.5 rounded-2xl text-sm sm:text-[15px] font-extrabold tracking-tight transition-all cursor-pointer flex items-center justify-between gap-3 whitespace-nowrap ${
               consoleTab === 'leads'
-                ? 'bg-gradient-to-r from-[#102a4e] via-[#163a6b] to-[#b58b42] text-white shadow-xs font-bold'
+                ? 'bg-gradient-to-r from-[#0e2444] via-[#163a6b] to-[#b58b42] text-white shadow-lg ring-1 ring-[#f1bd5b]/40'
                 : theme === 'light'
-                ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+                ? 'bg-slate-50 hover:bg-slate-100 text-slate-800 border border-slate-200/90 hover:border-slate-300'
+                : 'bg-slate-900/70 hover:bg-slate-800 text-slate-200 border border-sky-900/60 hover:border-sky-700'
             }`}
           >
-            <Mail className="w-4 h-4 text-sky-600" />
-            <span>Enquiries & Leads ({leads.length})</span>
+            <span className="flex items-center gap-3 min-w-0">
+              <span
+                className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
+                  consoleTab === 'leads'
+                    ? 'bg-white/15 text-sky-200'
+                    : theme === 'light'
+                    ? 'bg-sky-100 text-sky-700'
+                    : 'bg-sky-500/15 text-sky-300'
+                }`}
+              >
+                <Mail className="w-[18px] h-[18px]" />
+              </span>
+              <span className="truncate">Enquiries & Leads</span>
+            </span>
+            <span
+              className={`px-2.5 py-0.5 rounded-lg text-xs font-black tabular-nums shrink-0 ${
+                consoleTab === 'leads'
+                  ? 'bg-white/20 text-white'
+                  : theme === 'light'
+                  ? 'bg-white text-slate-700 border border-slate-200'
+                  : 'bg-slate-800 text-slate-300 border border-slate-700'
+              }`}
+            >
+              {leads.length}
+            </span>
           </button>
 
           <button
             type="button"
             onClick={() => setConsoleTab('crm')}
-            className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap shrink-0 ${
+            className={`group px-4 py-3.5 rounded-2xl text-sm sm:text-[15px] font-extrabold tracking-tight transition-all cursor-pointer flex items-center justify-between gap-3 whitespace-nowrap ${
               consoleTab === 'crm'
-                ? 'bg-gradient-to-r from-[#102a4e] via-[#163a6b] to-[#b58b42] text-white shadow-xs font-bold'
+                ? 'bg-gradient-to-r from-[#0e2444] via-[#163a6b] to-[#b58b42] text-white shadow-lg ring-1 ring-[#f1bd5b]/40'
                 : theme === 'light'
-                ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+                ? 'bg-slate-50 hover:bg-slate-100 text-slate-800 border border-slate-200/90 hover:border-slate-300'
+                : 'bg-slate-900/70 hover:bg-slate-800 text-slate-200 border border-sky-900/60 hover:border-sky-700'
             }`}
           >
-            <PhoneCall className="w-4 h-4 text-emerald-600" />
-            <span>Student Call CRM ({crmCallLogs.length})</span>
+            <span className="flex items-center gap-3 min-w-0">
+              <span
+                className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
+                  consoleTab === 'crm'
+                    ? 'bg-white/15 text-emerald-300'
+                    : theme === 'light'
+                    ? 'bg-emerald-100 text-emerald-700'
+                    : 'bg-emerald-500/15 text-emerald-300'
+                }`}
+              >
+                <PhoneCall className="w-[18px] h-[18px]" />
+              </span>
+              <span className="truncate">Student Call CRM</span>
+            </span>
+            <span
+              className={`px-2.5 py-0.5 rounded-lg text-xs font-black tabular-nums shrink-0 ${
+                consoleTab === 'crm'
+                  ? 'bg-white/20 text-white'
+                  : theme === 'light'
+                  ? 'bg-white text-slate-700 border border-slate-200'
+                  : 'bg-slate-800 text-slate-300 border border-slate-700'
+              }`}
+            >
+              {crmCallLogs.length}
+            </span>
           </button>
         </div>
 
@@ -670,7 +791,10 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
                 </button>
 
                 <button
-                  onClick={() => setIsAddModalOpen(true)}
+                  onClick={() => {
+                    setAddFormError(null);
+                    setIsAddModalOpen(true);
+                  }}
                   className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#102a4e] to-[#b58b42] hover:opacity-95 text-white text-xs font-bold flex items-center gap-2 shadow-sm transition-all cursor-pointer"
                 >
                   <Plus className="w-4 h-4" />
@@ -792,12 +916,12 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
                         ? 'bg-slate-50 border-slate-200 text-slate-600'
                         : 'bg-[#061220] border-sky-950 text-slate-400'
                     }`}>
-                      <th className="py-4 px-6">Learner Profile</th>
-                      <th className="py-4 px-6">Student Email & Password</th>
-                      <th className="py-4 px-6">Program / Package</th>
-                      <th className="py-4 px-6">Tuition Fee Clearance</th>
-                      <th className="py-4 px-6 text-center">LMS Access Status</th>
-                      <th className="py-4 px-6 text-right">Access Controls</th>
+                      <th className="py-3.5 pl-5 pr-3">Learner Profile</th>
+                      <th className="py-3.5 px-3">Student Email & Password</th>
+                      <th className="py-3.5 px-3">Program / Package</th>
+                      <th className="py-3.5 px-3">Tuition Fee Clearance</th>
+                      <th className="py-3.5 px-3 text-center">LMS Access Status</th>
+                      <th className="py-3.5 pl-3 pr-5 text-right">Access Controls</th>
                     </tr>
                   </thead>
                   <tbody className={`divide-y text-xs ${
@@ -823,9 +947,9 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
                             }`}
                           >
                             {/* Learner Profile */}
-                            <td className="py-4 px-6">
-                              <div className="flex items-center gap-3">
-                                <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#102a4e] to-[#b58b42] flex items-center justify-center text-white font-extrabold text-xs shadow-xs shrink-0">
+                            <td className="py-3.5 pl-5 pr-3">
+                              <div className="flex items-center gap-2.5">
+                                <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#102a4e] to-[#b58b42] flex items-center justify-center text-white font-extrabold text-[11px] shadow-xs shrink-0">
                                   {learner.name
                                     .split(' ')
                                     .map((n) => n[0])
@@ -833,8 +957,8 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
                                     .substring(0, 2)
                                     .toUpperCase()}
                                 </div>
-                                <div>
-                                  <div className={`font-bold transition-colors ${
+                                <div className="min-w-0">
+                                  <div className={`font-bold transition-colors truncate max-w-[140px] ${
                                     theme === 'light' ? 'text-slate-900 group-hover:text-[#b58b42]' : 'text-white group-hover:text-[#f1bd5b]'
                                   }`}>
                                     {learner.name}
@@ -850,13 +974,13 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
                             </td>
 
                             {/* Student Email & Password */}
-                            <td className="py-4 px-6">
-                              <div className={`font-semibold text-xs ${theme === 'light' ? 'text-slate-800' : 'text-slate-200'}`}>
+                            <td className="py-3.5 px-3">
+                              <div className={`font-semibold text-xs break-all max-w-[190px] ${theme === 'light' ? 'text-slate-800' : 'text-slate-200'}`}>
                                 {learner.email}
                               </div>
                               <div className="flex items-center gap-1.5 mt-1.5">
                                 <span className={`text-[10px] font-bold uppercase tracking-wide ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>Pass:</span>
-                                <span className={`font-mono text-xs font-bold px-2 py-0.5 rounded border ${
+                                <span className={`font-mono text-[11px] font-bold px-1.5 py-0.5 rounded border ${
                                   theme === 'light'
                                     ? 'bg-amber-50 text-amber-900 border-amber-300'
                                     : 'bg-amber-950/60 text-amber-300 border-amber-500/40'
@@ -869,7 +993,7 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
                                     navigator.clipboard.writeText(learner.password || 'bnc2026');
                                     onShowToast(`Copied password for ${learner.name}`);
                                   }}
-                                  className={`text-[10px] font-semibold underline cursor-pointer ml-1 ${
+                                  className={`text-[10px] font-semibold underline cursor-pointer ml-0.5 ${
                                     theme === 'light' ? 'text-sky-700 hover:text-sky-900' : 'text-sky-400 hover:text-white'
                                   }`}
                                   title="Copy student password"
@@ -885,13 +1009,13 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
                             </td>
 
                             {/* Package */}
-                            <td className="py-4 px-6">
-                              <div className={`font-semibold ${theme === 'light' ? 'text-slate-800' : 'text-slate-200'}`}>{learner.packageName}</div>
-                              <div className={`text-[10px] ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>{learner.accessDuration}</div>
+                            <td className="py-3.5 px-3 max-w-[175px]">
+                              <div className={`font-semibold leading-snug ${theme === 'light' ? 'text-slate-800' : 'text-slate-200'}`}>{learner.packageName}</div>
+                              <div className={`text-[10px] mt-0.5 ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>{learner.accessDuration}</div>
                             </td>
 
                             {/* Fee Status */}
-                            <td className="py-4 px-6">
+                            <td className="py-3.5 px-3">
                               <div
                                 className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold border ${
                                   isActive
@@ -902,20 +1026,20 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
                                 }`}
                               >
                                 {isActive ? (
-                                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                                 ) : isPending ? (
-                                  <Clock className="w-3.5 h-3.5 text-amber-600" />
+                                  <Clock className="w-3.5 h-3.5 text-amber-600 shrink-0" />
                                 ) : (
-                                  <AlertTriangle className="w-3.5 h-3.5 text-rose-600" />
+                                  <AlertTriangle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
                                 )}
                                 <span>{learner.feeStatus}</span>
                               </div>
                             </td>
 
                             {/* Status Badge */}
-                            <td className="py-4 px-6 text-center">
+                            <td className="py-3.5 px-3 text-center">
                               {isActive ? (
-                                <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-bold border ${
+                                <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold border whitespace-nowrap ${
                                   theme === 'light'
                                     ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
                                     : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
@@ -924,7 +1048,7 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
                                   <span>Active Access</span>
                                 </span>
                               ) : isRevoked ? (
-                                <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-bold border ${
+                                <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold border whitespace-nowrap ${
                                   theme === 'light'
                                     ? 'bg-rose-50 text-rose-800 border-rose-200'
                                     : 'bg-rose-500/20 text-rose-300 border-rose-500/40'
@@ -933,7 +1057,7 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
                                   <span>Access Revoked</span>
                                 </span>
                               ) : (
-                                <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-bold border ${
+                                <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold border whitespace-nowrap ${
                                   theme === 'light'
                                     ? 'bg-amber-50 text-amber-800 border-amber-200'
                                     : 'bg-amber-500/20 text-[#f1bd5b] border-amber-500/40'
@@ -945,66 +1069,92 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
                             </td>
 
                             {/* Actions */}
-                            <td className="py-4 px-6 text-right space-x-2 whitespace-nowrap">
-                              {/* Toggle Grant / Revoke */}
-                              <button
-                                type="button"
-                                onClick={() => handleToggleAccess(learner.id)}
-                                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer border ${
-                                  isActive
-                                    ? theme === 'light'
-                                      ? 'bg-rose-50 hover:bg-rose-100 text-rose-800 border-rose-200 shadow-xs'
-                                      : 'bg-rose-950/80 hover:bg-rose-900 text-rose-200 border-rose-700/60 shadow-xs'
-                                    : theme === 'light'
-                                    ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border-emerald-200 shadow-xs'
-                                    : 'bg-emerald-950/80 hover:bg-emerald-900 text-emerald-200 border-emerald-700/60 shadow-xs'
-                                }`}
-                                title={isActive ? 'Click to revoke LMS access' : 'Click to grant LMS access'}
-                              >
-                                {isActive ? 'Revoke Access' : 'Grant Access'}
-                              </button>
+                            <td className="py-3.5 pl-3 pr-5 text-right">
+                              <div className="inline-flex flex-wrap items-center justify-end gap-1.5">
+                                {confirmDeleteLearnerId === learner.id ? (
+                                  <div className="inline-flex items-center gap-1.5">
+                                    <button
+                                      type="button"
+                                      onClick={() => handleDeleteLearner(learner.id, learner.name)}
+                                      className="px-3 py-1 rounded-full bg-rose-600 hover:bg-rose-700 text-white text-[11px] font-bold cursor-pointer shadow-xs transition-colors whitespace-nowrap"
+                                    >
+                                      Confirm Delete
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => setConfirmDeleteLearnerId(null)}
+                                      className={`px-3 py-1 rounded-full text-[11px] font-semibold cursor-pointer transition-colors whitespace-nowrap ${
+                                        theme === 'light'
+                                          ? 'bg-slate-200 hover:bg-slate-300 text-slate-700'
+                                          : 'bg-slate-700 hover:bg-slate-600 text-slate-200'
+                                      }`}
+                                    >
+                                      Cancel
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <>
+                                    {/* Toggle Grant / Revoke */}
+                                    <button
+                                      type="button"
+                                      onClick={() => handleToggleAccess(learner.id)}
+                                      className={`px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-all cursor-pointer border whitespace-nowrap ${
+                                        isActive
+                                          ? theme === 'light'
+                                            ? 'bg-rose-50 hover:bg-rose-100 text-rose-800 border-rose-200 shadow-xs'
+                                            : 'bg-rose-950/80 hover:bg-rose-900 text-rose-200 border-rose-700/60 shadow-xs'
+                                          : theme === 'light'
+                                          ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border-emerald-200 shadow-xs'
+                                          : 'bg-emerald-950/80 hover:bg-emerald-900 text-emerald-200 border-emerald-700/60 shadow-xs'
+                                      }`}
+                                      title={isActive ? 'Click to revoke LMS access' : 'Click to grant LMS access'}
+                                    >
+                                      {isActive ? 'Revoke Access' : 'Grant Access'}
+                                    </button>
 
-                              {/* Login As Student (Preview) */}
-                              <button
-                                type="button"
-                                onClick={() => onSwitchToStudentView(learner)}
-                                className={`p-1.5 rounded-lg border transition-colors cursor-pointer ${
-                                  theme === 'light'
-                                    ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
-                                    : 'bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border-transparent'
-                                }`}
-                                title="Preview LMS as this student"
-                              >
-                                <BookOpen className="w-4 h-4 text-sky-600" />
-                              </button>
+                                    {/* Login As Student (Preview) */}
+                                    <button
+                                      type="button"
+                                      onClick={() => onSwitchToStudentView(learner)}
+                                      className={`p-1.5 rounded-lg border transition-colors cursor-pointer ${
+                                        theme === 'light'
+                                          ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
+                                          : 'bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border-transparent'
+                                      }`}
+                                      title="Preview LMS as this student"
+                                    >
+                                      <BookOpen className="w-4 h-4 text-sky-600" />
+                                    </button>
 
-                              {/* Edit Details */}
-                              <button
-                                type="button"
-                                onClick={() => setEditingLearner(learner)}
-                                className={`p-1.5 rounded-lg border transition-colors cursor-pointer ${
-                                  theme === 'light'
-                                    ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
-                                    : 'bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border-transparent'
-                                }`}
-                                title="Edit student package & notes"
-                              >
-                                <Edit3 className="w-4 h-4 text-[#b58b42]" />
-                              </button>
+                                    {/* Edit Details */}
+                                    <button
+                                      type="button"
+                                      onClick={() => setEditingLearner(learner)}
+                                      className={`p-1.5 rounded-lg border transition-colors cursor-pointer ${
+                                        theme === 'light'
+                                          ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
+                                          : 'bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border-transparent'
+                                      }`}
+                                      title="Edit student package & notes"
+                                    >
+                                      <Edit3 className="w-4 h-4 text-[#b58b42]" />
+                                    </button>
 
-                              {/* Delete */}
-                              <button
-                                type="button"
-                                onClick={() => handleDeleteLearner(learner.id, learner.name)}
-                                className={`p-1.5 rounded-lg border transition-colors cursor-pointer ${
-                                  theme === 'light'
-                                    ? 'bg-slate-100 hover:bg-rose-50 text-slate-500 hover:text-rose-700 border-slate-200'
-                                    : 'bg-slate-800 hover:bg-rose-950 text-slate-400 hover:text-rose-400 border-transparent'
-                                }`}
-                                title="Remove from roster"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => setConfirmDeleteLearnerId(learner.id)}
+                                      className={`p-1.5 rounded-lg border transition-colors cursor-pointer ${
+                                        theme === 'light'
+                                          ? 'bg-slate-100 hover:bg-rose-50 text-slate-500 hover:text-rose-700 border-slate-200'
+                                          : 'bg-slate-800 hover:bg-rose-950 text-slate-400 hover:text-rose-400 border-transparent'
+                                      }`}
+                                      title="Remove from roster"
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </button>
+                                  </>
+                                )}
+                              </div>
                             </td>
                           </tr>
                         );
@@ -1016,6 +1166,15 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
             </div>
           </>
         )}
+
+    {consoleTab === 'videos' && (
+      <CurriculumEditor
+        modules={modules}
+        onUpdateModules={onUpdateModules}
+        onShowToast={onShowToast}
+        theme={theme}
+      />
+    )}
 
     {consoleTab === 'crm' && (
       <CrmCallLogEditor
@@ -1101,12 +1260,12 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
                     ? 'border-slate-200 bg-slate-50 text-slate-500'
                     : 'border-sky-950 bg-slate-900/90 text-slate-400'
                 }`}>
-                  <th className="py-3.5 px-6">Candidate</th>
-                  <th className="py-3.5 px-6">Contact Channels</th>
-                  <th className="py-3.5 px-6">Qualification & Program</th>
-                  <th className="py-3.5 px-6">Source / Brochure</th>
-                  <th className="py-3.5 px-6">Submitted</th>
-                  <th className="py-3.5 px-6 text-right">Actions</th>
+                  <th className="py-3.5 pl-5 pr-3">Candidate</th>
+                  <th className="py-3.5 px-3">Contact Channels</th>
+                  <th className="py-3.5 px-3">Qualification & Program</th>
+                  <th className="py-3.5 px-3">Source / Brochure</th>
+                  <th className="py-3.5 px-3">Submitted</th>
+                  <th className="py-3.5 pl-3 pr-5 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className={`divide-y text-xs ${
@@ -1124,7 +1283,7 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
                       theme === 'light' ? 'hover:bg-slate-50' : 'hover:bg-slate-900/50'
                     }`}>
                       {/* Name */}
-                      <td className="py-4 px-6">
+                      <td className="py-3.5 pl-5 pr-3">
                         <div className={`font-bold transition-colors ${
                           theme === 'light'
                             ? 'text-slate-900 group-hover:text-sky-800'
@@ -1142,8 +1301,8 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
                       </td>
 
                       {/* Contact */}
-                      <td className="py-4 px-6 space-y-1">
-                        <div className={`flex items-center gap-1.5 font-mono ${theme === 'light' ? 'text-slate-700' : 'text-slate-300'}`}>
+                      <td className="py-3.5 px-3 space-y-1">
+                        <div className={`flex items-center gap-1.5 font-mono break-all max-w-[200px] ${theme === 'light' ? 'text-slate-700' : 'text-slate-300'}`}>
                           <Mail className="w-3.5 h-3.5 text-sky-600 shrink-0" />
                           <a href={`mailto:${lead.email}`} className="hover:text-[#b58b42] transition-colors">
                             {lead.email}
@@ -1158,13 +1317,13 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
                       </td>
 
                       {/* Qualification & Program */}
-                      <td className="py-4 px-6">
+                      <td className="py-3.5 px-3 max-w-[180px]">
                         <div className={`font-semibold ${theme === 'light' ? 'text-slate-900' : 'text-slate-200'}`}>{lead.program || 'All Packages'}</div>
                         <div className={`text-[11px] mt-0.5 ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>{lead.qualification || "Bachelor's Degree"}</div>
                       </td>
 
                       {/* Source & Brochure */}
-                      <td className="py-4 px-6">
+                      <td className="py-3.5 px-3">
                         <div className={`text-[11px] ${theme === 'light' ? 'text-slate-700' : 'text-slate-300'}`}>{lead.source}</div>
                         {lead.brochureDownloaded && (
                           <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 mt-1">
@@ -1175,65 +1334,95 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
                       </td>
 
                       {/* Timestamp */}
-                      <td className={`py-4 px-6 text-[11px] ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>
+                      <td className={`py-3.5 px-3 text-[11px] ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>
                         {lead.submittedAt}
                       </td>
 
                       {/* Actions */}
-                      <td className="py-4 px-6 text-right space-x-2">
-                        <a
-                          href={`https://wa.me/${(lead.phone || '').replace(/[^0-9]/g, '')}?text=${encodeURIComponent(
-                            `Hello ${lead.name}, thank you for your enquiry with BNC ELEVATE CIA coaching! CA Gurvinder Pal Singh's admissions desk is reaching out regarding your syllabus and cohort options.`
-                          )}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className={`inline-flex p-1.5 rounded-lg border transition-colors ${
-                            theme === 'light'
-                              ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200'
-                              : 'bg-emerald-950 hover:bg-emerald-900 text-emerald-300 border-emerald-700/50'
-                          }`}
-                          title="Chat on WhatsApp"
-                        >
-                          <MessageSquare className="w-4 h-4" />
-                        </a>
-                        <a
-                          href={`mailto:${lead.email}?subject=${encodeURIComponent(`[BNC ELEVATE] CIA Coaching Guidance for ${lead.name}`)}&body=${encodeURIComponent(
-                            `Dear ${lead.name},\n\nThank you for reaching out to BNC ELEVATE.\n\nWe have received your enquiry regarding ${lead.program || 'our CIA Coaching Program'}.\n\nPlease let us know your preferred time for a 1-on-1 counseling call with CA Gurvinder Pal Singh.\n\nWarm regards,\nCA Gurvinder Pal Singh\nDirector & Senior Faculty, BNC Global\ninfo@bncglobal.in | +91 63960 18626`
-                          )}`}
-                          className={`inline-flex p-1.5 rounded-lg border transition-colors ${
-                            theme === 'light'
-                              ? 'bg-sky-50 hover:bg-sky-100 text-sky-700 border-sky-200'
-                              : 'bg-sky-950 hover:bg-sky-900 text-sky-300 border-sky-700/50'
-                          }`}
-                          title="Email Candidate"
-                        >
-                          <Mail className="w-4 h-4" />
-                        </a>
-                        <button
-                          type="button"
-                          onClick={() => handleConvertLeadToLearner(lead)}
-                          className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border text-xs font-bold transition-colors cursor-pointer ${
-                            theme === 'light'
-                              ? 'bg-amber-50 hover:bg-amber-100 text-[#8d6928] border-amber-300'
-                              : 'bg-[#b58b42]/20 hover:bg-[#b58b42]/30 text-[#f1bd5b] border-[#b58b42]/50'
-                          }`}
-                          title="Convert to Enrolled Learner"
-                        >
-                          <Plus className="w-3.5 h-3.5" />
-                          <span className="hidden lg:inline">Enroll</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteLead(lead.id)}
-                          className={`inline-flex p-1.5 rounded-lg transition-colors cursor-pointer ${
-                            theme === 'light'
-                              ? 'bg-slate-100 hover:bg-rose-50 text-slate-500 hover:text-rose-600'
-                              : 'bg-slate-800 hover:bg-rose-950 text-slate-400 hover:text-rose-400'
-                          }`}
-                          title="Delete Lead"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                      <td className="py-3.5 pl-3 pr-5 text-right">
+                        <div className="inline-flex flex-wrap items-center justify-end gap-1.5">
+                          {confirmDeleteLeadId === lead.id ? (
+                            <div className="inline-flex items-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  handleDeleteLead(lead.id);
+                                  setConfirmDeleteLeadId(null);
+                                }}
+                                className="px-3 py-1 rounded-full bg-rose-600 hover:bg-rose-700 text-white text-[11px] font-bold cursor-pointer shadow-xs transition-colors whitespace-nowrap"
+                              >
+                                Confirm Delete
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setConfirmDeleteLeadId(null)}
+                                className={`px-3 py-1 rounded-full text-[11px] font-semibold cursor-pointer transition-colors whitespace-nowrap ${
+                                  theme === 'light'
+                                    ? 'bg-slate-200 hover:bg-slate-300 text-slate-700'
+                                    : 'bg-slate-700 hover:bg-slate-600 text-slate-200'
+                                }`}
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          ) : (
+                            <>
+                              <a
+                                href={`https://wa.me/${(lead.phone || '').replace(/[^0-9]/g, '')}?text=${encodeURIComponent(
+                                  `Hello ${lead.name}, thank you for your enquiry with BNC ELEVATE CIA coaching! CA Gurvinder Pal Singh's admissions desk is reaching out regarding your syllabus and cohort options.`
+                                )}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className={`inline-flex p-1.5 rounded-lg border transition-colors ${
+                                  theme === 'light'
+                                    ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200'
+                                    : 'bg-emerald-950 hover:bg-emerald-900 text-emerald-300 border-emerald-700/50'
+                                }`}
+                                title="Chat on WhatsApp"
+                              >
+                                <MessageSquare className="w-4 h-4" />
+                              </a>
+                              <a
+                                href={`mailto:${lead.email}?subject=${encodeURIComponent(`[BNC ELEVATE] CIA Coaching Guidance for ${lead.name}`)}&body=${encodeURIComponent(
+                                  `Dear ${lead.name},\n\nThank you for reaching out to BNC ELEVATE.\n\nWe have received your enquiry regarding ${lead.program || 'our CIA Coaching Program'}.\n\nPlease let us know your preferred time for a 1-on-1 counseling call with CA Gurvinder Pal Singh.\n\nWarm regards,\nCA Gurvinder Pal Singh\nDirector & Senior Faculty, BNC Global\ninfo@bncglobal.in | +91 63960 18626`
+                                )}`}
+                                className={`inline-flex p-1.5 rounded-lg border transition-colors ${
+                                  theme === 'light'
+                                    ? 'bg-sky-50 hover:bg-sky-100 text-sky-700 border-sky-200'
+                                    : 'bg-sky-950 hover:bg-sky-900 text-sky-300 border-sky-700/50'
+                                }`}
+                                title="Email Candidate"
+                              >
+                                <Mail className="w-4 h-4" />
+                              </a>
+                              <button
+                                type="button"
+                                onClick={() => handleConvertLeadToLearner(lead)}
+                                className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border text-xs font-bold transition-colors cursor-pointer ${
+                                  theme === 'light'
+                                    ? 'bg-amber-50 hover:bg-amber-100 text-[#8d6928] border-amber-300'
+                                    : 'bg-[#b58b42]/20 hover:bg-[#b58b42]/30 text-[#f1bd5b] border-[#b58b42]/50'
+                                }`}
+                                title="Convert to Enrolled Learner"
+                              >
+                                <Plus className="w-3.5 h-3.5" />
+                                <span className="hidden lg:inline">Enroll</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setConfirmDeleteLeadId(lead.id)}
+                                className={`inline-flex p-1.5 rounded-lg transition-colors cursor-pointer ${
+                                  theme === 'light'
+                                    ? 'bg-slate-100 hover:bg-rose-50 text-slate-500 hover:text-rose-600'
+                                    : 'bg-slate-800 hover:bg-rose-950 text-slate-400 hover:text-rose-400'
+                                }`}
+                                title="Delete Lead"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -1296,6 +1485,12 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
             </div>
 
             <form onSubmit={handleAddLearner} className="p-6 space-y-4 text-xs max-h-[80vh] overflow-y-auto">
+              {addFormError && (
+                <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 font-semibold flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
+                  <span>{addFormError}</span>
+                </div>
+              )}
               <div>
                 <label className={`block font-semibold mb-1 ${theme === 'light' ? 'text-slate-700' : 'text-slate-300'}`}>
                   Student Full Name *

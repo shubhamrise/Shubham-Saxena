@@ -29,6 +29,7 @@ export const StudentDoubtsEditor: React.FC<StudentDoubtsEditorProps> = ({
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'answered'>('all');
   const [activeReplyId, setActiveReplyId] = useState<string | null>(null);
   const [replyText, setReplyText] = useState('');
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const handleStartReply = (item: StudentDoubtItem) => {
     setActiveReplyId(item.id);
@@ -37,7 +38,7 @@ export const StudentDoubtsEditor: React.FC<StudentDoubtsEditorProps> = ({
 
   const handleSaveReply = (id: string) => {
     if (!replyText.trim()) {
-      alert('Please enter a response.');
+      onShowToast('Please enter a response before submitting.');
       return;
     }
 
@@ -57,9 +58,9 @@ export const StudentDoubtsEditor: React.FC<StudentDoubtsEditorProps> = ({
   };
 
   const handleDelete = (id: string) => {
-    if (!confirm('Remove this student doubt entry?')) return;
     const updated = doubts.filter((d) => d.id !== id);
     onUpdateDoubts(updated);
+    setConfirmDeleteId(null);
     onShowToast('✓ Doubt entry removed.');
   };
 
@@ -166,13 +167,33 @@ export const StudentDoubtsEditor: React.FC<StudentDoubtsEditorProps> = ({
                   </span>
                 </div>
 
-                <button
-                  onClick={() => handleDelete(item.id)}
-                  className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
-                  title="Delete Entry"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
+                {confirmDeleteId === item.id ? (
+                  <div className="inline-flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(item.id)}
+                      className="px-3 py-1 rounded-full bg-rose-600 hover:bg-rose-700 text-white text-[11px] font-bold cursor-pointer shadow-xs transition-colors whitespace-nowrap"
+                    >
+                      Confirm Delete
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setConfirmDeleteId(null)}
+                      className="px-3 py-1 rounded-full bg-slate-200 hover:bg-slate-300 text-slate-700 text-[11px] font-semibold cursor-pointer transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setConfirmDeleteId(item.id)}
+                    className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                    title="Delete Entry"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                )}
               </div>
 
               {/* Student Query Text */}

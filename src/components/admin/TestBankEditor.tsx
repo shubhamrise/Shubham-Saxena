@@ -29,6 +29,7 @@ export const TestBankEditor: React.FC<TestBankEditorProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [editingQuestion, setEditingQuestion] = useState<LmsMcqQuestion | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   // Form states
   const [formPartId, setFormPartId] = useState<'part-1' | 'part-2' | 'part-3'>('part-1');
@@ -123,11 +124,10 @@ export const TestBankEditor: React.FC<TestBankEditorProps> = ({
   };
 
   const handleDeleteQuestion = (id: string) => {
-    if (confirm('Are you sure you want to delete this question from the test bank?')) {
-      const updated = questions.filter((q) => q.id !== id);
-      onUpdateQuestions(updated);
-      onShowToast('Question removed from test bank.');
-    }
+    const updated = questions.filter((q) => q.id !== id);
+    onUpdateQuestions(updated);
+    setConfirmDeleteId(null);
+    onShowToast('Question removed from test bank.');
   };
 
   const filteredQuestions = questions.filter((q) => {
@@ -281,18 +281,41 @@ export const TestBankEditor: React.FC<TestBankEditorProps> = ({
                     <Edit3 className="w-3.5 h-3.5 text-[#b58b42]" />
                     <span>Edit MCQ</span>
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteQuestion(q.id)}
-                    className={`p-1.5 rounded-lg transition-colors cursor-pointer border ${
-                      theme === 'light'
-                        ? 'bg-slate-100 hover:bg-rose-50 text-slate-500 hover:text-rose-600 border-slate-300'
-                        : 'bg-slate-800 hover:bg-rose-950 text-slate-400 hover:text-rose-300 border-slate-700'
-                    }`}
-                    title="Delete question"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  {confirmDeleteId === q.id ? (
+                    <div className="inline-flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteQuestion(q.id)}
+                        className="px-3 py-1 rounded-full bg-rose-600 hover:bg-rose-700 text-white text-[11px] font-bold cursor-pointer shadow-xs transition-colors whitespace-nowrap"
+                      >
+                        Confirm Delete
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setConfirmDeleteId(null)}
+                        className={`px-3 py-1 rounded-full text-[11px] font-semibold cursor-pointer transition-colors ${
+                          theme === 'light'
+                            ? 'bg-slate-200 hover:bg-slate-300 text-slate-700'
+                            : 'bg-slate-700 hover:bg-slate-600 text-slate-200'
+                        }`}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setConfirmDeleteId(q.id)}
+                      className={`p-1.5 rounded-lg transition-colors cursor-pointer border ${
+                        theme === 'light'
+                          ? 'bg-slate-100 hover:bg-rose-50 text-slate-500 hover:text-rose-600 border-slate-300'
+                          : 'bg-slate-800 hover:bg-rose-950 text-slate-400 hover:text-rose-300 border-slate-700'
+                      }`}
+                      title="Delete question"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
               </div>
 

@@ -12,6 +12,10 @@ export interface LmsLesson {
   handoutSize: string;
   sampleTranscript: string;
   videoPoster: string;
+  videoUrl?: string;
+  videoSourceType?: 'upload' | 'url';
+  videoFileName?: string;
+  videoFileSize?: string;
 }
 
 export interface LmsModule {

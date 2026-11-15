@@ -27,6 +27,7 @@ export const LiveClassesEditor: React.FC<LiveClassesEditorProps> = ({
 }) => {
   const [editingClass, setEditingClass] = useState<LiveClassItem | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   // Form fields
   const [formTitle, setFormTitle] = useState('');
@@ -107,11 +108,10 @@ export const LiveClassesEditor: React.FC<LiveClassesEditorProps> = ({
   };
 
   const handleDeleteClass = (id: string, title: string) => {
-    if (confirm(`Are you sure you want to cancel and remove live class "${title}"?`)) {
-      const updated = liveClasses.filter((c) => c.id !== id);
-      onUpdateLiveClasses(updated);
-      onShowToast(`Removed live class "${title}"`);
-    }
+    const updated = liveClasses.filter((c) => c.id !== id);
+    onUpdateLiveClasses(updated);
+    setConfirmDeleteId(null);
+    onShowToast(`Removed live class "${title}"`);
   };
 
   return (
@@ -191,18 +191,41 @@ export const LiveClassesEditor: React.FC<LiveClassesEditorProps> = ({
                   >
                     <Edit3 className="w-3.5 h-3.5 text-[#b58b42]" />
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteClass(item.id, item.title)}
-                    className={`p-1.5 rounded-lg border transition-colors cursor-pointer ${
-                      theme === 'light'
-                        ? 'bg-slate-100 hover:bg-rose-50 text-slate-500 hover:text-rose-600 border-slate-300'
-                        : 'bg-slate-800 hover:bg-rose-950 text-slate-400 hover:text-rose-300 border-slate-700'
-                    }`}
-                    title="Delete session"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  {confirmDeleteId === item.id ? (
+                    <div className="inline-flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteClass(item.id, item.title)}
+                        className="px-3 py-1 rounded-full bg-rose-600 hover:bg-rose-700 text-white text-[11px] font-bold cursor-pointer shadow-xs transition-colors whitespace-nowrap"
+                      >
+                        Confirm Delete
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setConfirmDeleteId(null)}
+                        className={`px-3 py-1 rounded-full text-[11px] font-semibold cursor-pointer transition-colors ${
+                          theme === 'light'
+                            ? 'bg-slate-200 hover:bg-slate-300 text-slate-700'
+                            : 'bg-slate-700 hover:bg-slate-600 text-slate-200'
+                        }`}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setConfirmDeleteId(item.id)}
+                      className={`p-1.5 rounded-lg border transition-colors cursor-pointer ${
+                        theme === 'light'
+                          ? 'bg-slate-100 hover:bg-rose-50 text-slate-500 hover:text-rose-600 border-slate-300'
+                          : 'bg-slate-800 hover:bg-rose-950 text-slate-400 hover:text-rose-300 border-slate-700'
+                      }`}
+                      title="Delete session"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
               </div>
 
