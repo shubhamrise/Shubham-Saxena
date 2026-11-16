@@ -131,9 +131,9 @@ export const Navbar: React.FC<NavbarProps> = ({
             <div className="flex items-center shrink-0">
               <a href="#" className="inline-block group py-1" title="BNC ELEVATE - CIA Portal">
                 <img
-                  src="/assets/aistudio/bnc_elevate_logo_transparent__1__4c50f8bb.png"
+                  src="/assets/aistudio/5345cca2-44dd-42ae-bbfa-151e5c4a1c5b_62b142c3.png"
                   alt="BNC ELEVATE"
-                  className="h-12 sm:h-14 md:h-16 lg:h-18 w-auto max-h-[72px] object-contain transition-transform duration-300 group-hover:scale-105 drop-shadow-xs"
+                  className="h-12 sm:h-14 md:h-16 w-auto max-h-[68px] object-contain transition-transform duration-300 group-hover:scale-105 drop-shadow-xs"
                 />
               </a>
             </div>

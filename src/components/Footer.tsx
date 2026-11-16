@@ -48,7 +48,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenCheckout, onOpenInquiry, o
               <a href="#" className="inline-block py-1 group" title="BNC ELEVATE">
                 <div className="px-3 py-1.5 rounded-xl bg-white shadow-md inline-flex items-center">
                   <img
-                    src="/assets/aistudio/bnc_elevate_logo_transparent__1__4c50f8bb.png"
+                    src="/assets/aistudio/5345cca2-44dd-42ae-bbfa-151e5c4a1c5b_62b142c3.png"
                     alt="BNC ELEVATE"
                     className="h-10 sm:h-12 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
                   />
