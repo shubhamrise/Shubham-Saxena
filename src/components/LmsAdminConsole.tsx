@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ManagedLearner, LmsAdminUser, EnquiryLead, CrmCallLog } from '../types';
+import { ManagedLearner, LmsAdminUser, EnquiryLead, CrmCallLog, CampaignSpreadsheetBatch } from '../types';
 import {
   ShieldCheck,
   UserCheck,
@@ -12,9 +12,7 @@ import {
   Clock,
   ArrowLeft,
   LogOut,
-  Sparkles,
   BookOpen,
-  Filter,
   X,
   AlertTriangle,
   Mail,
@@ -25,11 +23,13 @@ import {
   MessageSquare,
   Sun,
   Moon,
-  Video
+  Video,
+  Users
 } from 'lucide-react';
 import { LmsModule } from '../data/lmsData';
 import { CrmCallLogEditor } from './admin/CrmCallLogEditor';
 import { CurriculumEditor } from './admin/CurriculumEditor';
+import { CampaignFormsEditor } from './admin/CampaignFormsEditor';
 
 const INITIAL_CRM_CALL_LOGS: CrmCallLog[] = [
   {
@@ -84,8 +84,10 @@ const INITIAL_CRM_CALL_LOGS: CrmCallLog[] = [
 export type AdminConsoleTab =
   | 'learners'
   | 'videos'
+  | 'enquiries'
   | 'leads'
-  | 'crm';
+  | 'crm'
+  | 'campaigns';
 
 interface LmsAdminConsoleProps {
   adminUser: LmsAdminUser;
@@ -129,11 +131,14 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
 
   const [consoleTab, setConsoleTab] = useState<AdminConsoleTab>('crm');
   const [searchTerm, setSearchTerm] = useState('');
+  const [enquirySearchTerm, setEnquirySearchTerm] = useState('');
   const [leadSearchTerm, setLeadSearchTerm] = useState('');
+  const [leadSourceOption, setLeadSourceOption] = useState<'website' | 'campaigns'>('website');
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'revoked' | 'pending'>('all');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingLearner, setEditingLearner] = useState<ManagedLearner | null>(null);
   const [confirmDeleteLearnerId, setConfirmDeleteLearnerId] = useState<string | null>(null);
+  const [confirmDeleteEnquiryId, setConfirmDeleteEnquiryId] = useState<string | null>(null);
   const [confirmDeleteLeadId, setConfirmDeleteLeadId] = useState<string | null>(null);
   const [addFormError, setAddFormError] = useState<string | null>(null);
 
@@ -155,11 +160,37 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
     }
   };
 
-  // Unified leads state populated from website inquiries
-  const [leads, setLeads] = useState<EnquiryLead[]>(() => {
+  // Campaign Google Forms Excel uploads state
+  const [campaignBatches, setCampaignBatches] = useState<CampaignSpreadsheetBatch[]>(() => {
+    try {
+      const saved = localStorage.getItem('bnc_campaign_form_uploads');
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return [];
+  });
+
+  const handleUpdateCampaignBatches = (updated: CampaignSpreadsheetBatch[]) => {
+    setCampaignBatches(updated);
+    try {
+      localStorage.setItem('bnc_campaign_form_uploads', JSON.stringify(updated));
+    } catch (e) {
+      console.warn(e);
+    }
+  };
+
+  const isCampaignSource = (item: EnquiryLead): boolean =>
+    item.id.startsWith('lead-cmp-') || /^Email Campaign/i.test(item.source || '');
+
+  // Website Enquiries ONLY (Hero, Brochure Modal, Faculty Consultation Desk, Website Inquiry forms)
+  const [enquiries, setEnquiries] = useState<EnquiryLead[]>(() => {
     try {
       const stored = localStorage.getItem('bnc_all_leads');
-      if (stored) return JSON.parse(stored);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          return parsed.filter((item: EnquiryLead) => !isCampaignSource(item));
+        }
+      }
       const hero = JSON.parse(localStorage.getItem('bnc_hero_enquiries') || '[]');
       const brochure = JSON.parse(localStorage.getItem('bnc_brochure_downloads') || '[]');
       const consult = JSON.parse(localStorage.getItem('bnc_inquiries') || '[]');
@@ -243,21 +274,117 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
     }
   });
 
-  const handleDeleteLead = (id: string) => {
-    const updated = leads.filter((l) => l.id !== id);
-    setLeads(updated);
+  // Leads Directory ONLY (Email Campaign imports & Leads promoted from Website Enquiries)
+  const [leads, setLeads] = useState<EnquiryLead[]>(() => {
+    try {
+      const savedDir = localStorage.getItem('bnc_leads_directory');
+      if (savedDir) return JSON.parse(savedDir);
+
+      // Migrate any previously stored campaign leads out of bnc_all_leads
+      const oldAll = JSON.parse(localStorage.getItem('bnc_all_leads') || '[]');
+      if (Array.isArray(oldAll)) {
+        return oldAll.filter((item: EnquiryLead) => isCampaignSource(item));
+      }
+      return [];
+    } catch {
+      return [];
+    }
+  });
+
+  const handleDeleteEnquiry = (id: string) => {
+    const updated = enquiries.filter((e) => e.id !== id);
+    setEnquiries(updated);
     try {
       localStorage.setItem('bnc_all_leads', JSON.stringify(updated));
     } catch (e) {
       console.warn(e);
     }
-    onShowToast('Lead removed from inquiries log');
+    onShowToast('Website enquiry removed from log');
   };
 
-  const handleExportLeadsCsv = () => {
+  const handleDeleteLead = (id: string) => {
+    const updated = leads.filter((l) => l.id !== id);
+    setLeads(updated);
+    try {
+      localStorage.setItem('bnc_leads_directory', JSON.stringify(updated));
+    } catch (e) {
+      console.warn(e);
+    }
+    onShowToast('Lead removed from leads directory');
+  };
+
+  const handleAddEnquiryToLeads = (enquiry: EnquiryLead) => {
+    const emailKey = (enquiry.email || '').trim().toLowerCase();
+    const phoneKey = (enquiry.phone || '').replace(/[^0-9]/g, '').slice(-10);
+    const alreadyExists = leads.some((l) => {
+      const eMatch = emailKey && l.email.trim().toLowerCase() === emailKey;
+      const pMatch =
+        phoneKey.length >= 8 &&
+        (l.phone || '').replace(/[^0-9]/g, '').slice(-10) === phoneKey;
+      return eMatch || pMatch;
+    });
+
+    if (alreadyExists) {
+      onShowToast(`${enquiry.name} is already in Website Leads`);
+      return;
+    }
+
+    const promotedLead: EnquiryLead = {
+      ...enquiry,
+      id: `lead-web-${Date.now()}`,
+      source: `Website Enquiry · ${enquiry.source}`,
+    };
+    const updated = [promotedLead, ...leads];
+    setLeads(updated);
+    try {
+      localStorage.setItem('bnc_leads_directory', JSON.stringify(updated));
+    } catch (e) {
+      console.warn(e);
+    }
+    onShowToast(`Added ${enquiry.name} to Website Leads`);
+  };
+
+  const handleImportCampaignLeads = (incomingLeads: EnquiryLead[]): number => {
+    const existingEmails = new Set(
+      leads.map((l) => l.email.trim().toLowerCase()).filter(Boolean)
+    );
+    const existingPhones = new Set(
+      leads
+        .map((l) => (l.phone || '').replace(/[^0-9]/g, '').slice(-10))
+        .filter((p) => p.length >= 8)
+    );
+
+    const freshLeads: EnquiryLead[] = [];
+    incomingLeads.forEach((candidate) => {
+      const emailKey = candidate.email.trim().toLowerCase();
+      const phoneKey = (candidate.phone || '').replace(/[^0-9]/g, '').slice(-10);
+      if (emailKey && emailKey !== 'no-email@campaign.local' && existingEmails.has(emailKey)) {
+        return;
+      }
+      if (phoneKey.length >= 8 && existingPhones.has(phoneKey)) {
+        return;
+      }
+      if (emailKey) existingEmails.add(emailKey);
+      if (phoneKey.length >= 8) existingPhones.add(phoneKey);
+      freshLeads.push(candidate);
+    });
+
+    if (freshLeads.length > 0) {
+      const updated = [...freshLeads, ...leads];
+      setLeads(updated);
+      try {
+        localStorage.setItem('bnc_leads_directory', JSON.stringify(updated));
+      } catch (e) {
+        console.warn(e);
+      }
+    }
+    return freshLeads.length;
+  };
+
+  const handleExportEnquiriesCsv = () => {
     try {
       const headers = ['Name', 'Email', 'Phone', 'Qualification', 'Program', 'Source', 'Brochure Downloaded', 'Submitted At'];
-      const rows = leads.map((l) => [
+      const rows = enquiries.map((l) => [
         `"${l.name}"`,
         `"${l.email}"`,
         `"${l.phone}"`,
@@ -271,15 +398,16 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
       const encodedUri = encodeURI(csvContent);
       const link = document.createElement('a');
       link.setAttribute('href', encodedUri);
-      link.setAttribute('download', `BNC_Global_Enquiries_Leads_${new Date().toISOString().slice(0, 10)}.csv`);
+      link.setAttribute('download', `BNC_Website_Enquiries_${new Date().toISOString().slice(0, 10)}.csv`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      onShowToast('✓ Exported leads to CSV successfully!');
+      onShowToast('Exported Website Enquiries to CSV successfully!');
     } catch (e) {
       console.warn('CSV export error', e);
     }
   };
+
 
   const handleConvertLeadToLearner = (lead: EnquiryLead) => {
     setNewName(lead.name);
@@ -321,8 +449,40 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
     return matchesSearch && l.status === filterStatus;
   });
 
+  // Website Enquiries Filtering
+  const filteredEnquiries = enquiries.filter((l) => {
+    const term = enquirySearchTerm.toLowerCase();
+    return (
+      l.name.toLowerCase().includes(term) ||
+      l.email.toLowerCase().includes(term) ||
+      l.phone.toLowerCase().includes(term) ||
+      (l.program || '').toLowerCase().includes(term) ||
+      (l.qualification || '').toLowerCase().includes(term) ||
+      l.source.toLowerCase().includes(term)
+    );
+  });
+
+  // Leads grouped into the two options: Website Enquiries (promoted) vs Email Campaigns
+  const emailCampaignLeadsList = leads.filter((l) => isCampaignSource(l));
+  const websiteLeadsList = leads.filter((l) => !isCampaignSource(l));
+
+  const isEnquiryInWebsiteLeads = (enquiry: EnquiryLead): boolean => {
+    const emailKey = (enquiry.email || '').trim().toLowerCase();
+    const phoneKey = (enquiry.phone || '').replace(/[^0-9]/g, '').slice(-10);
+    return websiteLeadsList.some((l) => {
+      const eMatch = emailKey && l.email.trim().toLowerCase() === emailKey;
+      const pMatch =
+        phoneKey.length >= 8 &&
+        (l.phone || '').replace(/[^0-9]/g, '').slice(-10) === phoneKey;
+      return eMatch || pMatch;
+    });
+  };
+
+  const activeLeadsPool =
+    leadSourceOption === 'website' ? websiteLeadsList : emailCampaignLeadsList;
+
   // Leads Filtering
-  const filteredLeads = leads.filter((l) => {
+  const filteredLeads = activeLeadsPool.filter((l) => {
     const term = leadSearchTerm.toLowerCase();
     return (
       l.name.toLowerCase().includes(term) ||
@@ -448,6 +608,14 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
         const emailStr = String(ord.studentEmail || '').trim().toLowerCase();
 
         if (orderIdStr && !updated.some((l) => l.orderId === orderIdStr || l.email === emailStr)) {
+          const isPending = ord.paymentStatus === 'Pending Verification';
+          const durationMap: Record<string, string> = {
+            basic: '18 Months Active Access',
+            premium: '18 Months Active Access',
+            'premium-live': '18 Months Active Access',
+            'premium-plus': '24 Months Extended Access',
+            elite: '36 Months + Lifetime Alumni',
+          };
           updated.push({
             id: `ord-${ord.orderId}-${Date.now()}`,
             name: ord.studentName || 'Candidate',
@@ -455,11 +623,15 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
             phone: ord.studentPhone || '',
             orderId: orderIdStr,
             packageName: ord.packageName || 'Premium Live Interactive',
-            feeStatus: 'Admissions Desk Enrollment · Confirmed',
-            status: 'active',
+            feeStatus: ord.paymentMethod
+              ? `${ord.paymentStatus || 'Paid'} · ${ord.paymentMethod}`
+              : 'Admissions Desk Enrollment · Confirmed',
+            status: isPending ? 'pending' : 'active',
             enrollmentDate: ord.createdAt || 'Recent',
-            accessDuration: '18 Months Active Access',
-            notes: 'Synced from checkout enrollment'
+            accessDuration: durationMap[ord.packageId] || '18 Months Active Access',
+            notes: ord.transactionId
+              ? `Invoice ${ord.invoiceNumber || ord.orderId} · Txn ${ord.transactionId}`
+              : 'Synced from checkout enrollment',
           });
           addedCount++;
         }
@@ -477,40 +649,24 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
   };
 
   return (
-    <div className={`min-h-screen flex flex-col font-sans relative transition-colors duration-200 ${
-      theme === 'light' ? 'bg-white text-slate-900' : 'bg-[#071322] text-slate-100'
+    <div className={`min-h-screen flex flex-col font-sans transition-colors duration-200 ${
+      theme === 'light' ? 'bg-white text-slate-900' : 'bg-[#07111e] text-slate-100'
     }`}>
-      {/* Background Wallpaper - Clearly Visible & Slightly Lightened Outside Boxes in Light Theme */}
-      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        <img
-          src="/hero-bg.jpg"
-          alt="BNC Architectural Backdrop"
-          className={`w-full h-full object-cover object-center ${
-            theme === 'light' ? 'opacity-75 brightness-105' : 'filter contrast-125 opacity-30 brightness-75 saturate-110'
-          }`}
-        />
-        {theme === 'dark' && (
-          <>
-            <div className="absolute inset-0 bg-gradient-to-b from-[#071322]/95 via-[#0b1d33]/90 to-[#06101c]/95" />
-            <div className="absolute inset-0 bg-[radial-gradient(#38bdf8_1px,transparent_1px)] [background-size:32px_32px] opacity-[0.06]" />
-          </>
-        )}
-      </div>
-
-      {/* Top Admin Header Bar */}
-      <header className={`relative z-10 border-b px-4 sm:px-6 lg:px-8 py-3.5 shadow-xs transition-colors ${
+      {/* Top Admin Header Bar — Full-Width Edge-to-Edge */}
+      <header className={`sticky top-0 z-30 border-b px-4 sm:px-6 lg:px-8 py-3 transition-colors ${
         theme === 'light'
           ? 'bg-white border-slate-200'
-          : 'bg-[#07172b]/95 border-sky-950 shadow-md backdrop-blur-md'
+          : 'bg-[#07111e] border-slate-800/90'
       }`}>
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <button
+              type="button"
               onClick={onBackToWebsite}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-colors cursor-pointer ${
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
                 theme === 'light'
-                  ? 'bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-700'
-                  : 'bg-sky-950/80 hover:bg-sky-900 border-sky-800/60 text-slate-200'
+                  ? 'bg-white hover:bg-slate-50 border-slate-200 text-slate-700'
+                  : 'bg-slate-900 hover:bg-slate-800 border-slate-800 text-slate-200'
               }`}
               title="Return to Public Website"
             >
@@ -518,44 +674,33 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
               <span>Public Website</span>
             </button>
 
-            <div className={`h-6 w-px hidden sm:block ${theme === 'light' ? 'bg-slate-200' : 'bg-sky-900'}`} />
+            <div className={`h-5 w-px hidden sm:block ${theme === 'light' ? 'bg-slate-200' : 'bg-slate-800'}`} />
 
-            <div className="flex items-center gap-2">
-              <span className={`p-1 rounded border ${
-                theme === 'light'
-                  ? 'bg-amber-50 border-amber-200 text-[#b58b42]'
-                  : 'bg-[#b58b42]/20 border-[#b58b42]/40 text-[#f1bd5b]'
-              }`}>
-                <ShieldCheck className="w-4 h-4" />
+            <div className="flex items-center gap-2 whitespace-nowrap">
+              <ShieldCheck className="w-4 h-4 text-[#b58b42] shrink-0" />
+              <span className={`text-sm font-black tracking-tight ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>
+                BNC ELEVATE
               </span>
-              <div>
-                <span className={`text-sm font-black ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>BNC ELEVATE</span>
-                <span className={`mx-2 font-light ${theme === 'light' ? 'text-slate-400' : 'text-slate-500'}`}>|</span>
-                <span className="text-xs uppercase tracking-wider text-[#b58b42] font-bold">
-                  Academic Admin Console
-                </span>
-              </div>
+              <span className={theme === 'light' ? 'text-slate-300' : 'text-slate-700'}>·</span>
+              <span className={`text-xs font-semibold ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>
+                Academic Admin Console
+              </span>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <div className={`hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs ${
-              theme === 'light'
-                ? 'bg-slate-100 border-slate-200 text-slate-700'
-                : 'bg-slate-900/80 border-slate-700/80 text-slate-300'
-            }`}>
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className={theme === 'light' ? 'text-slate-500 font-medium' : 'text-slate-300 font-medium'}>Logged in:</span>
-              <span className={theme === 'light' ? 'text-slate-900 font-bold' : 'text-white font-bold'}>{adminUser.name}</span>
-            </div>
+          <div className="flex items-center gap-2.5 shrink-0">
+            <span className={`hidden md:inline text-xs font-medium mr-1 ${theme === 'light' ? 'text-slate-600' : 'text-slate-400'}`}>
+              Signed in as <strong className={theme === 'light' ? 'text-slate-900 font-semibold' : 'text-white font-semibold'}>{adminUser.name}</strong>
+            </span>
 
             {/* Theme Toggle Button */}
             <button
+              type="button"
               onClick={toggleTheme}
-              className={`p-2 rounded-xl transition-all cursor-pointer border flex items-center justify-center ${
+              className={`p-2 rounded-lg transition-colors cursor-pointer border flex items-center justify-center ${
                 theme === 'light'
-                  ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300 shadow-xs'
-                  : 'bg-slate-800 hover:bg-slate-700 text-amber-300 border-slate-700 shadow-xs'
+                  ? 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200'
+                  : 'bg-slate-900 hover:bg-slate-800 text-amber-300 border-slate-800'
               }`}
               title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
             >
@@ -563,8 +708,9 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
             </button>
 
             <button
+              type="button"
               onClick={() => onSwitchToStudentView()}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-[#102a4e] via-[#163a6b] to-[#b58b42] hover:opacity-95 text-white text-xs font-bold shadow-xs cursor-pointer transition-all border border-sky-900/20"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#102a4e] hover:bg-[#163a6b] text-white text-xs font-semibold cursor-pointer transition-colors whitespace-nowrap shrink-0"
               title="Preview LMS Curriculum as Student"
             >
               <BookOpen className="w-3.5 h-3.5 text-[#f1bd5b]" />
@@ -572,11 +718,12 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
             </button>
 
             <button
+              type="button"
               onClick={onLogoutAdmin}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
                 theme === 'light'
-                  ? 'bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-rose-700 border-slate-300 hover:border-rose-300'
-                  : 'bg-slate-800/90 hover:bg-rose-950 text-slate-300 hover:text-rose-200 border-slate-700 hover:border-rose-500/50'
+                  ? 'bg-white hover:bg-rose-50 text-slate-700 hover:text-rose-700 border-slate-200 hover:border-rose-200'
+                  : 'bg-slate-900 hover:bg-rose-950/60 text-slate-300 hover:text-rose-200 border-slate-800 hover:border-rose-800'
               }`}
               title="Log out of Admin Console"
             >
@@ -587,206 +734,268 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
         </div>
       </header>
 
-      {/* Main Admin Content */}
-      <main className="relative z-10 flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-        
-        {/* Console Tab Switcher: Full LMS Administration */}
-        <div
-          className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 p-2.5 rounded-3xl border w-full transition-colors ${
-            theme === 'light'
-              ? 'bg-white border-slate-200 shadow-md'
-              : 'bg-[#091729] border-sky-800/80 shadow-xl'
-          }`}
-        >
-          {/* 1. Student Call CRM */}
-          <button
-            type="button"
-            onClick={() => setConsoleTab('crm')}
-            className={`group px-4 py-3.5 rounded-2xl text-sm sm:text-[15px] font-extrabold tracking-tight transition-all cursor-pointer flex items-center justify-between gap-3 whitespace-nowrap ${
-              consoleTab === 'crm'
-                ? 'bg-gradient-to-r from-[#0e2444] via-[#163a6b] to-[#b58b42] text-white shadow-lg ring-1 ring-[#f1bd5b]/40'
-                : theme === 'light'
-                ? 'bg-slate-50 hover:bg-slate-100 text-slate-800 border border-slate-200/90 hover:border-slate-300'
-                : 'bg-slate-900/70 hover:bg-slate-800 text-slate-200 border border-sky-900/60 hover:border-sky-700'
-            }`}
+      {/* Main Full-Page Split Workspace */}
+      <main className="flex-1 flex flex-col lg:flex-row w-full">
+        {/* Left Sidebar Navigation Rail — Edge-to-Edge */}
+        <aside className={`w-full lg:w-64 shrink-0 border-b lg:border-b-0 lg:border-r transition-colors ${
+          theme === 'light'
+            ? 'bg-slate-50/70 border-slate-200'
+            : 'bg-[#081526] border-slate-800/90'
+        }`}>
+          <nav
+            aria-label="Admin Console Sections"
+            className="flex flex-col gap-1 p-3 lg:sticky lg:top-[57px]"
           >
-            <span className="flex items-center gap-3 min-w-0">
-              <span
-                className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
-                  consoleTab === 'crm'
-                    ? 'bg-white/15 text-emerald-300'
-                    : theme === 'light'
-                    ? 'bg-emerald-100 text-emerald-700'
-                    : 'bg-emerald-500/15 text-emerald-300'
-                }`}
-              >
-                <PhoneCall className="w-[18px] h-[18px]" />
-              </span>
-              <span className="truncate">Student Call CRM</span>
-            </span>
-            <span
-              className={`px-2.5 py-0.5 rounded-lg text-xs font-black tabular-nums shrink-0 ${
+            {/* 1. Student Call CRM */}
+            <button
+              type="button"
+              onClick={() => setConsoleTab('crm')}
+              className={`group w-full px-3 py-2.5 rounded-lg text-[13px] font-semibold transition-colors cursor-pointer flex items-center justify-between gap-2.5 whitespace-nowrap ${
                 consoleTab === 'crm'
-                  ? 'bg-white/20 text-white'
+                  ? theme === 'light'
+                    ? 'bg-[#102a4e] text-white'
+                    : 'bg-sky-950 text-white border border-sky-800/70'
                   : theme === 'light'
-                  ? 'bg-white text-slate-700 border border-slate-200'
-                  : 'bg-slate-800 text-slate-300 border border-slate-700'
+                  ? 'text-slate-700 hover:bg-slate-200/70 hover:text-slate-950'
+                  : 'text-slate-300 hover:bg-slate-800/60 hover:text-white'
               }`}
             >
-              {crmCallLogs.length}
-            </span>
-          </button>
-
-          {/* 2. Enquiries & Leads */}
-          <button
-            type="button"
-            onClick={() => setConsoleTab('leads')}
-            className={`group px-4 py-3.5 rounded-2xl text-sm sm:text-[15px] font-extrabold tracking-tight transition-all cursor-pointer flex items-center justify-between gap-3 whitespace-nowrap ${
-              consoleTab === 'leads'
-                ? 'bg-gradient-to-r from-[#0e2444] via-[#163a6b] to-[#b58b42] text-white shadow-lg ring-1 ring-[#f1bd5b]/40'
-                : theme === 'light'
-                ? 'bg-slate-50 hover:bg-slate-100 text-slate-800 border border-slate-200/90 hover:border-slate-300'
-                : 'bg-slate-900/70 hover:bg-slate-800 text-slate-200 border border-sky-900/60 hover:border-sky-700'
-            }`}
-          >
-            <span className="flex items-center gap-3 min-w-0">
-              <span
-                className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
-                  consoleTab === 'leads'
-                    ? 'bg-white/15 text-sky-200'
+              <span className="flex items-center gap-2.5 min-w-0">
+                <PhoneCall className={`w-4 h-4 shrink-0 ${
+                  consoleTab === 'crm'
+                    ? 'text-[#f1bd5b]'
                     : theme === 'light'
-                    ? 'bg-sky-100 text-sky-700'
-                    : 'bg-sky-500/15 text-sky-300'
+                    ? 'text-slate-500 group-hover:text-slate-800'
+                    : 'text-slate-400 group-hover:text-slate-200'
+                }`} />
+                <span className="truncate">Student Call CRM</span>
+              </span>
+              <span
+                className={`text-xs font-bold tabular-nums shrink-0 ${
+                  consoleTab === 'crm'
+                    ? 'text-white/80'
+                    : theme === 'light'
+                    ? 'text-slate-500'
+                    : 'text-slate-400'
                 }`}
               >
-                <Mail className="w-[18px] h-[18px]" />
+                {crmCallLogs.length}
               </span>
-              <span className="truncate">Enquiries & Leads</span>
-            </span>
-            <span
-              className={`px-2.5 py-0.5 rounded-lg text-xs font-black tabular-nums shrink-0 ${
+            </button>
+
+            {/* 2. Leads */}
+            <button
+              type="button"
+              onClick={() => setConsoleTab('leads')}
+              className={`group w-full px-3 py-2.5 rounded-lg text-[13px] font-semibold transition-colors cursor-pointer flex items-center justify-between gap-2.5 whitespace-nowrap ${
                 consoleTab === 'leads'
-                  ? 'bg-white/20 text-white'
+                  ? theme === 'light'
+                    ? 'bg-[#102a4e] text-white'
+                    : 'bg-sky-950 text-white border border-sky-800/70'
                   : theme === 'light'
-                  ? 'bg-white text-slate-700 border border-slate-200'
-                  : 'bg-slate-800 text-slate-300 border border-slate-700'
+                  ? 'text-slate-700 hover:bg-slate-200/70 hover:text-slate-950'
+                  : 'text-slate-300 hover:bg-slate-800/60 hover:text-white'
               }`}
             >
-              {leads.length}
-            </span>
-          </button>
-
-          {/* 3. Learners & Access */}
-          <button
-            type="button"
-            onClick={() => setConsoleTab('learners')}
-            className={`group px-4 py-3.5 rounded-2xl text-sm sm:text-[15px] font-extrabold tracking-tight transition-all cursor-pointer flex items-center justify-between gap-3 whitespace-nowrap ${
-              consoleTab === 'learners'
-                ? 'bg-gradient-to-r from-[#0e2444] via-[#163a6b] to-[#b58b42] text-white shadow-lg ring-1 ring-[#f1bd5b]/40'
-                : theme === 'light'
-                ? 'bg-slate-50 hover:bg-slate-100 text-slate-800 border border-slate-200/90 hover:border-slate-300'
-                : 'bg-slate-900/70 hover:bg-slate-800 text-slate-200 border border-sky-900/60 hover:border-sky-700'
-            }`}
-          >
-            <span className="flex items-center gap-3 min-w-0">
-              <span
-                className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
-                  consoleTab === 'learners'
-                    ? 'bg-white/15 text-[#f7cd76]'
+              <span className="flex items-center gap-2.5 min-w-0">
+                <Users className={`w-4 h-4 shrink-0 ${
+                  consoleTab === 'leads'
+                    ? 'text-[#f1bd5b]'
                     : theme === 'light'
-                    ? 'bg-amber-100/90 text-[#9c742e]'
-                    : 'bg-amber-500/15 text-[#f1bd5b]'
+                    ? 'text-slate-500 group-hover:text-slate-800'
+                    : 'text-slate-400 group-hover:text-slate-200'
+                }`} />
+                <span className="truncate">Leads</span>
+              </span>
+              <span
+                className={`text-xs font-bold tabular-nums shrink-0 ${
+                  consoleTab === 'leads'
+                    ? 'text-white/80'
+                    : theme === 'light'
+                    ? 'text-slate-500'
+                    : 'text-slate-400'
                 }`}
               >
-                <UserCheck className="w-[18px] h-[18px]" />
+                {websiteLeadsList.length + emailCampaignLeadsList.length}
               </span>
-              <span className="truncate">Learners & Access</span>
-            </span>
-            <span
-              className={`px-2.5 py-0.5 rounded-lg text-xs font-black tabular-nums shrink-0 ${
+            </button>
+
+            {/* 3. Enquiries (Website Enquiries Only) */}
+            <button
+              type="button"
+              onClick={() => setConsoleTab('enquiries')}
+              className={`group w-full px-3 py-2.5 rounded-lg text-[13px] font-semibold transition-colors cursor-pointer flex items-center justify-between gap-2.5 whitespace-nowrap ${
+                consoleTab === 'enquiries'
+                  ? theme === 'light'
+                    ? 'bg-[#102a4e] text-white'
+                    : 'bg-sky-950 text-white border border-sky-800/70'
+                  : theme === 'light'
+                  ? 'text-slate-700 hover:bg-slate-200/70 hover:text-slate-950'
+                  : 'text-slate-300 hover:bg-slate-800/60 hover:text-white'
+              }`}
+            >
+              <span className="flex items-center gap-2.5 min-w-0">
+                <Mail className={`w-4 h-4 shrink-0 ${
+                  consoleTab === 'enquiries'
+                    ? 'text-[#f1bd5b]'
+                    : theme === 'light'
+                    ? 'text-slate-500 group-hover:text-slate-800'
+                    : 'text-slate-400 group-hover:text-slate-200'
+                }`} />
+                <span className="truncate">Enquiries</span>
+              </span>
+              <span
+                className={`text-xs font-bold tabular-nums shrink-0 ${
+                  consoleTab === 'enquiries'
+                    ? 'text-white/80'
+                    : theme === 'light'
+                    ? 'text-slate-500'
+                    : 'text-slate-400'
+                }`}
+              >
+                {enquiries.length}
+              </span>
+            </button>
+
+            {/* 4. Campaigns (Google Forms Excel Uploads) */}
+            <button
+              type="button"
+              onClick={() => setConsoleTab('campaigns')}
+              className={`group w-full px-3 py-2.5 rounded-lg text-[13px] font-semibold transition-colors cursor-pointer flex items-center justify-between gap-2.5 whitespace-nowrap ${
+                consoleTab === 'campaigns'
+                  ? theme === 'light'
+                    ? 'bg-[#102a4e] text-white'
+                    : 'bg-sky-950 text-white border border-sky-800/70'
+                  : theme === 'light'
+                  ? 'text-slate-700 hover:bg-slate-200/70 hover:text-slate-950'
+                  : 'text-slate-300 hover:bg-slate-800/60 hover:text-white'
+              }`}
+            >
+              <span className="flex items-center gap-2.5 min-w-0">
+                <FileSpreadsheet className={`w-4 h-4 shrink-0 ${
+                  consoleTab === 'campaigns'
+                    ? 'text-[#f1bd5b]'
+                    : theme === 'light'
+                    ? 'text-slate-500 group-hover:text-slate-800'
+                    : 'text-slate-400 group-hover:text-slate-200'
+                }`} />
+                <span className="truncate">Campaigns</span>
+              </span>
+              <span
+                className={`text-xs font-bold tabular-nums shrink-0 ${
+                  consoleTab === 'campaigns'
+                    ? 'text-white/80'
+                    : theme === 'light'
+                    ? 'text-slate-500'
+                    : 'text-slate-400'
+                }`}
+              >
+                {campaignBatches.reduce((sum, b) => sum + b.rows.length, 0)}
+              </span>
+            </button>
+
+            {/* 5. Learners & Access */}
+            <button
+              type="button"
+              onClick={() => setConsoleTab('learners')}
+              className={`group w-full px-3 py-2.5 rounded-lg text-[13px] font-semibold transition-colors cursor-pointer flex items-center justify-between gap-2.5 whitespace-nowrap ${
                 consoleTab === 'learners'
-                  ? 'bg-white/20 text-white'
+                  ? theme === 'light'
+                    ? 'bg-[#102a4e] text-white'
+                    : 'bg-sky-950 text-white border border-sky-800/70'
                   : theme === 'light'
-                  ? 'bg-white text-slate-700 border border-slate-200'
-                  : 'bg-slate-800 text-slate-300 border border-slate-700'
+                  ? 'text-slate-700 hover:bg-slate-200/70 hover:text-slate-950'
+                  : 'text-slate-300 hover:bg-slate-800/60 hover:text-white'
               }`}
             >
-              {learners.length}
-            </span>
-          </button>
-
-          {/* 4. Video Uploads */}
-          <button
-            type="button"
-            onClick={() => setConsoleTab('videos')}
-            className={`group px-4 py-3.5 rounded-2xl text-sm sm:text-[15px] font-extrabold tracking-tight transition-all cursor-pointer flex items-center justify-between gap-3 whitespace-nowrap ${
-              consoleTab === 'videos'
-                ? 'bg-gradient-to-r from-[#0e2444] via-[#163a6b] to-[#b58b42] text-white shadow-lg ring-1 ring-[#f1bd5b]/40'
-                : theme === 'light'
-                ? 'bg-slate-50 hover:bg-slate-100 text-slate-800 border border-slate-200/90 hover:border-slate-300'
-                : 'bg-slate-900/70 hover:bg-slate-800 text-slate-200 border border-sky-900/60 hover:border-sky-700'
-            }`}
-          >
-            <span className="flex items-center gap-3 min-w-0">
-              <span
-                className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
-                  consoleTab === 'videos'
-                    ? 'bg-white/15 text-[#f7cd76]'
+              <span className="flex items-center gap-2.5 min-w-0">
+                <UserCheck className={`w-4 h-4 shrink-0 ${
+                  consoleTab === 'learners'
+                    ? 'text-[#f1bd5b]'
                     : theme === 'light'
-                    ? 'bg-amber-100/90 text-[#9c742e]'
-                    : 'bg-amber-500/15 text-[#f1bd5b]'
+                    ? 'text-slate-500 group-hover:text-slate-800'
+                    : 'text-slate-400 group-hover:text-slate-200'
+                }`} />
+                <span className="truncate">Learners & Access</span>
+              </span>
+              <span
+                className={`text-xs font-bold tabular-nums shrink-0 ${
+                  consoleTab === 'learners'
+                    ? 'text-white/80'
+                    : theme === 'light'
+                    ? 'text-slate-500'
+                    : 'text-slate-400'
                 }`}
               >
-                <Video className="w-[18px] h-[18px]" />
+                {learners.length}
               </span>
-              <span className="truncate">Video Uploads</span>
-            </span>
-            <span
-              className={`px-2.5 py-0.5 rounded-lg text-xs font-black tabular-nums shrink-0 ${
+            </button>
+
+            {/* 6. Video Uploads */}
+            <button
+              type="button"
+              onClick={() => setConsoleTab('videos')}
+              className={`group w-full px-3 py-2.5 rounded-lg text-[13px] font-semibold transition-colors cursor-pointer flex items-center justify-between gap-2.5 whitespace-nowrap ${
                 consoleTab === 'videos'
-                  ? 'bg-white/20 text-white'
+                  ? theme === 'light'
+                    ? 'bg-[#102a4e] text-white'
+                    : 'bg-sky-950 text-white border border-sky-800/70'
                   : theme === 'light'
-                  ? 'bg-white text-slate-700 border border-slate-200'
-                  : 'bg-slate-800 text-slate-300 border border-slate-700'
+                  ? 'text-slate-700 hover:bg-slate-200/70 hover:text-slate-950'
+                  : 'text-slate-300 hover:bg-slate-800/60 hover:text-white'
               }`}
             >
-              {modules.reduce((acc, m) => acc + m.lessons.length, 0)}
-            </span>
-          </button>
-        </div>
+              <span className="flex items-center gap-2.5 min-w-0">
+                <Video className={`w-4 h-4 shrink-0 ${
+                  consoleTab === 'videos'
+                    ? 'text-[#f1bd5b]'
+                    : theme === 'light'
+                    ? 'text-slate-500 group-hover:text-slate-800'
+                    : 'text-slate-400 group-hover:text-slate-200'
+                }`} />
+                <span className="truncate">Video Uploads</span>
+              </span>
+              <span
+                className={`text-xs font-bold tabular-nums shrink-0 ${
+                  consoleTab === 'videos'
+                    ? 'text-white/80'
+                    : theme === 'light'
+                    ? 'text-slate-500'
+                    : 'text-slate-400'
+                }`}
+              >
+                {modules.reduce((acc, m) => acc + m.lessons.length, 0)}
+              </span>
+            </button>
+          </nav>
+        </aside>
+
+        {/* Right Full-Width Workspace Content */}
+        <div className="flex-1 min-w-0 w-full flex flex-col">
 
         {consoleTab === 'learners' && (
-          <>
-            {/* Banner */}
-            <div className={`flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-6 rounded-3xl border shadow-xs transition-colors ${
-              theme === 'light'
-                ? 'bg-gradient-to-r from-white via-sky-50 to-white border-slate-200'
-                : 'bg-gradient-to-r from-[#0b1d33] via-[#091b30] to-[#122338] border-sky-800/60 shadow-xl'
+          <div className="flex-1 flex flex-col">
+            {/* Page Header */}
+            <div className={`px-6 lg:px-8 py-5 border-b flex flex-col md:flex-row items-start md:items-center justify-between gap-4 ${
+              theme === 'light' ? 'border-slate-200' : 'border-slate-800/90'
             }`}>
               <div>
-                <div className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border text-[10px] font-bold uppercase tracking-wider mb-2 ${
-                  theme === 'light'
-                    ? 'bg-amber-50 text-[#b58b42] border-amber-200'
-                    : 'bg-[#b58b42]/20 text-[#f1bd5b] border-[#b58b42]/40'
-                }`}>
-                  <Sparkles className="w-3.5 h-3.5 text-[#b58b42]" />
-                  <span>Access Authorization & Fee Clearance Management</span>
-                </div>
-                <h1 className={`text-xl sm:text-2xl font-black tracking-tight ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>
-                  Learner Access & Enrollment Controller
+                <h1 className={`text-xl sm:text-2xl font-bold tracking-tight ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>
+                  Learner Access &amp; Enrollment
                 </h1>
-                <p className={`text-xs sm:text-sm mt-1 max-w-2xl leading-relaxed ${theme === 'light' ? 'text-slate-600' : 'text-slate-300'}`}>
-                  Grant or revoke individual student access to video masterclasses, official Gleim CIA test banks & SmartAdapt™, and AI audit tools in real-time. Students with <strong className="text-rose-600 font-bold">Revoked</strong> status cannot log in until administrative clearance.
+                <p className={`text-xs sm:text-sm mt-1 max-w-2xl ${theme === 'light' ? 'text-slate-600' : 'text-slate-400'}`}>
+                  Authorize or revoke student access to video masterclasses, Gleim CIA test banks &amp; SmartAdapt™, and AI audit tools.
                 </p>
               </div>
 
               <div className="flex items-center gap-2.5 shrink-0">
                 <button
+                  type="button"
                   onClick={handleSyncFromCheckout}
-                  className={`px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 border transition-all cursor-pointer shadow-xs ${
+                  className={`px-3.5 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 border transition-colors cursor-pointer whitespace-nowrap ${
                     theme === 'light'
-                      ? 'bg-white hover:bg-slate-100 text-slate-800 border-slate-300'
-                      : 'bg-slate-800/90 hover:bg-slate-700 text-slate-200 border-slate-700'
+                      ? 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
+                      : 'bg-slate-900 hover:bg-slate-800 text-slate-200 border-slate-800'
                   }`}
                   title="Sync latest enrollment orders from checkout"
                 >
@@ -795,109 +1004,97 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
                 </button>
 
                 <button
+                  type="button"
                   onClick={() => {
                     setAddFormError(null);
                     setIsAddModalOpen(true);
                   }}
-                  className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#102a4e] to-[#b58b42] hover:opacity-95 text-white text-xs font-bold flex items-center gap-2 shadow-sm transition-all cursor-pointer"
+                  className="px-4 py-2 rounded-lg bg-[#102a4e] hover:bg-[#163a6b] text-white text-xs font-semibold flex items-center gap-2 transition-colors cursor-pointer whitespace-nowrap"
                 >
-                  <Plus className="w-4 h-4" />
+                  <Plus className="w-4 h-4 text-[#f1bd5b]" />
                   <span>Grant New Learner Access</span>
                 </button>
               </div>
             </div>
 
-            {/* 4 KPI Cards */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className={`p-5 rounded-2xl border shadow-xs ${
-                theme === 'light'
-                  ? 'bg-white border-slate-200 text-slate-900'
-                  : 'bg-[#091729]/95 border-sky-900/60 shadow-lg text-white'
-              }`}>
-                <div className={`flex items-center justify-between text-xs font-bold uppercase ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>
+            {/* Unified Horizontal Metric Strip (No Floating Boxes) */}
+            <div className={`grid grid-cols-2 lg:grid-cols-4 divide-y lg:divide-y-0 lg:divide-x border-b ${
+              theme === 'light'
+                ? 'border-slate-200 divide-slate-200 bg-slate-50/40'
+                : 'border-slate-800/90 divide-slate-800/90 bg-[#081526]/60'
+            }`}>
+              <div className="px-6 lg:px-8 py-4">
+                <div className={`flex items-center justify-between text-xs font-semibold ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>
                   <span>Total Learners</span>
-                  <BookOpen className="w-4 h-4 text-sky-600" />
+                  <BookOpen className="w-4 h-4 text-slate-400" />
                 </div>
-                <div className={`text-2xl sm:text-3xl font-black mt-2 ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>{totalCount}</div>
-                <div className={`text-[11px] mt-1 ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>Enrolled candidate accounts</div>
+                <div className={`text-2xl font-bold mt-1.5 tabular-nums ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>{totalCount}</div>
+                <div className={`text-xs mt-0.5 ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>Enrolled candidate accounts</div>
               </div>
 
-              <div className={`p-5 rounded-2xl border shadow-xs ${
-                theme === 'light'
-                  ? 'bg-emerald-50 border-emerald-200'
-                  : 'bg-emerald-950/40 border-emerald-500/40 shadow-lg'
-              }`}>
-                <div className={`flex items-center justify-between text-xs font-bold uppercase ${theme === 'light' ? 'text-emerald-800' : 'text-emerald-400'}`}>
+              <div className="px-6 lg:px-8 py-4">
+                <div className={`flex items-center justify-between text-xs font-semibold ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>
                   <span>Access Granted</span>
                   <UserCheck className="w-4 h-4 text-emerald-600" />
                 </div>
-                <div className={`text-2xl sm:text-3xl font-black mt-2 ${theme === 'light' ? 'text-emerald-700' : 'text-emerald-300'}`}>{activeCount}</div>
-                <div className={`text-[11px] mt-1 ${theme === 'light' ? 'text-emerald-700' : 'text-emerald-300/80'}`}>Active paid learners authorized</div>
+                <div className={`text-2xl font-bold mt-1.5 tabular-nums ${theme === 'light' ? 'text-emerald-700' : 'text-emerald-400'}`}>{activeCount}</div>
+                <div className={`text-xs mt-0.5 ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>Active paid learners</div>
               </div>
 
-              <div className={`p-5 rounded-2xl border shadow-xs ${
-                theme === 'light'
-                  ? 'bg-rose-50 border-rose-200'
-                  : 'bg-rose-950/40 border-rose-500/40 shadow-lg'
-              }`}>
-                <div className={`flex items-center justify-between text-xs font-bold uppercase ${theme === 'light' ? 'text-rose-800' : 'text-rose-400'}`}>
+              <div className="px-6 lg:px-8 py-4">
+                <div className={`flex items-center justify-between text-xs font-semibold ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>
                   <span>Access Revoked</span>
                   <UserX className="w-4 h-4 text-rose-600" />
                 </div>
-                <div className={`text-2xl sm:text-3xl font-black mt-2 ${theme === 'light' ? 'text-rose-700' : 'text-rose-300'}`}>{revokedCount}</div>
-                <div className={`text-[11px] mt-1 ${theme === 'light' ? 'text-rose-700' : 'text-rose-300/80'}`}>Suspended / fee pending accounts</div>
+                <div className={`text-2xl font-bold mt-1.5 tabular-nums ${theme === 'light' ? 'text-rose-700' : 'text-rose-400'}`}>{revokedCount}</div>
+                <div className={`text-xs mt-0.5 ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>Suspended / fee pending</div>
               </div>
 
-              <div className={`p-5 rounded-2xl border shadow-xs ${
-                theme === 'light'
-                  ? 'bg-amber-50 border-amber-200'
-                  : 'bg-amber-950/40 border-amber-500/40 shadow-lg'
-              }`}>
-                <div className={`flex items-center justify-between text-xs font-bold uppercase ${theme === 'light' ? 'text-amber-800' : 'text-[#f1bd5b]'}`}>
+              <div className="px-6 lg:px-8 py-4">
+                <div className={`flex items-center justify-between text-xs font-semibold ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>
                   <span>Under Clearance</span>
-                  <Clock className="w-4 h-4 text-[#b58b42]" />
+                  <Clock className="w-4 h-4 text-amber-600" />
                 </div>
-                <div className={`text-2xl sm:text-3xl font-black mt-2 ${theme === 'light' ? 'text-amber-800' : 'text-[#f1bd5b]'}`}>{pendingCount}</div>
-                <div className={`text-[11px] mt-1 ${theme === 'light' ? 'text-amber-800' : 'text-[#f1bd5b]/80'}`}>Pending finance approval</div>
+                <div className={`text-2xl font-bold mt-1.5 tabular-nums ${theme === 'light' ? 'text-amber-700' : 'text-[#f1bd5b]'}`}>{pendingCount}</div>
+                <div className={`text-xs mt-0.5 ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>Pending finance approval</div>
               </div>
             </div>
 
-            {/* Filter & Search Bar */}
-            <div className={`flex flex-col sm:flex-row items-center justify-between gap-3 p-4 rounded-2xl border shadow-xs transition-colors ${
-              theme === 'light'
-                ? 'bg-white border-slate-200'
-                : 'bg-[#091729]/90 border-sky-900/60 shadow-md'
+            {/* Filter & Search Toolbar */}
+            <div className={`px-6 lg:px-8 py-3.5 border-b flex flex-col sm:flex-row items-center justify-between gap-3 ${
+              theme === 'light' ? 'border-slate-200' : 'border-slate-800/90'
             }`}>
               <div className="relative w-full sm:w-80">
-                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
                 <input
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="Search by student name, email, or order ID..."
-                  className={`w-full pl-10 pr-4 py-2 rounded-xl text-xs focus:outline-none transition-all border ${
+                  className={`w-full pl-9 pr-4 py-2 rounded-lg text-xs focus:outline-none transition-colors border ${
                     theme === 'light'
-                      ? 'bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-400 focus:border-sky-600 focus:ring-1 focus:ring-sky-600'
-                      : 'bg-slate-900/90 border-slate-700/80 text-white placeholder-slate-500 focus:border-[#f1bd5b]'
+                      ? 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white focus:border-slate-400'
+                      : 'bg-slate-900 border-slate-800 text-white placeholder-slate-500 focus:border-sky-600'
                   }`}
                 />
               </div>
 
-              <div className="flex items-center gap-1.5 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
-                <span className={`text-xs font-semibold mr-1 flex items-center gap-1 ${theme === 'light' ? 'text-slate-600' : 'text-slate-400'}`}>
-                  <Filter className="w-3.5 h-3.5" />
-                  <span>Status:</span>
-                </span>
+              <div className={`flex items-center gap-1 p-1 rounded-lg ${
+                theme === 'light' ? 'bg-slate-100' : 'bg-slate-900 border border-slate-800'
+              }`}>
                 {(['all', 'active', 'revoked', 'pending'] as const).map((st) => (
                   <button
                     key={st}
+                    type="button"
                     onClick={() => setFilterStatus(st)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold capitalize transition-all cursor-pointer ${
+                    className={`px-3 py-1 rounded-md text-xs font-semibold capitalize transition-colors cursor-pointer whitespace-nowrap ${
                       filterStatus === st
-                        ? 'bg-gradient-to-r from-[#102a4e] to-[#b58b42] text-white shadow-xs'
+                        ? theme === 'light'
+                          ? 'bg-white text-slate-900 shadow-xs'
+                          : 'bg-slate-800 text-white'
                         : theme === 'light'
-                        ? 'bg-slate-100 text-slate-700 hover:text-slate-900 hover:bg-slate-200 border border-slate-200'
-                        : 'bg-slate-800/80 text-slate-300 hover:text-white hover:bg-slate-700'
+                        ? 'text-slate-600 hover:text-slate-900'
+                        : 'text-slate-400 hover:text-white'
                     }`}
                   >
                     {st}
@@ -906,28 +1103,23 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
               </div>
             </div>
 
-            {/* Roster Table */}
-            <div className={`border rounded-3xl overflow-hidden shadow-xs transition-colors ${
-              theme === 'light'
-                ? 'bg-white border-slate-200'
-                : 'bg-[#091729]/95 border-sky-900/60 shadow-2xl'
-            }`}>
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className={`border-b text-[11px] font-bold uppercase tracking-wider ${
-                      theme === 'light'
-                        ? 'bg-slate-50 border-slate-200 text-slate-600'
-                        : 'bg-[#061220] border-sky-950 text-slate-400'
-                    }`}>
-                      <th className="py-3.5 pl-5 pr-3">Learner Profile</th>
-                      <th className="py-3.5 px-3">Student Email & Password</th>
-                      <th className="py-3.5 px-3">Program / Package</th>
-                      <th className="py-3.5 px-3">Tuition Fee Clearance</th>
-                      <th className="py-3.5 px-3 text-center">LMS Access Status</th>
-                      <th className="py-3.5 pl-3 pr-5 text-right">Access Controls</th>
-                    </tr>
-                  </thead>
+            {/* Full-Width Roster Table */}
+            <div className="overflow-x-auto flex-1">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className={`border-b text-[11px] font-semibold uppercase tracking-wider ${
+                    theme === 'light'
+                      ? 'bg-slate-50/70 border-slate-200 text-slate-500'
+                      : 'bg-[#081526] border-slate-800/90 text-slate-400'
+                  }`}>
+                    <th className="py-3 pl-6 lg:pl-8 pr-3">Learner Profile</th>
+                    <th className="py-3 px-3">Student Email &amp; Password</th>
+                    <th className="py-3 px-3">Program / Package</th>
+                    <th className="py-3 px-3">Tuition Fee Clearance</th>
+                    <th className="py-3 px-3 text-center">LMS Access Status</th>
+                    <th className="py-3 pl-3 pr-6 lg:pr-8 text-right">Access Controls</th>
+                  </tr>
+                </thead>
                   <tbody className={`divide-y text-xs ${
                     theme === 'light' ? 'divide-slate-100 text-slate-700' : 'divide-sky-950/60 text-slate-300'
                   }`}>
@@ -1048,7 +1240,7 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
                                     ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
                                     : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
                                 }`}>
-                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                  <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0" />
                                   <span>Active Access</span>
                                 </span>
                               ) : isRevoked ? (
@@ -1167,8 +1359,7 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
                   </tbody>
                 </table>
               </div>
-            </div>
-          </>
+          </div>
         )}
 
     {consoleTab === 'videos' && (
@@ -1185,100 +1376,448 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
         callLogs={crmCallLogs}
         onUpdateCallLogs={handleUpdateCallLogs}
         learners={learners}
-        leads={leads}
+        leads={[...enquiries, ...leads]}
         adminName={adminUser.name}
         onShowToast={onShowToast}
         theme={theme}
       />
     )}
 
-    {consoleTab === 'leads' && (
-      /* ================= ENQUIRIES & BROCHURE LEADS VIEW ================= */
-      <div className="space-y-6">
-        {/* Leads Overview Banner */}
-        <div className={`p-6 rounded-3xl border shadow-xs transition-colors flex flex-col md:flex-row items-start md:items-center justify-between gap-4 ${
-          theme === 'light'
-            ? 'bg-gradient-to-r from-white via-sky-50 to-white border-slate-200'
-            : 'bg-gradient-to-r from-[#0b1d33] via-[#091b30] to-[#122338] border-sky-800/60 shadow-xl'
+    {consoleTab === 'campaigns' && (
+      <CampaignFormsEditor
+        batches={campaignBatches}
+        onUpdateBatches={handleUpdateCampaignBatches}
+        existingLeads={leads}
+        onImportLeads={handleImportCampaignLeads}
+        onShowToast={onShowToast}
+        theme={theme}
+      />
+    )}
+
+    {consoleTab === 'enquiries' && (
+      /* ================= WEBSITE ENQUIRIES VIEW (WEBSITE ONLY) ================= */
+      <div className="flex-1 flex flex-col">
+        {/* Page Header */}
+        <div className={`px-6 lg:px-8 py-5 border-b flex flex-col md:flex-row items-start md:items-center justify-between gap-4 ${
+          theme === 'light' ? 'border-slate-200' : 'border-slate-800/90'
         }`}>
           <div>
-            <div className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border text-[10px] font-bold uppercase tracking-wider mb-2 ${
-              theme === 'light'
-                ? 'bg-amber-50 text-[#b58b42] border-amber-200'
-                : 'bg-[#b58b42]/20 text-[#f1bd5b] border-[#b58b42]/40'
-            }`}>
-              <Mail className="w-3.5 h-3.5" />
-              <span>Incoming Leads Desk · Target: info@bncglobal.in</span>
-            </div>
-            <h2 className={`text-xl sm:text-2xl font-black tracking-tight ${
+            <h2 className={`text-xl sm:text-2xl font-bold tracking-tight ${
               theme === 'light' ? 'text-slate-900' : 'text-white'
             }`}>
-              Enquiries & Brochure Download Leads
+              Website Enquiries &amp; Brochure Requests
             </h2>
-            <p className={`text-xs sm:text-sm mt-1 max-w-2xl leading-relaxed ${
-              theme === 'light' ? 'text-slate-600' : 'text-slate-300'
+            <p className={`text-xs sm:text-sm mt-1 max-w-2xl ${
+              theme === 'light' ? 'text-slate-600' : 'text-slate-400'
             }`}>
-              Real-time directory of candidates who submitted inquiries or downloaded the 10-page BNC Global CIA® Student Brochure.
+              Candidates who submitted website enquiry forms or downloaded the CIA® Student Brochure. Target inbox: info@bncglobal.in.
             </p>
           </div>
 
           <div className="flex items-center gap-2.5 shrink-0">
             <button
               type="button"
-              onClick={handleExportLeadsCsv}
-              className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#102a4e] to-[#b58b42] hover:opacity-95 text-white text-xs font-bold flex items-center gap-2 shadow-sm transition-all cursor-pointer"
+              onClick={handleExportEnquiriesCsv}
+              className="px-4 py-2 rounded-lg bg-[#102a4e] hover:bg-[#163a6b] text-white text-xs font-semibold flex items-center gap-2 transition-colors cursor-pointer whitespace-nowrap"
             >
-              <Download className="w-4 h-4" />
-              <span>Export CSV ({leads.length})</span>
+              <Download className="w-4 h-4 text-[#f1bd5b]" />
+              <span>Export CSV ({enquiries.length})</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Search Toolbar */}
+        <div className={`px-6 lg:px-8 py-3.5 border-b ${
+          theme === 'light' ? 'border-slate-200' : 'border-slate-800/90'
+        }`}>
+          <div className="relative max-w-md">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+            <input
+              type="text"
+              value={enquirySearchTerm}
+              onChange={(e) => setEnquirySearchTerm(e.target.value)}
+              placeholder="Search website enquiries by name, email, phone, or program..."
+              className={`w-full pl-9 pr-4 py-2 rounded-lg border text-xs transition-colors ${
+                theme === 'light'
+                  ? 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-slate-400'
+                  : 'bg-slate-900 border-slate-800 text-white placeholder-slate-500 focus:outline-none focus:border-sky-600'
+              }`}
+            />
+          </div>
+        </div>
+
+        {/* Full-Width Enquiries Table */}
+        <div className="overflow-x-auto flex-1">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className={`border-b text-[11px] font-semibold uppercase tracking-wider ${
+                theme === 'light'
+                  ? 'border-slate-200 bg-slate-50/70 text-slate-500'
+                  : 'border-slate-800/90 bg-[#081526] text-slate-400'
+              }`}>
+                <th className="py-3 pl-6 lg:pl-8 pr-3">Candidate</th>
+                <th className="py-3 px-3">Contact Channels</th>
+                <th className="py-3 px-3">Qualification &amp; Program</th>
+                <th className="py-3 px-3">Website Source / Brochure</th>
+                <th className="py-3 px-3">Submitted</th>
+                <th className="py-3 pl-3 pr-6 lg:pr-8 text-right">Actions</th>
+              </tr>
+            </thead>
+              <tbody className={`divide-y text-xs ${
+                theme === 'light' ? 'divide-slate-100' : 'divide-sky-950/60'
+              }`}>
+                {filteredEnquiries.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className={`py-12 text-center ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>
+                      No website enquiries match the current search.
+                    </td>
+                  </tr>
+                ) : (
+                  filteredEnquiries.map((enquiry) => (
+                    <tr key={enquiry.id} className={`transition-colors group ${
+                      theme === 'light' ? 'hover:bg-slate-50' : 'hover:bg-slate-900/50'
+                    }`}>
+                      <td className="py-3.5 pl-5 pr-3">
+                        <div className={`font-bold transition-colors ${
+                          theme === 'light'
+                            ? 'text-slate-900 group-hover:text-sky-800'
+                            : 'text-white group-hover:text-[#f1bd5b]'
+                        }`}>
+                          {enquiry.name}
+                        </div>
+                        <span className={`inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-semibold border ${
+                          theme === 'light'
+                            ? 'bg-sky-50 text-sky-800 border-sky-200'
+                            : 'bg-sky-950 text-sky-300 border-sky-800/40'
+                        }`}>
+                          {enquiry.status}
+                        </span>
+                      </td>
+
+                      <td className="py-3.5 px-3 space-y-1">
+                        <div className={`flex items-center gap-1.5 font-mono break-all max-w-[200px] ${theme === 'light' ? 'text-slate-700' : 'text-slate-300'}`}>
+                          <Mail className="w-3.5 h-3.5 text-sky-600 shrink-0" />
+                          <a href={`mailto:${enquiry.email}`} className="hover:text-[#b58b42] transition-colors">
+                            {enquiry.email}
+                          </a>
+                        </div>
+                        <div className={`flex items-center gap-1.5 ${theme === 'light' ? 'text-slate-700' : 'text-slate-300'}`}>
+                          <Phone className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                          <a href={`tel:${enquiry.phone}`} className="hover:text-emerald-700 font-semibold">
+                            {enquiry.phone}
+                          </a>
+                        </div>
+                      </td>
+
+                      <td className="py-3.5 px-3 max-w-[180px]">
+                        <div className={`font-semibold ${theme === 'light' ? 'text-slate-900' : 'text-slate-200'}`}>{enquiry.program || 'All Packages'}</div>
+                        <div className={`text-[11px] mt-0.5 ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>{enquiry.qualification || "Bachelor's Degree"}</div>
+                      </td>
+
+                      <td className="py-3.5 px-3">
+                        <div className={`text-[11px] ${theme === 'light' ? 'text-slate-700' : 'text-slate-300'}`}>{enquiry.source}</div>
+                        {enquiry.brochureDownloaded && (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 mt-1">
+                            <CheckCircle2 className="w-3 h-3" />
+                            <span>Brochure Downloaded</span>
+                          </span>
+                        )}
+                      </td>
+
+                      <td className={`py-3.5 px-3 text-[11px] ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>
+                        {enquiry.submittedAt}
+                      </td>
+
+                      <td className="py-3.5 pl-3 pr-5 text-right">
+                        <div className="inline-flex flex-wrap items-center justify-end gap-1.5">
+                          {confirmDeleteEnquiryId === enquiry.id ? (
+                            <div className="inline-flex items-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  handleDeleteEnquiry(enquiry.id);
+                                  setConfirmDeleteEnquiryId(null);
+                                }}
+                                className="px-3 py-1 rounded-full bg-rose-600 hover:bg-rose-700 text-white text-[11px] font-bold cursor-pointer shadow-xs transition-colors whitespace-nowrap"
+                              >
+                                Confirm Delete
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setConfirmDeleteEnquiryId(null)}
+                                className={`px-3 py-1 rounded-full text-[11px] font-semibold cursor-pointer transition-colors whitespace-nowrap ${
+                                  theme === 'light'
+                                    ? 'bg-slate-200 hover:bg-slate-300 text-slate-700'
+                                    : 'bg-slate-700 hover:bg-slate-600 text-slate-200'
+                                }`}
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          ) : (
+                            <>
+                              <a
+                                href={`https://wa.me/${(enquiry.phone || '').replace(/[^0-9]/g, '')}?text=${encodeURIComponent(
+                                  `Hello ${enquiry.name}, thank you for your enquiry with BNC ELEVATE CIA coaching! CA Gurvinder Pal Singh's admissions desk is reaching out regarding your syllabus and cohort options.`
+                                )}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className={`inline-flex p-1.5 rounded-lg border transition-colors ${
+                                  theme === 'light'
+                                    ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200'
+                                    : 'bg-emerald-950 hover:bg-emerald-900 text-emerald-300 border-emerald-700/50'
+                                }`}
+                                title="Chat on WhatsApp"
+                              >
+                                <MessageSquare className="w-4 h-4" />
+                              </a>
+                              <a
+                                href={`mailto:${enquiry.email}?subject=${encodeURIComponent(`[BNC ELEVATE] CIA Coaching Guidance for ${enquiry.name}`)}&body=${encodeURIComponent(
+                                  `Dear ${enquiry.name},\n\nThank you for reaching out to BNC ELEVATE.\n\nWe have received your enquiry regarding ${enquiry.program || 'our CIA Coaching Program'}.\n\nPlease let us know your preferred time for a 1-on-1 counseling call with CA Gurvinder Pal Singh.\n\nWarm regards,\nCA Gurvinder Pal Singh\nDirector & Senior Faculty, BNC Global\ninfo@bncglobal.in | +91 63960 18626`
+                                )}`}
+                                className={`inline-flex p-1.5 rounded-lg border transition-colors ${
+                                  theme === 'light'
+                                    ? 'bg-sky-50 hover:bg-sky-100 text-sky-700 border-sky-200'
+                                    : 'bg-sky-950 hover:bg-sky-900 text-sky-300 border-sky-700/50'
+                                }`}
+                                title="Email Candidate"
+                              >
+                                <Mail className="w-4 h-4" />
+                              </a>
+                              {isEnquiryInWebsiteLeads(enquiry) ? (
+                                <span
+                                  className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border text-xs font-bold whitespace-nowrap ${
+                                    theme === 'light'
+                                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                      : 'bg-emerald-950/60 text-emerald-300 border-emerald-700/50'
+                                  }`}
+                                  title="Already added to Website Leads"
+                                >
+                                  <CheckCircle2 className="w-3.5 h-3.5" />
+                                  <span>In Website Leads</span>
+                                </span>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => handleAddEnquiryToLeads(enquiry)}
+                                  className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border text-xs font-bold transition-colors cursor-pointer whitespace-nowrap ${
+                                    theme === 'light'
+                                      ? 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border-indigo-200'
+                                      : 'bg-indigo-950 hover:bg-indigo-900 text-indigo-300 border-indigo-700/50'
+                                  }`}
+                                  title="Add this enquiry into Website Leads"
+                                >
+                                  <Users className="w-3.5 h-3.5" />
+                                  <span>Add to Website Leads</span>
+                                </button>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() => handleConvertLeadToLearner(enquiry)}
+                                className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border text-xs font-bold transition-colors cursor-pointer ${
+                                  theme === 'light'
+                                    ? 'bg-amber-50 hover:bg-amber-100 text-[#8d6928] border-amber-300'
+                                    : 'bg-[#b58b42]/20 hover:bg-[#b58b42]/30 text-[#f1bd5b] border-[#b58b42]/50'
+                                }`}
+                                title="Convert to Enrolled Learner"
+                              >
+                                <Plus className="w-3.5 h-3.5" />
+                                <span className="hidden lg:inline">Enroll</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setConfirmDeleteEnquiryId(enquiry.id)}
+                                className={`inline-flex p-1.5 rounded-lg transition-colors cursor-pointer ${
+                                  theme === 'light'
+                                    ? 'bg-slate-100 hover:bg-rose-50 text-slate-500 hover:text-rose-600'
+                                    : 'bg-slate-800 hover:bg-rose-950 text-slate-400 hover:text-rose-400'
+                                }`}
+                                title="Delete Website Enquiry"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+        </div>
+      </div>
+    )}
+
+    {consoleTab === 'leads' && (
+      /* ================= LEADS DIRECTORY VIEW (2 OPTIONS: WEBSITE ENQUIRIES / EMAIL CAMPAIGNS) ================= */
+      <div className="flex-1 flex flex-col">
+        {/* Page Header + Left-Aligned Bold Source Options */}
+        <div className={`px-6 lg:px-8 py-5 border-b flex flex-col md:flex-row items-start md:items-end justify-between gap-4 ${
+          theme === 'light' ? 'border-slate-200' : 'border-slate-800/90'
+        }`}>
+          <div className="flex flex-col items-start gap-4">
+            <div>
+              <h2 className={`text-xl sm:text-2xl font-bold tracking-tight ${
+                theme === 'light' ? 'text-slate-900' : 'text-white'
+              }`}>
+                Leads Directory
+              </h2>
+              <p className={`text-xs sm:text-sm mt-1 ${
+                theme === 'light' ? 'text-slate-600' : 'text-slate-400'
+              }`}>
+                Manage qualified prospects separated by Website Enquiries and Email Campaigns.
+              </p>
+            </div>
+
+            <div className={`inline-flex items-center p-1 rounded-lg border ${
+              theme === 'light'
+                ? 'bg-slate-100 border-slate-200'
+                : 'bg-slate-900 border-slate-800'
+            }`}>
+              <button
+                type="button"
+                onClick={() => setLeadSourceOption('website')}
+                className={`px-4 py-2 rounded-md text-xs sm:text-[13px] font-bold flex items-center gap-2 transition-colors cursor-pointer whitespace-nowrap ${
+                  leadSourceOption === 'website'
+                    ? 'bg-[#102a4e] text-white shadow-xs'
+                    : theme === 'light'
+                    ? 'text-slate-700 hover:text-slate-950'
+                    : 'text-slate-300 hover:text-white'
+                }`}
+              >
+                <Mail className={`w-4 h-4 shrink-0 ${leadSourceOption === 'website' ? 'text-[#f1bd5b]' : ''}`} />
+                <span>Website Enquiries</span>
+                <span className={`font-bold tabular-nums ${leadSourceOption === 'website' ? 'text-white/90' : 'opacity-75'}`}>
+                  ({websiteLeadsList.length})
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setLeadSourceOption('campaigns')}
+                className={`px-4 py-2 rounded-md text-xs sm:text-[13px] font-bold flex items-center gap-2 transition-colors cursor-pointer whitespace-nowrap ${
+                  leadSourceOption === 'campaigns'
+                    ? 'bg-[#102a4e] text-white shadow-xs'
+                    : theme === 'light'
+                    ? 'text-slate-700 hover:text-slate-950'
+                    : 'text-slate-300 hover:text-white'
+                }`}
+              >
+                <FileSpreadsheet className={`w-4 h-4 shrink-0 ${leadSourceOption === 'campaigns' ? 'text-[#f1bd5b]' : ''}`} />
+                <span>Email Campaigns</span>
+                <span className={`font-bold tabular-nums ${leadSourceOption === 'campaigns' ? 'text-white/90' : 'opacity-75'}`}>
+                  ({emailCampaignLeadsList.length})
+                </span>
+              </button>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row md:flex-col items-start sm:items-center md:items-end gap-3 shrink-0">
+            <div className="text-left md:text-right">
+              <div className={`text-[11px] font-semibold uppercase tracking-wider ${
+                theme === 'light' ? 'text-slate-500' : 'text-slate-400'
+              }`}>
+                Total Leads
+              </div>
+              <div className={`text-2xl sm:text-3xl font-bold tabular-nums leading-tight ${
+                theme === 'light' ? 'text-slate-900' : 'text-white'
+              }`}>
+                {websiteLeadsList.length + emailCampaignLeadsList.length}
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                try {
+                  const headers = ['Name', 'Email', 'Phone', 'Qualification', 'Program', 'Source', 'Submitted At', 'Notes'];
+                  const rows = activeLeadsPool.map((l) => [
+                    `"${l.name}"`,
+                    `"${l.email}"`,
+                    `"${l.phone}"`,
+                    `"${l.qualification || ''}"`,
+                    `"${l.program || ''}"`,
+                    `"${l.source}"`,
+                    `"${l.submittedAt}"`,
+                    `"${(l.notes || '').replace(/"/g, '""')}"`
+                  ]);
+                  const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+                  const encodedUri = encodeURI(csvContent);
+                  const link = document.createElement('a');
+                  link.setAttribute('href', encodedUri);
+                  link.setAttribute(
+                    'download',
+                    `BNC_Leads_${leadSourceOption === 'website' ? 'Website_Enquiries' : 'Email_Campaigns'}_${new Date().toISOString().slice(0, 10)}.csv`
+                  );
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
+                  onShowToast(`Exported ${activeLeadsPool.length} lead(s) to CSV!`);
+                } catch (e) {
+                  console.warn('CSV export error', e);
+                }
+              }}
+              className="px-4 py-2 rounded-lg bg-[#102a4e] hover:bg-[#163a6b] text-white text-xs font-semibold flex items-center gap-2 transition-colors cursor-pointer shrink-0 whitespace-nowrap"
+            >
+              <Download className="w-4 h-4 text-[#f1bd5b]" />
+              <span>Export CSV ({activeLeadsPool.length})</span>
             </button>
           </div>
         </div>
 
         {/* Search Input for Leads */}
-        <div className="relative">
-          <Search className="w-4 h-4 text-slate-400 absolute left-4 top-3.5" />
-          <input
-            type="text"
-            value={leadSearchTerm}
-            onChange={(e) => setLeadSearchTerm(e.target.value)}
-            placeholder="Search leads by candidate name, email, phone, or program of interest..."
-            className={`w-full pl-11 pr-4 py-3 rounded-2xl border text-xs sm:text-sm transition-all shadow-xs ${
-              theme === 'light'
-                ? 'bg-white border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-sky-600 focus:ring-1 focus:ring-sky-600'
-                : 'bg-[#091729]/95 border-sky-900/60 text-white placeholder-slate-500 focus:outline-none focus:border-[#f1bd5b] shadow-md'
-            }`}
-          />
+        <div className={`px-6 lg:px-8 py-3.5 border-b ${
+          theme === 'light' ? 'border-slate-200' : 'border-slate-800/90'
+        }`}>
+          <div className="relative max-w-md">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+            <input
+              type="text"
+              value={leadSearchTerm}
+              onChange={(e) => setLeadSearchTerm(e.target.value)}
+              placeholder={
+                leadSourceOption === 'website'
+                  ? 'Search website enquiry leads by name, email, phone, or program...'
+                  : 'Search email campaign leads by name, email, phone, or campaign...'
+              }
+              className={`w-full pl-9 pr-4 py-2 rounded-lg border text-xs transition-colors ${
+                theme === 'light'
+                  ? 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-slate-400'
+                  : 'bg-slate-900 border-slate-800 text-white placeholder-slate-500 focus:outline-none focus:border-sky-600'
+              }`}
+            />
+          </div>
         </div>
 
-        {/* Leads Table */}
-        <div className={`border rounded-3xl overflow-hidden transition-colors ${
-          theme === 'light'
-            ? 'bg-white border-slate-200 shadow-xs'
-            : 'bg-[#091729]/95 border-sky-900/60 shadow-xl'
-        }`}>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className={`border-b text-[11px] font-bold uppercase tracking-wider ${
-                  theme === 'light'
-                    ? 'border-slate-200 bg-slate-50 text-slate-500'
-                    : 'border-sky-950 bg-slate-900/90 text-slate-400'
-                }`}>
-                  <th className="py-3.5 pl-5 pr-3">Candidate</th>
-                  <th className="py-3.5 px-3">Contact Channels</th>
-                  <th className="py-3.5 px-3">Qualification & Program</th>
-                  <th className="py-3.5 px-3">Source / Brochure</th>
-                  <th className="py-3.5 px-3">Submitted</th>
-                  <th className="py-3.5 pl-3 pr-5 text-right">Actions</th>
-                </tr>
-              </thead>
+        {/* Full-Width Leads Table */}
+        <div className="overflow-x-auto flex-1">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className={`border-b text-[11px] font-semibold uppercase tracking-wider ${
+                theme === 'light'
+                  ? 'border-slate-200 bg-slate-50/70 text-slate-500'
+                  : 'border-slate-800/90 bg-[#081526] text-slate-400'
+              }`}>
+                <th className="py-3 pl-6 lg:pl-8 pr-3">Candidate</th>
+                <th className="py-3 px-3">Contact Channels</th>
+                <th className="py-3 px-3">Qualification &amp; Program</th>
+                <th className="py-3 px-3">Source / Brochure</th>
+                <th className="py-3 px-3">Submitted</th>
+                <th className="py-3 pl-3 pr-6 lg:pr-8 text-right">Actions</th>
+              </tr>
+            </thead>
               <tbody className={`divide-y text-xs ${
                 theme === 'light' ? 'divide-slate-100' : 'divide-sky-950/60'
               }`}>
                 {filteredLeads.length === 0 ? (
                   <tr>
                     <td colSpan={6} className={`py-12 text-center ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>
-                      No candidate inquiries match the current search.
+                      {leadSourceOption === 'campaigns'
+                        ? 'No Email Campaign leads synced yet. Upload a Google Forms Excel sheet in the Campaigns tab and add respondents to Leads.'
+                        : leadSearchTerm.trim()
+                        ? 'No Website Leads match the current search.'
+                        : 'No Website Leads added yet. Open the Enquiries tab and click "Add to Website Leads" on any enquiry.'}
                     </td>
                   </tr>
                 ) : (
@@ -1433,11 +1972,11 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
                 )}
               </tbody>
             </table>
-          </div>
         </div>
       </div>
     )}
-  </main>
+        </div>
+    </main>
 
       {/* MODAL: Grant New Learner Access */}
       {isAddModalOpen && (

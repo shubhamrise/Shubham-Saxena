@@ -1,18 +1,15 @@
 import React, { useState } from 'react';
-import { Currency } from '../types';
 import { PACKAGES } from '../data/ciaData';
 import { Check, ArrowRight, Sparkles, FileSpreadsheet, ChevronDown, ChevronUp, Download } from 'lucide-react';
 import { motion } from 'motion/react';
 
 interface PackagesSectionProps {
-  currency: Currency;
   onOpenCheckout: (packageId: string) => void;
   onOpenInquiry: () => void;
   onOpenBrochure?: (packageId?: string) => void;
 }
 
 export const PackagesSection: React.FC<PackagesSectionProps> = ({
-  currency: _currency,
   onOpenCheckout,
   onOpenInquiry,
   onOpenBrochure,
@@ -33,7 +30,7 @@ export const PackagesSection: React.FC<PackagesSectionProps> = ({
       </div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header - Directly matching Page 4 of the official BNC Elevate Brochure */}
+        {/* Header */}
         <div className="text-center max-w-3xl mx-auto mb-12">
           <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#b58b42]/20 border border-[#b58b42]/40 text-xs font-bold text-[#f1bd5b] uppercase tracking-widest mb-3">
             <Sparkles className="w-3.5 h-3.5 text-[#f1bd5b]" />
@@ -46,7 +43,7 @@ export const PackagesSection: React.FC<PackagesSectionProps> = ({
             All five packages cover every part of the CIA® exam. LMS access starts as soon as your admission is confirmed. IIA exam fees are paid separately.
           </p>
 
-          {/* Brochure & Fee Structure Option */}
+          {/* Brochure & Counseling Option */}
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
             <button
               onClick={() => onOpenBrochure?.('all')}
@@ -60,7 +57,7 @@ export const PackagesSection: React.FC<PackagesSectionProps> = ({
               className="px-5 py-3 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700 text-slate-200 text-xs font-semibold transition-all cursor-pointer flex items-center gap-2"
             >
               <FileSpreadsheet className="w-4 h-4 text-sky-400" />
-              <span>Request Fee Counseling</span>
+              <span>Request Academic Counseling</span>
             </button>
           </div>
         </div>
@@ -105,12 +102,12 @@ export const PackagesSection: React.FC<PackagesSectionProps> = ({
 
                 <div className="relative z-10 flex flex-col justify-between h-full">
                   <div>
-                    {/* Header info */}
+                    {/* Package Title & Delivery Mode */}
                     <div className="mb-4 pb-3 border-b border-slate-100">
                       <h3 className="text-xl font-black text-slate-900 tracking-tight leading-snug">
                         {pkg.name}
                       </h3>
-                      <div className="text-xs font-semibold text-slate-500 mt-1">
+                      <div className="text-xs font-semibold text-[#9e7735] mt-1">
                         {pkg.deliverables.mode}
                       </div>
                     </div>
@@ -157,7 +154,7 @@ export const PackagesSection: React.FC<PackagesSectionProps> = ({
                           : 'bg-sky-100/70 hover:bg-sky-200/70 text-sky-950 border border-sky-300 hover:border-sky-400'
                       }`}
                     >
-                      <span>Enrol now</span>
+                      <span>Enroll Now</span>
                       <ArrowRight className="w-3.5 h-3.5" />
                     </button>
 

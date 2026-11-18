@@ -119,7 +119,7 @@ export const InquiryModal: React.FC<InquiryModalProps> = ({
               Speak with a Senior CIA® Faculty Counselor
             </h3>
             <p className="text-xs text-slate-600 font-medium">
-              Get personalized syllabus guidance, eligibility review & fee breakdown
+              Get personalized syllabus guidance, eligibility review & cohort roadmap
             </p>
           </div>
           <button

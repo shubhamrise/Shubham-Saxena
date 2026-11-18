@@ -95,7 +95,7 @@ export const DeliverablesSection: React.FC<DeliverablesSectionProps> = ({ onOpen
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-3xl mx-auto mb-16">
           <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#b58b42]/20 border border-[#b58b42]/40 text-xs font-bold text-[#f1bd5b] uppercase tracking-widest mb-3">
-            WHAT YOUR TUITION INCLUDES
+            WHAT THE PROGRAM INCLUDES
           </div>
           <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight mb-4">
             Everything Required to Clear on Your First Attempt

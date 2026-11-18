@@ -6,12 +6,6 @@ export interface PackagePlan {
   tagline: string;
   badge?: string;
   isPopular?: boolean;
-  priceINR: number;
-  priceUSD: number;
-  originalPriceINR?: number;
-  originalPriceUSD?: number;
-  offerNote?: string;
-  installmentINR: number;
   featuresHeader?: string;
   features: string[];
   deliverables: {
@@ -63,15 +57,28 @@ export interface EnrollmentOrder {
   orderId: string;
   packageId: string;
   packageName: string;
-  currency: Currency;
-  basePrice: number;
-  discount: number;
-  totalPrice: number;
+  currency?: Currency;
+  basePrice?: number;
+  discount?: number;
+  totalPrice?: number;
   studentName: string;
   studentEmail: string;
   studentPhone: string;
   qualification: string;
   paymentMethod?: string;
+  paymentPlan?: 'full' | 'installment' | 'advisor';
+  amountPaidToday?: number;
+  remainingBalance?: number;
+  paymentStatus?: 'Paid' | 'Installment Paid' | 'Pending Verification' | 'Enrollment Confirmed';
+  transactionId?: string;
+  upiTransactionCode?: string;
+  gatewayPaymentId?: string;
+  payerVpa?: string;
+  paidAt?: string;
+  invoiceNumber?: string;
+  gstAmount?: number;
+  city?: string;
+  notes?: string;
   createdAt: string;
   addOns: {
     printedBooks: boolean;
@@ -150,7 +157,33 @@ export interface CrmCallLog {
   interestLevel: 'Hot / Ready to Enroll' | 'Warm / Follow-up' | 'Support / Existing Student' | 'Cold / Not Interested';
   reconnectAgain: boolean;
   nextFollowUpDate?: string;
-  feedback: string;
+  feedback?: string;
   handledBy: string;
+}
+
+export interface CampaignFormRow {
+  id: string;
+  batchId: string;
+  campaignName: string;
+  submittedAt: string;
+  name: string;
+  email: string;
+  phone: string;
+  qualification?: string;
+  program?: string;
+  notes?: string;
+  rawFields: Record<string, string>;
+  importedToLeads?: boolean;
+}
+
+export interface CampaignSpreadsheetBatch {
+  id: string;
+  campaignName: string;
+  fileName: string;
+  sheetName: string;
+  uploadedAt: string;
+  savedAt?: string;
+  headers: string[];
+  rows: CampaignFormRow[];
 }
 

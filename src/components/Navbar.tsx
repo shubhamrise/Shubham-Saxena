@@ -1,10 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Currency } from '../types';
 import { Phone, Mail, ChevronRight, Menu, X, BookOpen } from 'lucide-react';
 
 interface NavbarProps {
-  currency: Currency;
-  setCurrency: (c: Currency) => void;
   onOpenCheckout: (packageId?: string) => void;
   onOpenInquiry: () => void;
   onOpenLms?: () => void;
@@ -12,8 +9,6 @@ interface NavbarProps {
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
-  currency,
-  setCurrency,
   onOpenCheckout,
   onOpenInquiry,
   onOpenLms,
@@ -160,7 +155,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               </div>
             </nav>
 
-            {/* Zone 3: Currency Switcher, AI Advisor & Primary Action */}
+            {/* Zone 3: Student LMS & Primary Enrollment Action */}
             <div className="hidden sm:flex items-center gap-3 shrink-0">
 
 

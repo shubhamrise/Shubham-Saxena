@@ -6,12 +6,6 @@ export const PACKAGES: PackagePlan[] = [
     name: 'Basic Self-Paced',
     tagline: 'Self-study + LMS',
     badge: 'Self-paced',
-    priceINR: 36000,
-    priceUSD: 440,
-    originalPriceINR: 45000,
-    originalPriceUSD: 550,
-    offerNote: 'full program 20% off till 31 Mar 2027',
-    installmentINR: 19000,
     featuresHeader: "What's included",
     features: [
       'Full preparation support for all 3 CIA exam parts',
@@ -37,12 +31,6 @@ export const PACKAGES: PackagePlan[] = [
     name: 'Premium',
     tagline: 'Self-study + 20h doubts',
     badge: 'Popular choice',
-    priceINR: 48000,
-    priceUSD: 585,
-    originalPriceINR: 60000,
-    originalPriceUSD: 730,
-    offerNote: 'full program 20% off till 31 Mar 2027',
-    installmentINR: 25000,
     featuresHeader: 'Everything in Basic, plus',
     features: [
       '20 hrs interactive live doubt-clearing sessions with senior CIA and CA faculty',
@@ -68,12 +56,6 @@ export const PACKAGES: PackagePlan[] = [
     tagline: 'Live weekend classes',
     badge: 'Most popular',
     isPopular: true,
-    priceINR: 65600,
-    priceUSD: 799,
-    originalPriceINR: 82000,
-    originalPriceUSD: 1000,
-    offerNote: 'full program 20% off till 31 Mar 2027',
-    installmentINR: 34500,
     featuresHeader: 'Everything in Premium, plus',
     features: [
       '100+ hrs live instructor-led sessions every Friday and Saturday',
@@ -99,12 +81,6 @@ export const PACKAGES: PackagePlan[] = [
     name: 'Premium Plus',
     tagline: 'Live classes + AI Lab',
     badge: 'Flagship innovation',
-    priceINR: 92000,
-    priceUSD: 1120,
-    originalPriceINR: 115000,
-    originalPriceUSD: 1400,
-    offerNote: 'full program 20% off till 31 Mar 2027',
-    installmentINR: 48500,
     featuresHeader: 'Everything in Premium Live, plus',
     features: [
       'Hands-on AI tools training tailored for internal audit and risk management',
@@ -130,12 +106,6 @@ export const PACKAGES: PackagePlan[] = [
     name: 'Elite',
     tagline: 'Live + Expert Mentorship',
     badge: 'Executive VIP tier',
-    priceINR: 116000,
-    priceUSD: 1415,
-    originalPriceINR: 145000,
-    originalPriceUSD: 1770,
-    offerNote: 'full program 20% off till 31 Mar 2027',
-    installmentINR: 61000,
     featuresHeader: 'Everything in Premium Plus, plus',
     features: [
       'Direct Big Four referrals (Deloitte, PwC, EY, KPMG Internal Audit and Risk Advisory)',
@@ -479,8 +449,8 @@ export const FAQS = [
     a: 'Yes! You must activate your IIA India membership before paying exam registration fees in the CCMS portal. Members save up to 40% on exam fees compared to non-member rates. IIA fees are paid directly to the institute.'
   },
   {
-    q: 'Can I purchase a package in installments or EMI?',
-    a: 'Yes, BNC Global offers flexible 2-part zero-interest installment options for our training programs. You can choose this directly in the checkout modal or contact our student support desk.'
+    q: 'Are flexible payment plans or installments available?',
+    a: 'Yes, BNC Global offers flexible installment options tailored for students and working professionals. Submit your enrollment request or contact our admissions desk for a customized schedule.'
   },
   {
     q: 'Can my employer reimburse the CIA course and exam fee?',

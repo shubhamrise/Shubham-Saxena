@@ -38,7 +38,6 @@ export const AdmissionsDeskModal: React.FC<AdmissionsDeskModalProps> = ({ isOpen
           email: o.studentEmail || '',
           programOrInterest: o.packageName || 'CIA Coaching',
           date: o.orderDate || new Date().toISOString(),
-          amount: o.totalPrice ? `${o.currency || '₹'} ${o.totalPrice}` : undefined,
         });
       });
     } catch (e) {
@@ -96,7 +95,7 @@ export const AdmissionsDeskModal: React.FC<AdmissionsDeskModalProps> = ({ isOpen
 
   const handleExportCSV = () => {
     if (leads.length === 0) return;
-    const headers = ['Type', 'Name', 'Phone', 'Email', 'Program / Interest', 'Qualification', 'Date', 'Amount'];
+    const headers = ['Type', 'Name', 'Phone', 'Email', 'Program / Interest', 'Qualification', 'Date'];
     const rows = leads.map((l) => [
       l.type,
       `"${l.name.replace(/"/g, '""')}"`,
@@ -105,7 +104,6 @@ export const AdmissionsDeskModal: React.FC<AdmissionsDeskModalProps> = ({ isOpen
       `"${(l.programOrInterest || '').replace(/"/g, '""')}"`,
       `"${(l.qualification || '').replace(/"/g, '""')}"`,
       `"${new Date(l.date).toLocaleString('en-IN')}"`,
-      `"${l.amount || 'N/A'}"`,
     ]);
 
     const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((e) => e.join(','))].join('\n');

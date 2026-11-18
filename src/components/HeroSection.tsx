@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { Currency } from '../types';
 import {
   ArrowRight,
   Sparkles,
@@ -31,7 +30,6 @@ import {
 } from '../services/enquiryService';
 
 interface HeroSectionProps {
-  currency: Currency;
   onOpenCheckout: (packageId?: string) => void;
   onOpenQuiz: () => void;
   onOpenInquiry: () => void;
@@ -39,7 +37,6 @@ interface HeroSectionProps {
 }
 
 export const HeroSection: React.FC<HeroSectionProps> = ({
-  currency,
   onOpenCheckout,
   onOpenQuiz,
   onOpenInquiry,
@@ -253,7 +250,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                   Speak to a Senior CIA® Counselor
                 </h3>
                 <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                  Receive syllabus roadmap, fee scholarship options & personalized eligibility advice.
+                  Receive syllabus roadmap, cohort schedule & personalized eligibility advice.
                 </p>
               </div>
 
@@ -288,7 +285,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                     </button>
                     <a
                       href={`mailto:info@bncglobal.in?subject=${encodeURIComponent(`[BNC ELEVATE] CIA Enquiry & Brochure Request: ${enquiryName}`)}&body=${encodeURIComponent(
-                        `Candidate Name: ${enquiryName}\nPhone / WhatsApp: ${enquiryPhone}\nEmail: ${enquiryEmail}\nEducational Qualification: ${enquiryQualification}\nProgram of Interest: ${enquiryProgram}\nBrochure Downloaded: Yes\nSubmitted At: ${new Date().toLocaleString()}\n\nAdmissions Note: Please dispatch cohort batch dates and scholarship fee structure to my email.`
+                        `Candidate Name: ${enquiryName}\nPhone / WhatsApp: ${enquiryPhone}\nEmail: ${enquiryEmail}\nEducational Qualification: ${enquiryQualification}\nProgram of Interest: ${enquiryProgram}\nBrochure Downloaded: Yes\nSubmitted At: ${new Date().toLocaleString()}\n\nAdmissions Note: Please dispatch cohort batch dates and program details to my email.`
                       )}`}
                       className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-md transition-all border border-slate-700"
                     >

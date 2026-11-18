@@ -127,7 +127,7 @@ export const BrochureModal: React.FC<BrochureModalProps> = ({
             </div>
             <div>
               <div className="text-[10px] font-bold text-[#f1bd5b] uppercase tracking-wider">
-                Official Curriculum & Fee Guide
+                Official Curriculum & Program Guide
               </div>
               <h3 className="text-base sm:text-lg font-black text-white">
                 Download BNC ELEVATE Brochure
@@ -159,7 +159,7 @@ export const BrochureModal: React.FC<BrochureModalProps> = ({
                   Brochure Downloaded Successfully!
                 </h4>
                 <p className="text-xs sm:text-sm text-slate-300 max-w-md mx-auto leading-relaxed">
-                  Your comprehensive 2026-27 CIA® syllabus and fee structure has been saved to your device.
+                  Your comprehensive 2026-27 CIA® syllabus and program guide has been saved to your device.
                 </p>
               </div>
 
@@ -218,7 +218,7 @@ export const BrochureModal: React.FC<BrochureModalProps> = ({
           ) : (
             <div>
               <p className="text-xs sm:text-sm text-slate-300 leading-relaxed mb-6">
-                Receive the detailed 3-part CIA curriculum breakdown, full fee schedule, installment options, faculty credentials, and Pearson VUE exam prep roadmap.
+                Receive the detailed 3-part CIA curriculum breakdown, preparation packages, faculty credentials, and Pearson VUE exam prep roadmap.
               </p>
 
               <form onSubmit={handleFormSubmit} className="space-y-4">

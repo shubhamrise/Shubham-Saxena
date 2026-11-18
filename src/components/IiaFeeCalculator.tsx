@@ -152,7 +152,7 @@ export const IiaFeeCalculator: React.FC = () => {
         <div className="space-y-8">
           <div>
             <h3 className="text-lg font-bold text-slate-900 mb-3 flex items-center gap-2">
-              <span>IIA India Member Examination Price Schedule</span>
+              <span>IIA India Member Examination Fee Schedule</span>
               <span className="px-2 py-0.5 rounded text-[10px] bg-amber-100 text-[#b58b42] font-bold uppercase">
                 Offer Rates Active Till March 31, 2027
               </span>
@@ -162,8 +162,8 @@ export const IiaFeeCalculator: React.FC = () => {
                 <thead>
                   <tr className="bg-slate-100/90 text-slate-700 border-b border-slate-200">
                     <th className="p-4 font-bold">Item Description</th>
-                    <th className="p-4 font-bold">Standard Price</th>
-                    <th className="p-4 font-bold text-blue-900">Special Offer Price</th>
+                    <th className="p-4 font-bold">Standard IIA Fee</th>
+                    <th className="p-4 font-bold text-blue-900">Special Offer Fee</th>
                     <th className="p-4 font-bold text-emerald-700">Total with 18% GST</th>
                     <th className="p-4 font-bold">Validity / Specification</th>
                   </tr>

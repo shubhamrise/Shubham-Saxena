@@ -77,7 +77,6 @@ export const CrmCallLogEditor: React.FC<CrmCallLogEditorProps> = ({
   const [formResponseSummary, setFormResponseSummary] = useState('');
   const [formReconnectAgain, setFormReconnectAgain] = useState<boolean>(true);
   const [formNextFollowUp, setFormNextFollowUp] = useState('');
-  const [formFeedback, setFormFeedback] = useState('');
   const [formHandledBy, setFormHandledBy] = useState(adminName);
 
   // Live Call Stopwatch inside modal
@@ -111,7 +110,6 @@ export const CrmCallLogEditor: React.FC<CrmCallLogEditorProps> = ({
     setFormResponseSummary('');
     setFormReconnectAgain(true);
     setFormNextFollowUp('');
-    setFormFeedback('');
     setFormHandledBy(adminName);
     setIsTimerActive(false);
     setTimerSeconds(0);
@@ -134,7 +132,6 @@ export const CrmCallLogEditor: React.FC<CrmCallLogEditorProps> = ({
     setFormResponseSummary(log.responseSummary);
     setFormReconnectAgain(log.reconnectAgain);
     setFormNextFollowUp(log.nextFollowUpDate || '');
-    setFormFeedback(log.feedback);
     setFormHandledBy(log.handledBy || adminName);
     setIsTimerActive(false);
     setTimerSeconds(log.durationSeconds);
@@ -189,7 +186,7 @@ export const CrmCallLogEditor: React.FC<CrmCallLogEditorProps> = ({
       interestLevel: formInterestLevel,
       reconnectAgain: formReconnectAgain,
       nextFollowUpDate: formReconnectAgain && formNextFollowUp.trim() ? formNextFollowUp.trim() : undefined,
-      feedback: formFeedback.trim() || 'No additional remarks logged.',
+      feedback: editingLog?.feedback,
       handledBy: formHandledBy.trim() || adminName
     };
 
@@ -254,7 +251,7 @@ export const CrmCallLogEditor: React.FC<CrmCallLogEditorProps> = ({
         `"${c.responseSummary.replace(/"/g, '""')}"`,
         `"${c.reconnectAgain ? 'Yes' : 'No'}"`,
         `"${c.nextFollowUpDate || ''}"`,
-        `"${c.feedback.replace(/"/g, '""')}"`,
+        `"${(c.feedback || '').replace(/"/g, '""')}"`,
         `"${c.handledBy.replace(/"/g, '""')}"`
       ]);
       const csvContent =
@@ -292,7 +289,7 @@ export const CrmCallLogEditor: React.FC<CrmCallLogEditorProps> = ({
       c.phone.toLowerCase().includes(term) ||
       (c.email && c.email.toLowerCase().includes(term)) ||
       c.responseSummary.toLowerCase().includes(term) ||
-      c.feedback.toLowerCase().includes(term) ||
+      (c.feedback || '').toLowerCase().includes(term) ||
       c.handledBy.toLowerCase().includes(term);
 
     const matchesDirection =
@@ -323,39 +320,27 @@ export const CrmCallLogEditor: React.FC<CrmCallLogEditorProps> = ({
   };
 
   return (
-    <div className="space-y-6">
-      {/* Banner */}
+    <div className="flex-1 flex flex-col">
+      {/* Page Header */}
       <div
-        className={`flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-6 rounded-3xl border shadow-xs transition-colors ${
-          theme === 'light'
-            ? 'bg-gradient-to-r from-white via-sky-50 to-white border-slate-200'
-            : 'bg-gradient-to-r from-[#0b1d33] via-[#091b30] to-[#122338] border-sky-800/60 shadow-xl'
+        className={`px-6 lg:px-8 py-5 border-b flex flex-col md:flex-row items-start md:items-center justify-between gap-4 ${
+          theme === 'light' ? 'border-slate-200' : 'border-slate-800/90'
         }`}
       >
         <div>
-          <div
-            className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border text-[10px] font-bold uppercase tracking-wider mb-2 ${
-              theme === 'light'
-                ? 'bg-amber-50 text-[#b58b42] border-amber-200'
-                : 'bg-[#b58b42]/20 text-[#f1bd5b] border-[#b58b42]/40'
-            }`}
-          >
-            <PhoneCall className="w-3.5 h-3.5 text-[#b58b42]" />
-            <span>Student Tele-Counseling & Call Follow-Up CRM</span>
-          </div>
           <h2
-            className={`text-xl sm:text-2xl font-black tracking-tight ${
+            className={`text-xl sm:text-2xl font-bold tracking-tight ${
               theme === 'light' ? 'text-slate-900' : 'text-white'
             }`}
           >
-            Student Phone Call CRM & Feedback Tracker
+            Student Phone Call CRM &amp; Follow-Up Tracker
           </h2>
           <p
-            className={`text-xs sm:text-sm mt-1 max-w-2xl leading-relaxed ${
-              theme === 'light' ? 'text-slate-600' : 'text-slate-300'
+            className={`text-xs sm:text-sm mt-1 max-w-2xl ${
+              theme === 'light' ? 'text-slate-600' : 'text-slate-400'
             }`}
           >
-            Log every inbound and outbound phone call with students and prospects—track phone numbers, exact call durations, student responses, follow-up reconnect decisions, and counselor feedback.
+            Log inbound and outbound student calls, track exact durations, capture responses, and schedule follow-up reconnects.
           </p>
         </div>
 
@@ -363,10 +348,10 @@ export const CrmCallLogEditor: React.FC<CrmCallLogEditorProps> = ({
           <button
             type="button"
             onClick={handleExportCrmCsv}
-            className={`px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 border transition-all cursor-pointer shadow-xs ${
+            className={`px-3.5 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 border transition-colors cursor-pointer whitespace-nowrap ${
               theme === 'light'
-                ? 'bg-white hover:bg-slate-100 text-slate-800 border-slate-300'
-                : 'bg-slate-800/90 hover:bg-slate-700 text-slate-200 border-slate-700'
+                ? 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
+                : 'bg-slate-900 hover:bg-slate-800 text-slate-200 border-slate-800'
             }`}
           >
             <Download className="w-4 h-4 text-sky-600" />
@@ -376,40 +361,40 @@ export const CrmCallLogEditor: React.FC<CrmCallLogEditorProps> = ({
           <button
             type="button"
             onClick={openAddModal}
-            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#102a4e] to-[#b58b42] hover:opacity-95 text-white text-xs font-bold flex items-center gap-2 shadow-sm transition-all cursor-pointer"
+            className="px-4 py-2 rounded-lg bg-[#102a4e] hover:bg-[#163a6b] text-white text-xs font-semibold flex items-center gap-2 transition-colors cursor-pointer whitespace-nowrap"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-4 h-4 text-[#f1bd5b]" />
             <span>Log Phone Call</span>
           </button>
         </div>
       </div>
 
-      {/* 4 KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div
-          className={`p-5 rounded-2xl border shadow-xs ${
-            theme === 'light'
-              ? 'bg-white border-slate-200 text-slate-900'
-              : 'bg-[#091729]/95 border-sky-900/60 shadow-lg text-white'
-          }`}
-        >
+      {/* Unified Horizontal Metric Strip (No Floating Boxes) */}
+      <div
+        className={`grid grid-cols-2 lg:grid-cols-4 divide-y lg:divide-y-0 lg:divide-x border-b ${
+          theme === 'light'
+            ? 'border-slate-200 divide-slate-200 bg-slate-50/40'
+            : 'border-slate-800/90 divide-slate-800/90 bg-[#081526]/60'
+        }`}
+      >
+        <div className="px-6 lg:px-8 py-4">
           <div
-            className={`flex items-center justify-between text-xs font-bold uppercase ${
+            className={`flex items-center justify-between text-xs font-semibold ${
               theme === 'light' ? 'text-slate-500' : 'text-slate-400'
             }`}
           >
             <span>Total Calls Logged</span>
-            <Phone className="w-4 h-4 text-sky-600" />
+            <Phone className="w-4 h-4 text-slate-400" />
           </div>
           <div
-            className={`text-2xl sm:text-3xl font-black mt-2 ${
+            className={`text-2xl font-bold mt-1.5 tabular-nums ${
               theme === 'light' ? 'text-slate-900' : 'text-white'
             }`}
           >
             {totalCalls}
           </div>
           <div
-            className={`text-[11px] mt-1 ${
+            className={`text-xs mt-0.5 ${
               theme === 'light' ? 'text-slate-500' : 'text-slate-400'
             }`}
           >
@@ -417,93 +402,75 @@ export const CrmCallLogEditor: React.FC<CrmCallLogEditorProps> = ({
           </div>
         </div>
 
-        <div
-          className={`p-5 rounded-2xl border shadow-xs ${
-            theme === 'light'
-              ? 'bg-sky-50 border-sky-200'
-              : 'bg-sky-950/40 border-sky-500/40 shadow-lg'
-          }`}
-        >
+        <div className="px-6 lg:px-8 py-4">
           <div
-            className={`flex items-center justify-between text-xs font-bold uppercase ${
-              theme === 'light' ? 'text-sky-800' : 'text-sky-300'
+            className={`flex items-center justify-between text-xs font-semibold ${
+              theme === 'light' ? 'text-slate-500' : 'text-slate-400'
             }`}
           >
             <span>Outbound / Inbound</span>
             <PhoneOutgoing className="w-4 h-4 text-sky-600" />
           </div>
           <div
-            className={`text-2xl sm:text-3xl font-black mt-2 ${
-              theme === 'light' ? 'text-sky-800' : 'text-sky-200'
+            className={`text-2xl font-bold mt-1.5 tabular-nums ${
+              theme === 'light' ? 'text-sky-700' : 'text-sky-300'
             }`}
           >
-            {outboundCount} <span className="text-base font-semibold opacity-60">/</span> {inboundCount}
+            {outboundCount} <span className="text-base font-medium opacity-50">/</span> {inboundCount}
           </div>
           <div
-            className={`text-[11px] mt-1 ${
-              theme === 'light' ? 'text-sky-700' : 'text-sky-300/80'
+            className={`text-xs mt-0.5 ${
+              theme === 'light' ? 'text-slate-500' : 'text-slate-400'
             }`}
           >
             Calls made vs. calls received
           </div>
         </div>
 
-        <div
-          className={`p-5 rounded-2xl border shadow-xs ${
-            theme === 'light'
-              ? 'bg-amber-50 border-amber-200'
-              : 'bg-amber-950/40 border-amber-500/40 shadow-lg'
-          }`}
-        >
+        <div className="px-6 lg:px-8 py-4">
           <div
-            className={`flex items-center justify-between text-xs font-bold uppercase ${
-              theme === 'light' ? 'text-amber-800' : 'text-[#f1bd5b]'
+            className={`flex items-center justify-between text-xs font-semibold ${
+              theme === 'light' ? 'text-slate-500' : 'text-slate-400'
             }`}
           >
             <span>Reconnect Required</span>
-            <RefreshCw className="w-4 h-4 text-[#b58b42]" />
+            <RefreshCw className="w-4 h-4 text-amber-600" />
           </div>
           <div
-            className={`text-2xl sm:text-3xl font-black mt-2 ${
-              theme === 'light' ? 'text-amber-800' : 'text-[#f1bd5b]'
+            className={`text-2xl font-bold mt-1.5 tabular-nums ${
+              theme === 'light' ? 'text-amber-700' : 'text-[#f1bd5b]'
             }`}
           >
             {reconnectPendingCount}
           </div>
           <div
-            className={`text-[11px] mt-1 ${
-              theme === 'light' ? 'text-amber-800' : 'text-[#f1bd5b]/80'
+            className={`text-xs mt-0.5 ${
+              theme === 'light' ? 'text-slate-500' : 'text-slate-400'
             }`}
           >
             Marked for follow-up reconnect
           </div>
         </div>
 
-        <div
-          className={`p-5 rounded-2xl border shadow-xs ${
-            theme === 'light'
-              ? 'bg-emerald-50 border-emerald-200'
-              : 'bg-emerald-950/40 border-emerald-500/40 shadow-lg'
-          }`}
-        >
+        <div className="px-6 lg:px-8 py-4">
           <div
-            className={`flex items-center justify-between text-xs font-bold uppercase ${
-              theme === 'light' ? 'text-emerald-800' : 'text-emerald-400'
+            className={`flex items-center justify-between text-xs font-semibold ${
+              theme === 'light' ? 'text-slate-500' : 'text-slate-400'
             }`}
           >
             <span>Avg Call Duration</span>
             <Clock className="w-4 h-4 text-emerald-600" />
           </div>
           <div
-            className={`text-2xl sm:text-3xl font-black mt-2 ${
-              theme === 'light' ? 'text-emerald-700' : 'text-emerald-300'
+            className={`text-2xl font-bold mt-1.5 tabular-nums ${
+              theme === 'light' ? 'text-emerald-700' : 'text-emerald-400'
             }`}
           >
             {formatDuration(avgDurationSecs)}
           </div>
           <div
-            className={`text-[11px] mt-1 ${
-              theme === 'light' ? 'text-emerald-700' : 'text-emerald-300/80'
+            className={`text-xs mt-0.5 ${
+              theme === 'light' ? 'text-slate-500' : 'text-slate-400'
             }`}
           >
             Across all logged conversations
@@ -511,117 +478,119 @@ export const CrmCallLogEditor: React.FC<CrmCallLogEditorProps> = ({
         </div>
       </div>
 
-      {/* Filter & Search Bar */}
+      {/* Inline Filter & Search Toolbar */}
       <div
-        className={`flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 p-4 rounded-2xl border shadow-xs transition-colors ${
-          theme === 'light'
-            ? 'bg-white border-slate-200'
-            : 'bg-[#091729]/90 border-sky-900/60 shadow-md'
+        className={`px-6 lg:px-8 py-3.5 border-b flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 ${
+          theme === 'light' ? 'border-slate-200' : 'border-slate-800/90'
         }`}
       >
-        <div className="relative flex-1 min-w-[240px]">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+        <div className="relative flex-1 max-w-md">
+          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search by student name, phone number, response, or feedback..."
-            className={`w-full pl-10 pr-4 py-2 rounded-xl text-xs focus:outline-none transition-all border ${
+            placeholder="Search by student name, phone number, or response..."
+            className={`w-full pl-9 pr-4 py-2 rounded-lg text-xs focus:outline-none transition-colors border ${
               theme === 'light'
-                ? 'bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-400 focus:border-sky-600 focus:ring-1 focus:ring-sky-600'
-                : 'bg-slate-900/90 border-slate-700/80 text-white placeholder-slate-500 focus:border-[#f1bd5b]'
+                ? 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white focus:border-slate-400'
+                : 'bg-slate-900 border-slate-800 text-white placeholder-slate-500 focus:border-sky-600'
             }`}
           />
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
           {/* Direction Filter */}
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-2">
             <span
-              className={`text-xs font-semibold flex items-center gap-1 ${
-                theme === 'light' ? 'text-slate-600' : 'text-slate-400'
+              className={`text-xs font-medium flex items-center gap-1 ${
+                theme === 'light' ? 'text-slate-500' : 'text-slate-400'
               }`}
             >
               <Filter className="w-3.5 h-3.5" />
               <span>Direction:</span>
             </span>
-            {(['all', 'outbound', 'inbound'] as const).map((dir) => (
-              <button
-                key={dir}
-                type="button"
-                onClick={() => setDirectionFilter(dir)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold capitalize transition-all cursor-pointer ${
-                  directionFilter === dir
-                    ? 'bg-gradient-to-r from-[#102a4e] to-[#b58b42] text-white shadow-xs'
-                    : theme === 'light'
-                    ? 'bg-slate-100 text-slate-700 hover:text-slate-900 hover:bg-slate-200 border border-slate-200'
-                    : 'bg-slate-800/80 text-slate-300 hover:text-white hover:bg-slate-700'
-                }`}
-              >
-                {dir}
-              </button>
-            ))}
+            <div className={`inline-flex items-center p-1 rounded-lg ${
+              theme === 'light' ? 'bg-slate-100' : 'bg-slate-900 border border-slate-800'
+            }`}>
+              {(['all', 'outbound', 'inbound'] as const).map((dir) => (
+                <button
+                  key={dir}
+                  type="button"
+                  onClick={() => setDirectionFilter(dir)}
+                  className={`px-3 py-1 rounded-md text-xs font-semibold capitalize transition-colors cursor-pointer whitespace-nowrap ${
+                    directionFilter === dir
+                      ? theme === 'light'
+                        ? 'bg-white text-slate-900 shadow-xs'
+                        : 'bg-slate-800 text-white'
+                      : theme === 'light'
+                      ? 'text-slate-600 hover:text-slate-900'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  {dir}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Reconnect Filter */}
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-2">
             <span
-              className={`text-xs font-semibold ${
-                theme === 'light' ? 'text-slate-600' : 'text-slate-400'
+              className={`text-xs font-medium ${
+                theme === 'light' ? 'text-slate-500' : 'text-slate-400'
               }`}
             >
               Reconnect:
             </span>
-            {([
-              { id: 'all', label: 'All' },
-              { id: 'yes', label: 'Yes (Follow-Up)' },
-              { id: 'no', label: 'No (Closed)' }
-            ] as const).map((opt) => (
-              <button
-                key={opt.id}
-                type="button"
-                onClick={() => setReconnectFilter(opt.id)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                  reconnectFilter === opt.id
-                    ? 'bg-gradient-to-r from-[#102a4e] to-[#b58b42] text-white shadow-xs'
-                    : theme === 'light'
-                    ? 'bg-slate-100 text-slate-700 hover:text-slate-900 hover:bg-slate-200 border border-slate-200'
-                    : 'bg-slate-800/80 text-slate-300 hover:text-white hover:bg-slate-700'
-                }`}
-              >
-                {opt.label}
-              </button>
-            ))}
+            <div className={`inline-flex items-center p-1 rounded-lg ${
+              theme === 'light' ? 'bg-slate-100' : 'bg-slate-900 border border-slate-800'
+            }`}>
+              {([
+                { id: 'all', label: 'All' },
+                { id: 'yes', label: 'Yes (Follow-Up)' },
+                { id: 'no', label: 'No (Closed)' }
+              ] as const).map((opt) => (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => setReconnectFilter(opt.id)}
+                  className={`px-3 py-1 rounded-md text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap ${
+                    reconnectFilter === opt.id
+                      ? theme === 'light'
+                        ? 'bg-white text-slate-900 shadow-xs'
+                        : 'bg-slate-800 text-white'
+                      : theme === 'light'
+                      ? 'text-slate-600 hover:text-slate-900'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </div>
 
-      {/* CRM Call Log Table */}
-      <div
-        className={`border rounded-3xl overflow-hidden shadow-xs transition-colors ${
-          theme === 'light'
-            ? 'bg-white border-slate-200'
-            : 'bg-[#091729]/95 border-sky-900/60 shadow-2xl'
-        }`}
-      >
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr
-                className={`border-b text-[11px] font-bold uppercase tracking-wider ${
-                  theme === 'light'
-                    ? 'bg-slate-50 border-slate-200 text-slate-600'
-                    : 'bg-[#061220] border-sky-950 text-slate-400'
-                }`}
-              >
-                <th className="py-3.5 pl-5 pr-3">Student & Phone</th>
-                <th className="py-3.5 px-3">Call Direction & Duration</th>
-                <th className="py-3.5 px-3">Student Response</th>
-                <th className="py-3.5 px-3 text-center">Reconnect Again?</th>
-                <th className="py-3.5 px-3">Feedback & Counselor Notes</th>
-                <th className="py-3.5 pl-3 pr-5 text-right">Actions</th>
-              </tr>
-            </thead>
+      {/* Full-Width CRM Call Log Table */}
+      <div className="overflow-x-auto flex-1">
+        <table className="w-full text-left border-collapse">
+          <thead>
+            <tr
+              className={`border-b text-[11px] font-semibold uppercase tracking-wider ${
+                theme === 'light'
+                  ? 'bg-slate-50/70 border-slate-200 text-slate-500'
+                  : 'bg-[#081526] border-slate-800/90 text-slate-400'
+              }`}
+            >
+              <th className="py-3 pl-6 lg:pl-8 pr-3">Student &amp; Phone</th>
+              <th className="py-3 px-3">Call Direction &amp; Duration</th>
+              <th className="py-3 px-3">Student Response</th>
+              <th className="py-3 px-3 text-center">Reconnect Again?</th>
+              <th className="py-3 pl-3 pr-6 lg:pr-8 text-right">Actions</th>
+            </tr>
+          </thead>
             <tbody
               className={`divide-y text-xs ${
                 theme === 'light'
@@ -632,7 +601,7 @@ export const CrmCallLogEditor: React.FC<CrmCallLogEditorProps> = ({
               {filteredLogs.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={6}
+                    colSpan={5}
                     className={`py-12 text-center ${
                       theme === 'light' ? 'text-slate-500' : 'text-slate-400'
                     }`}
@@ -827,19 +796,6 @@ export const CrmCallLogEditor: React.FC<CrmCallLogEditorProps> = ({
                       )}
                     </td>
 
-                    {/* Feedback */}
-                    <td className="py-3.5 px-3 min-w-[180px] max-w-[240px]">
-                      <div
-                        className={`p-3 rounded-xl border text-xs leading-relaxed ${
-                          theme === 'light'
-                            ? 'bg-slate-50 border-slate-200 text-slate-700'
-                            : 'bg-slate-900/70 border-slate-800 text-slate-300'
-                        }`}
-                      >
-                        {log.feedback}
-                      </div>
-                    </td>
-
                     {/* Actions */}
                     <td className="py-3.5 pl-3 pr-5 text-right">
                       <div className="inline-flex flex-wrap items-center justify-end gap-1.5">
@@ -899,7 +855,6 @@ export const CrmCallLogEditor: React.FC<CrmCallLogEditorProps> = ({
               )}
             </tbody>
           </table>
-        </div>
       </div>
 
       {/* MODAL: Log / Edit Phone Call */}
@@ -945,7 +900,7 @@ export const CrmCallLogEditor: React.FC<CrmCallLogEditorProps> = ({
                       theme === 'light' ? 'text-slate-500' : 'text-slate-400'
                     }`}
                   >
-                    Capture call direction, duration, student response, reconnect decision & feedback
+                    Capture call direction, duration, student response & reconnect decision
                   </p>
                 </div>
               </div>
@@ -1333,25 +1288,7 @@ export const CrmCallLogEditor: React.FC<CrmCallLogEditorProps> = ({
                 )}
               </div>
 
-              {/* Detailed Feedback & Handled By */}
-              <div>
-                <label className={`block font-semibold mb-1 ${theme === 'light' ? 'text-slate-700' : 'text-slate-300'}`}>
-                  Detailed Call Feedback & Action Notes *
-                </label>
-                <textarea
-                  rows={3}
-                  required
-                  value={formFeedback}
-                  onChange={(e) => setFormFeedback(e.target.value)}
-                  placeholder="Record student feedback, objections, key discussion points, or promised materials..."
-                  className={`w-full px-3.5 py-2.5 rounded-xl border text-xs focus:outline-none resize-y ${
-                    theme === 'light'
-                      ? 'bg-slate-50 border-slate-300 text-slate-900 focus:border-sky-600 focus:bg-white'
-                      : 'bg-slate-900 border-slate-700 text-white focus:border-[#f1bd5b]'
-                  }`}
-                />
-              </div>
-
+              {/* Handled By */}
               <div>
                 <label className={`block font-semibold mb-1 ${theme === 'light' ? 'text-slate-700' : 'text-slate-300'}`}>
                   Logged By / Counselor Name

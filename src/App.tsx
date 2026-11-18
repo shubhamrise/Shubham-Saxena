@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Currency, EnrollmentOrder } from './types';
+import { EnrollmentOrder } from './types';
 import { Navbar } from './components/Navbar';
 import { HeroSection } from './components/HeroSection';
 import { FoundersSection } from './components/FoundersSection';
@@ -20,7 +20,6 @@ import { BrochureModal } from './components/BrochureModal';
 import { Sparkles, ArrowRight, ShieldCheck } from 'lucide-react';
 
 export default function App() {
-  const [currency, setCurrency] = useState<Currency>('INR');
   const [lmsOpen, setLmsOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [selectedPackageForCheckout, setSelectedPackageForCheckout] = useState('premium');
@@ -87,7 +86,9 @@ export default function App() {
   };
 
   const handleEnrollSuccess = (order: EnrollmentOrder) => {
-    setActiveNotification(`Seat reserved for ${order.studentName}! Order ID: ${order.orderId}`);
+    setActiveNotification(
+      `Enrolled in ${order.packageName}! Invoice ${order.invoiceNumber || order.orderId} (${order.paymentStatus || 'Confirmed'})`
+    );
   };
 
   if (lmsOpen) {
@@ -137,8 +138,6 @@ export default function App() {
 
       {/* Navigation Bar */}
       <Navbar
-        currency={currency}
-        setCurrency={setCurrency}
         onOpenCheckout={handleOpenCheckout}
         onOpenInquiry={handleOpenInquiry}
         onOpenLms={() => setLmsOpen(true)}
@@ -149,7 +148,6 @@ export default function App() {
       <main className="relative z-10 flex-1">
         {/* 1. Master Opening Section: Hero + 4 Performance Metrics + 3 Pillars */}
         <HeroSection
-          currency={currency}
           onOpenCheckout={handleOpenCheckout}
           onOpenQuiz={handleOpenQuiz}
           onOpenInquiry={handleOpenInquiry}
@@ -174,15 +172,14 @@ export default function App() {
           onOpenInquiry={handleOpenInquiry}
         />
 
-        {/* 6. Pricing, Packages & Direct Enrollment (Core Purchase Center) */}
+        {/* 6. Packages & Direct Enrollment (Core Program Center) */}
         <PackagesSection
-          currency={currency}
           onOpenCheckout={handleOpenCheckout}
           onOpenInquiry={handleOpenInquiry}
           onOpenBrochure={handleOpenBrochure}
         />
 
-        {/* 7. What Course Fee Covers (The 8 Pillars) */}
+        {/* 7. What Program Covers (The 8 Pillars) */}
         <DeliverablesSection onOpenLms={() => setLmsOpen(true)} />
 
         {/* 8. Official IIA India Fees & Transparent Calculator */}
@@ -214,7 +211,7 @@ export default function App() {
               Ready to Earn the Certified Internal Auditor (CIA®) Designation?
             </h2>
             <p className="text-sm sm:text-base text-sky-50 max-w-2xl mx-auto leading-relaxed">
-              Join hundreds of successful auditors who passed with BNC Global. Secure your seat today with flexible no-cost 2-part installments.
+              Join hundreds of successful auditors who passed with BNC Global. Reserve your seat today for the upcoming live cohort.
             </p>
             <div className="flex flex-wrap items-center justify-center gap-4 pt-4">
               <button
@@ -266,8 +263,8 @@ export default function App() {
         isOpen={checkoutOpen}
         onClose={handleCloseCheckout}
         selectedPackageId={selectedPackageForCheckout}
-        currency={currency}
         onEnrollSuccess={handleEnrollSuccess}
+        onOpenLms={() => setLmsOpen(true)}
       />
 
       <InquiryModal

@@ -311,7 +311,7 @@ Candidate Details:
 - Brochure Downloaded: Yes
 - Submission Date: ${new Date().toLocaleString()}
 
-Please share upcoming cohort batch dates, fee scholarship eligibility, and demo class access.
+Please share upcoming cohort batch dates, program details, and demo class access.
 
 Warm regards,
 ${data.name}`;
@@ -323,6 +323,6 @@ ${data.name}`;
  * Generates direct WhatsApp chat URL to +91 63960 18626
  */
 export const getDirectWhatsAppUrl = (data: EnquiryPayload): string => {
-  const text = `Hi BNC ELEVATE, I have submitted an enquiry and downloaded the CIA brochure. My name is ${data.name} (${data.phone}). Please share the fee details and cohort schedule!`;
+  const text = `Hi BNC ELEVATE, I have submitted an enquiry and downloaded the CIA brochure. My name is ${data.name} (${data.phone}). Please share the program details and cohort schedule!`;
   return `https://wa.me/916396018626?text=${encodeURIComponent(text)}`;
 };

@@ -355,6 +355,13 @@ export const StudentLmsPortal: React.FC<StudentLmsPortalProps> = ({
           );
 
           if (matchedOrder) {
+            if (matchedOrder.paymentStatus === 'Pending Verification') {
+              setAuthError(
+                `Payment Under Verification: Your bank transfer for ${matchedOrder.packageName} (Ref: ${matchedOrder.transactionId || matchedOrder.orderId}) is awaiting finance confirmation. Contact info@bncglobal.in or +91 63960 18626 for priority clearance.`
+              );
+              return;
+            }
+
             const expectedOrderPass = matchedOrder.password?.trim() || 'bnc2026';
             if (trimmedPassword !== expectedOrderPass && trimmedPassword !== 'bnc2026') {
               setAuthError(
@@ -363,14 +370,26 @@ export const StudentLmsPortal: React.FC<StudentLmsPortalProps> = ({
               return;
             }
 
+            const durationMap: Record<string, string> = {
+              basic: '18 Months Active Access',
+              premium: '18 Months Active Access',
+              'premium-live': '18 Months Active Access',
+              'premium-plus': '24 Months Extended Access',
+              elite: '36 Months + Lifetime Alumni',
+            };
+
+            const feeLabel = matchedOrder.paymentMethod
+              ? `${matchedOrder.paymentStatus || 'Paid'} · ${matchedOrder.paymentMethod}`
+              : 'Fee Submission Confirmed & Verified';
+
             const student: AuthenticatedStudent = {
               name: matchedOrder.studentName || 'Enrolled Candidate',
               email: matchedOrder.studentEmail || inputEmail,
               orderId: matchedOrder.orderId || '2026000',
               packageName: matchedOrder.packageName || 'Premium Live Interactive',
-              feeStatus: 'Fee Submission Confirmed & Verified',
+              feeStatus: feeLabel,
               enrollmentDate: matchedOrder.createdAt || 'Recent Enrollment',
-              accessDuration: '18 Months Active Access'
+              accessDuration: durationMap[matchedOrder.packageId] || '18 Months Active Access',
             };
             authenticateStudent(student);
             return;
