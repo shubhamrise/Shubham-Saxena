@@ -341,7 +341,7 @@ export const AdmissionsDeskModal: React.FC<AdmissionsDeskModalProps> = ({ isOpen
         {/* Footer info */}
         <div className="bg-slate-50 p-4 border-t border-slate-200 text-center text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-2">
           <span>Official Dispatch Target: <strong className="text-slate-800">info@bncglobal.in</strong></span>
-          <span>Lead Hotline: <strong className="text-slate-800">+91 63960 18626</strong></span>
+          <span>Lead Hotline: <strong className="text-slate-800">+91 98213 75702</strong></span>
         </div>
       </div>
     </div>

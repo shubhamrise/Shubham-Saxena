@@ -140,7 +140,22 @@ export const StudentLmsPortal: React.FC<StudentLmsPortalProps> = ({
   const [adminUser, setAdminUser] = useState<LmsAdminUser | null>(() => {
     try {
       const saved = localStorage.getItem('bnc_lms_auth_admin');
-      return saved ? JSON.parse(saved) : null;
+      if (!saved) return null;
+      const parsed = JSON.parse(saved) as LmsAdminUser;
+      const isLegacyAdmin =
+        parsed.email !== 'neha@bncglobal.in' ||
+        (parsed.name && parsed.name.toLowerCase().includes('gurvinder'));
+      if (isLegacyAdmin) {
+        const migrated: LmsAdminUser = {
+          ...parsed,
+          email: 'neha@bncglobal.in',
+          name: 'Neha Srivastava',
+          role: 'Academic Administrator'
+        };
+        localStorage.setItem('bnc_lms_auth_admin', JSON.stringify(migrated));
+        return migrated;
+      }
+      return parsed;
     } catch {
       return null;
     }
@@ -312,7 +327,7 @@ export const StudentLmsPortal: React.FC<StudentLmsPortalProps> = ({
         const expectedPass = matchedLearner.password?.trim() || 'bnc2026';
         if (trimmedPassword !== expectedPass) {
           setAuthError(
-            'Incorrect Student Password. Please enter the access password assigned to your email by BNC Academic Administration. If you need your password reset, contact info@bncglobal.in or call +91 63960 18626.'
+            'Incorrect Student Password. Please enter the access password assigned to your email by BNC Academic Administration. If you need your password reset, contact info@bncglobal.in or call +91 98213 75702.'
           );
           return;
         }
@@ -320,7 +335,7 @@ export const StudentLmsPortal: React.FC<StudentLmsPortalProps> = ({
         // Enforce administrative access controls
         if (matchedLearner.status === 'revoked') {
           setAuthError(
-            `Access Suspended: Portal access for ${matchedLearner.name} has been suspended or revoked by Academic Administration. Status: ${matchedLearner.feeStatus}. Please contact Admissions at info@bncglobal.in or call +91 63960 18626 to resolve fee status.`
+            `Access Suspended: Portal access for ${matchedLearner.name} has been suspended or revoked by Academic Administration. Status: ${matchedLearner.feeStatus}. Please contact Admissions at info@bncglobal.in or call +91 98213 75702 to resolve fee status.`
           );
           return;
         }
@@ -357,7 +372,7 @@ export const StudentLmsPortal: React.FC<StudentLmsPortalProps> = ({
           if (matchedOrder) {
             if (matchedOrder.paymentStatus === 'Pending Verification') {
               setAuthError(
-                `Payment Under Verification: Your bank transfer for ${matchedOrder.packageName} (Ref: ${matchedOrder.transactionId || matchedOrder.orderId}) is awaiting finance confirmation. Contact info@bncglobal.in or +91 63960 18626 for priority clearance.`
+                `Payment Under Verification: Your bank transfer for ${matchedOrder.packageName} (Ref: ${matchedOrder.transactionId || matchedOrder.orderId}) is awaiting finance confirmation. Contact info@bncglobal.in or +91 98213 75702 for priority clearance.`
               );
               return;
             }
@@ -417,18 +432,15 @@ export const StudentLmsPortal: React.FC<StudentLmsPortalProps> = ({
       const email = adminEmail.trim().toLowerCase();
       const password = adminPassword.trim();
 
-      // Authorized credentials check (Configured for info@bncglobal.in / Admin@elevate)
+      // Authorized credentials check (Configured for neha@bncglobal.in / BNC@2026)
       const isValidAdmin =
-        (email === 'info@bncglobal.in' && (password === 'Admin@elevate' || password === 'admin@elevate' || password === 'admin123')) ||
-        (email === 'admin@bncglobal.in' && (password === 'Admin@elevate' || password === 'BNCAdmin@2026' || password === 'admin123')) ||
-        (email === 'director@bncglobal.in' && password.length >= 4) ||
-        (email === 'gpsingh@bncglobal.in' && password.length >= 4);
+        email === 'neha@bncglobal.in' && password === 'BNC@2026';
 
       if (isValidAdmin) {
         const newAdmin: LmsAdminUser = {
-          email: email,
-          name: email === 'info@bncglobal.in' ? 'CA Gurvinder Pal Singh (Lead Director)' : 'BNC Academic Administrator',
-          role: 'Lead Director & Master Access Controller',
+          email: 'neha@bncglobal.in',
+          name: 'Neha Srivastava',
+          role: 'Academic Administrator',
           authenticatedAt: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
         };
         setAdminUser(newAdmin);
@@ -743,8 +755,8 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
                   info@bncglobal.in
                 </a>
                 <span>·</span>
-                <a href="tel:+916396018626" className={`${theme === 'light' ? 'text-slate-800' : 'text-slate-200'} font-bold hover:text-[#b58b42]`}>
-                  +91 63960 18626
+                <a href="tel:+919821375702" className={`${theme === 'light' ? 'text-slate-800' : 'text-slate-200'} font-bold hover:text-[#b58b42]`}>
+                  +91 98213 75702
                 </a>
               </div>
 
@@ -826,7 +838,7 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
                   Student LMS Portal Sign In
                 </h1>
                 <p className={`mt-3 text-xs sm:text-sm ${theme === 'light' ? 'text-slate-600' : 'text-slate-300'} leading-relaxed`}>
-                  Access to BNC ELEVATE Masterclasses, Official Gleim CIA Test Bank & SmartAdapt™, and AI Audit Lab is strictly restricted to enrolled students. Please enter your registered student email and the access password assigned by Academic Administration.
+                  Please enter your registered student email and the access password assigned by Academic Administration.
                 </p>
               </div>
 
@@ -863,8 +875,8 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
                             Email info@bncglobal.in
                           </a>
                           <span>·</span>
-                          <a href="tel:+916396018626" className="text-sky-700 hover:underline font-bold">
-                            Call +91 63960 18626
+                          <a href="tel:+919821375702" className="text-sky-700 hover:underline font-bold">
+                            Call +91 98213 75702
                           </a>
                         </div>
                       </div>

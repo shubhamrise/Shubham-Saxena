@@ -11,7 +11,6 @@ import {
   Compass,
   Briefcase,
   Layers,
-  GraduationCap,
   BookOpen,
   Check,
   Mail,
@@ -107,7 +106,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   };
 
   return (
-    <section className="relative overflow-hidden pt-8 pb-16 lg:py-16 border-b border-sky-950">
+    <section className="relative overflow-hidden pt-4 pb-12 lg:pt-5 lg:pb-12 border-b border-sky-950">
       {/* User-Provided High-Resolution Corporate Team Atrium Background - First Page */}
       <div className="absolute inset-0 pointer-events-none">
         <img
@@ -137,15 +136,22 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         {/* =============================================================== */}
         {/* TOP HERO ARCHITECTURE: PROGRAM LAUNCHPAD                        */}
         {/* =============================================================== */}
-        <div className="text-center max-w-5xl lg:max-w-6xl mx-auto mb-10">
+        <div className="text-center max-w-5xl lg:max-w-6xl mx-auto mb-7">
           {/* Top Elite Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-900/95 border border-sky-400/40 text-[11px] font-bold text-white shadow-lg backdrop-blur-md uppercase tracking-wider mb-5">
+          <div className="inline-flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5 px-6 py-2.5 rounded-full bg-slate-900/95 border border-sky-400/40 text-xs sm:text-[13px] font-bold text-white shadow-lg backdrop-blur-md tracking-wider mb-3">
             <span className="w-2.5 h-2.5 rounded-full bg-[#f1bd5b] animate-pulse shadow-[0_0_10px_#f1bd5b]"></span>
-            <span className="text-white font-black tracking-wider">BNC GLOBAL CONSULTECH</span>
-            <span className="text-[#f1bd5b]">·</span>
-            <span className="text-sky-200 font-bold">ESTD. 2014</span>
-            <span className="text-[#f1bd5b]">·</span>
-            <span className="text-[#f1bd5b] font-black">CIA® EXECUTIVE ACCELERATOR</span>
+            <span className="text-[#f1bd5b] font-black uppercase">BNC ELEVATE</span>
+            <span className="inline-flex flex-wrap items-center justify-center gap-x-2 text-sky-200 font-semibold">
+              <span>The learning arm of</span>
+              <a
+                href="https://bncglobal.in"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-white font-black uppercase underline decoration-[#f1bd5b]/70 underline-offset-4 hover:text-[#f1bd5b] transition-colors"
+              >
+                BNC GLOBAL CONSULTECH
+              </a>
+            </span>
           </div>
 
           {/* Central Program Master Headline (Keeps line 1 on single unbroken line on full screen) */}
@@ -293,12 +299,12 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                       <span>Send Direct Email to info@bncglobal.in</span>
                     </a>
                     <a
-                      href="https://wa.me/916396018626?text=Hi%20BNC%20ELEVATE%2C%20I%20have%20submitted%20an%20enquiry%20for%20CIA%20coaching."
+                      href="https://wa.me/919821375702?text=Hi%20BNC%20ELEVATE%2C%20I%20have%20submitted%20an%20enquiry%20for%20CIA%20coaching."
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md transition-all"
                     >
-                      <span>Direct WhatsApp +91 63960 18626</span>
+                      <span>Direct WhatsApp +91 98213 75702</span>
                     </a>
                     <button
                       type="button"
@@ -340,7 +346,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                           required
                           value={enquiryPhone}
                           onChange={(e) => setEnquiryPhone(e.target.value)}
-                          placeholder="+91 63960 18626"
+                          placeholder="+91 98213 75702"
                           className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-sky-50/40 border border-sky-100 text-slate-900 placeholder-slate-400 text-xs sm:text-sm focus:outline-none focus:border-sky-700 focus:bg-white focus:ring-2 focus:ring-sky-200 transition-all"
                         />
                       </div>
@@ -432,25 +438,25 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         </div>
 
         {/* =============================================================== */}
-        {/* THE 3 PILLARS MASTER ARCHITECTURE (MERGED WITH ZERO DUPLICATION) */}
-        {/* Pillar 01: Why CIA | Pillar 02: Why BNC Global | Pillar 03: Tutor */}
+        {/* THE 2 PILLARS MASTER ARCHITECTURE                               */}
+        {/* Pillar 01: Why CIA | Pillar 02: Why BNC Global                  */}
         {/* =============================================================== */}
         <div className="mt-8 pt-8 border-t border-sky-950">
           <div className="text-center max-w-2xl mx-auto mb-8">
             <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#b58b42]/20 text-[#f1bd5b] border border-[#b58b42]/40 text-[10px] font-bold uppercase tracking-wider mb-2">
               <Sparkles className="w-3.5 h-3.5 text-[#f1bd5b]" />
-              <span>THE 3 PILLARS OF YOUR CERTIFICATION JOURNEY</span>
+              <span>THE 2 PILLARS OF YOUR CERTIFICATION JOURNEY</span>
             </div>
             <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-              Why CIA® · Why BNC Global · Master Faculty
+              Why CIA® · Why BNC Global
             </h2>
             <p className="text-xs sm:text-sm text-slate-300 mt-1.5 leading-relaxed">
               Everything you need to qualify, practice, and lead enterprise internal audit globally—all in one unified program.
             </p>
           </div>
 
-          {/* 3-Column Split-Grid Architecture */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
+          {/* 2-Column Split-Grid Architecture */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
             
             {/* ----------------------------------------------------------- */}
             {/* PILLAR 01 OF 03: WHY THE CIA® (THE CREDENTIAL)              */}
@@ -467,7 +473,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 <div className="flex items-center justify-between gap-2 pb-4 mb-4 border-b border-sky-100">
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-sky-100/80 text-sky-950 border border-sky-300">
                     <span className="w-1.5 h-1.5 rounded-full bg-sky-600"></span>
-                    PILLAR 01 OF 03 · THE CREDENTIAL
+                    PILLAR 01 OF 02 · THE CREDENTIAL
                   </span>
                   <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold text-[#b58b42] bg-amber-50 border border-amber-200">
                     <Sparkles className="w-3 h-3 text-[#b58b42]" />
@@ -579,7 +585,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 <div className="flex items-center justify-between gap-2 pb-4 mb-4 border-b border-amber-100">
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-50 text-[#b58b42] border border-amber-200">
                     <span className="w-1.5 h-1.5 rounded-full bg-[#b58b42]"></span>
-                    PILLAR 02 OF 03 · THE CONSULTING PRACTICE
+                    PILLAR 02 OF 02 · THE CONSULTING PRACTICE
                   </span>
                   <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold text-slate-700 bg-slate-100 border border-slate-200">
                     Established 2014
@@ -689,160 +695,6 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 >
                   <span>View BNC Training Packages</span>
                   <ArrowRight className="w-4 h-4 text-white" />
-                </button>
-              </div>
-            </div>
-
-            {/* ----------------------------------------------------------- */}
-            {/* PILLAR 03 OF 03: MASTER FACULTY (CA GURVINDER PAL SINGH)    */}
-            {/* ----------------------------------------------------------- */}
-            <div
-              id="tutor"
-              className="card-reflection group relative flex flex-col justify-between rounded-3xl bg-white border-2 border-sky-100 hover:border-sky-400 p-6 sm:p-7 shadow-[0_15px_45px_-12px_rgba(2,132,199,0.12)] hover:shadow-[0_25px_60px_-12px_rgba(2,132,199,0.22)] transition-all duration-300 overflow-hidden"
-            >
-              {/* Top Gradient Banner Stripe */}
-              <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-sky-700 via-sky-800 to-[#b58b42]"></div>
-
-              <div>
-                {/* Pillar 03 Kicker */}
-                <div className="flex items-center justify-between gap-2 pb-4 mb-4 border-b border-sky-100">
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-sky-100/80 text-sky-950 border border-sky-300">
-                    <span className="w-1.5 h-1.5 rounded-full bg-sky-600"></span>
-                    PILLAR 03 OF 03 · THE MASTER FACULTY
-                  </span>
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold text-[#b58b42] bg-amber-50 border border-amber-200">
-                    <ShieldCheck className="w-3 h-3 text-[#b58b42]" />
-                    100% Live Coaching
-                  </span>
-                </div>
-
-                {/* Faculty Portrait & Name Header */}
-                <div className="flex items-start gap-4 mb-4">
-                  <div className="relative group shrink-0">
-                    <div className="w-20 h-20 sm:w-22 sm:h-22 rounded-2xl overflow-hidden border-2 border-white shadow-lg ring-3 ring-[#b58b42]/30 bg-slate-100">
-                      <img
-                        src="/gurvinder-singh.jpg"
-                        alt="CA Gurvinder Pal Singh - Lead CIA Tutor"
-                        className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
-                        onError={(e) => {
-                          e.currentTarget.src =
-                            'https://media.licdn.com/dms/image/v2/D4D03AQFKN921POxWQQ/profile-displayphoto-shrink_400_400/profile-displayphoto-shrink_400_400/0/1665576222272?e=1794441600&v=beta&t=7zjsxMAB5avCzv9T1LNMnGe9SwBaFHOSQOH9g89uiw8';
-                        }}
-                      />
-                    </div>
-                    <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-gradient-to-r from-sky-700 to-[#b58b42] text-white text-[9px] font-bold shadow-md flex items-center gap-1 whitespace-nowrap">
-                      <ShieldCheck className="w-2.5 h-2.5 text-amber-200" />
-                      <span>Lead Faculty</span>
-                    </div>
-                  </div>
-
-                  <div className="flex-1">
-                    <h3 className="text-xl font-black text-slate-900 tracking-tight">
-                      CA Gurvinder Pal Singh
-                    </h3>
-                    <div className="text-xs font-bold text-[#b58b42] mt-0.5 mb-1.5">
-                      Co-Founder & Managing Director, BNC Global
-                    </div>
-                    <p className="text-[11px] text-slate-600 leading-relaxed font-normal">
-                      Gain direct personal mentorship from BNC Global's Co-Founder & Managing Director—bringing 21+ years of Big 4 consulting, enterprise risk management, and internal audit leadership straight into your classroom.
-                    </p>
-                  </div>
-                </div>
-
-                {/* 4 Quantifiable Badges with stylish glossy look */}
-                <div className="grid grid-cols-4 gap-2 mb-4 text-center">
-                  <div className="p-2.5 rounded-xl bg-gradient-to-b from-sky-50 to-white border border-sky-200 shadow-2xs">
-                    <div className="text-base font-black text-sky-950 tabular-nums">21+</div>
-                    <div className="text-[9px] font-bold text-slate-700 uppercase mt-0.5">Yrs Exp</div>
-                  </div>
-                  <div className="p-2.5 rounded-xl bg-gradient-to-b from-amber-50 to-white border border-amber-200 shadow-2xs">
-                    <div className="text-base font-black text-[#b58b42]">Big 4</div>
-                    <div className="text-[9px] font-bold text-slate-700 uppercase mt-0.5">Ex-KPMG</div>
-                  </div>
-                  <div className="p-2.5 rounded-xl bg-gradient-to-b from-sky-50 to-white border border-sky-200 shadow-2xs">
-                    <div className="text-base font-black text-sky-950">Aon</div>
-                    <div className="text-[9px] font-bold text-slate-700 uppercase mt-0.5">Ex-AVP</div>
-                  </div>
-                  <div className="p-2.5 rounded-xl bg-gradient-to-b from-amber-50 to-white border border-amber-200 shadow-2xs">
-                    <div className="text-base font-black text-[#b58b42]">ICAI</div>
-                    <div className="text-[9px] font-bold text-slate-700 uppercase mt-0.5">SRSB</div>
-                  </div>
-                </div>
-
-                {/* Professional Career Track Record */}
-                <div className="space-y-2 mb-4">
-                  <div className="text-[10px] font-black uppercase tracking-wider text-slate-700 mb-1 flex items-center gap-1.5">
-                    <Briefcase className="w-3.5 h-3.5 text-sky-800" />
-                    <span>Leadership & Corporate Career:</span>
-                  </div>
-
-                  <div className="p-2.5 rounded-xl bg-sky-50/70 border border-sky-200 text-xs flex justify-between items-start gap-2 hover:bg-sky-50 transition-colors">
-                    <div>
-                      <div className="font-bold text-slate-900 text-[11px]">Special Invitee – Sustainability Standards Board (SRSB)</div>
-                      <div className="text-[10px] text-slate-600">Institute of Chartered Accountants of India (ICAI)</div>
-                    </div>
-                    <span className="text-[9px] font-bold text-sky-950 bg-sky-100 px-2 py-0.5 rounded-full border border-sky-300 shrink-0">
-                      2025–Present
-                    </span>
-                  </div>
-
-                  <div className="p-2.5 rounded-xl bg-amber-50/70 border border-amber-200 text-xs flex justify-between items-start gap-2 hover:bg-amber-50 transition-colors">
-                    <div>
-                      <div className="font-bold text-slate-900 text-[11px]">Co-Founder & Managing Director</div>
-                      <div className="text-[10px] text-slate-600">BNC Global Consultech</div>
-                    </div>
-                    <span className="text-[9px] font-bold text-[#b58b42] bg-amber-100 px-2 py-0.5 rounded-full border border-amber-300 shrink-0">
-                      2018–Present
-                    </span>
-                  </div>
-
-                  <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs flex justify-between items-start gap-2 hover:bg-slate-100/70 transition-colors">
-                    <div>
-                      <div className="font-bold text-slate-900 text-[11px]">AVP – Internal Audit</div>
-                      <div className="text-[10px] text-slate-600">Aon Global Risk Solutions</div>
-                    </div>
-                    <span className="text-[9px] font-semibold text-slate-600 bg-white px-2 py-0.5 rounded-full border border-slate-200 shrink-0">
-                      2016–2018
-                    </span>
-                  </div>
-
-                  <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs flex justify-between items-start gap-2 hover:bg-slate-100/70 transition-colors">
-                    <div>
-                      <div className="font-bold text-slate-900 text-[11px]">Manager & Assistant Manager</div>
-                      <div className="text-[10px] text-slate-600">KPMG Risk Consulting</div>
-                    </div>
-                    <span className="text-[9px] font-semibold text-slate-600 bg-white px-2 py-0.5 rounded-full border border-slate-200 shrink-0">
-                      2011–2015
-                    </span>
-                  </div>
-                </div>
-
-                {/* Academic & Professional Credentials */}
-                <div className="p-3 rounded-xl bg-gradient-to-r from-sky-50/80 to-amber-50/50 border border-sky-200 text-xs text-slate-800 flex items-center justify-between mb-4 shadow-2xs">
-                  <div className="flex items-center gap-2">
-                    <GraduationCap className="w-4 h-4 text-sky-800 shrink-0" />
-                    <span className="text-[11px] font-bold">CA (ICAI) · B.Com (Hons.), Sri Guru Gobind Singh College of Commerce, DU</span>
-                  </div>
-                  <span className="text-[9px] font-black text-[#b58b42] bg-white px-2 py-0.5 rounded-full border border-amber-300 shadow-2xs">
-                    Verified
-                  </span>
-                </div>
-              </div>
-
-              {/* Bottom Card Actions */}
-              <div className="pt-3 border-t border-sky-100 flex gap-2">
-                <button
-                  onClick={() => onOpenCheckout('premium')}
-                  className="btn-reflection flex-1 py-3 px-3 rounded-xl bg-gradient-to-r from-sky-700 via-sky-800 to-[#b58b42] hover:from-sky-800 hover:to-[#9e7735] text-white font-bold text-xs shadow-md shadow-sky-800/25 hover:shadow-[#b58b42]/30 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
-                >
-                  <span>Enroll Now</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </button>
-                <button
-                  onClick={onOpenInquiry}
-                  className="py-3 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs border border-slate-300 transition-colors cursor-pointer"
-                >
-                  Consultation
                 </button>
               </div>
             </div>

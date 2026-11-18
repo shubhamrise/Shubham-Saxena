@@ -596,7 +596,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       <div>
         <div class="brand">bnc <span>ELEVATE</span></div>
         <div style="font-size:12px;color:#475569;margin-top:4px;">BNC Global Consultech Pvt. Ltd. · Enrollment Payment Receipt</div>
-        <div style="font-size:11px;color:#64748b;">info@bncglobal.in · +91 63960 18626</div>
+        <div style="font-size:11px;color:#64748b;">info@bncglobal.in · +91 98213 75702</div>
       </div>
       <div class="meta">
         <div class="badge">${receiptBadge}</div>

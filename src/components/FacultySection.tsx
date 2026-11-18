@@ -1,5 +1,5 @@
 import React from 'react';
-import { Award, Briefcase, CheckCircle2, MessageSquare, ArrowRight, Sparkles, Building2, Globe } from 'lucide-react';
+import { Award, Sparkles, Building2 } from 'lucide-react';
 
 interface FacultySectionProps {
   onOpenInquiry?: () => void;
@@ -176,19 +176,6 @@ export const FacultySection: React.FC<FacultySectionProps> = ({ onOpenInquiry })
                   </div>
                 </div>
 
-                {/* Faculty Connect CTA */}
-                {onOpenInquiry && (
-                  <div className="pt-2">
-                    <button
-                      onClick={onOpenInquiry}
-                      className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-sky-600 to-[#b58b42] hover:from-sky-700 hover:to-[#9e7735] text-white text-xs font-bold tracking-wide shadow-lg shadow-sky-950/50 hover:shadow-sky-900/60 transition-all cursor-pointer"
-                    >
-                      <MessageSquare className="w-4 h-4 text-[#f1bd5b]" />
-                      <span>Connect with Faculty & Schedule 1-on-1 Counseling</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                )}
               </div>
             </div>
           </div>

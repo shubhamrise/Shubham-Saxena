@@ -35,7 +35,7 @@ const INITIAL_CRM_CALL_LOGS: CrmCallLog[] = [
   {
     id: 'crm-1',
     studentName: 'Shubham Saxena',
-    phone: '+91 63960 18626',
+    phone: '+91 98213 75702',
     email: 'shubhamsaxena787787@gmail.com',
     direction: 'outbound',
     callStatus: 'Connected',
@@ -46,7 +46,7 @@ const INITIAL_CRM_CALL_LOGS: CrmCallLog[] = [
     reconnectAgain: true,
     nextFollowUpDate: 'Nov 16, 4:00 PM IST',
     feedback: 'Candidate is a qualified CA exploring CIA Challenge / 3-Part options. Positive conversation; asked for a follow-up call after reviewing weekend schedule.',
-    handledBy: 'CA Gurvinder Pal Singh (Lead Director)'
+    handledBy: 'Neha Srivastava'
   },
   {
     id: 'crm-2',
@@ -61,7 +61,7 @@ const INITIAL_CRM_CALL_LOGS: CrmCallLog[] = [
     interestLevel: 'Support / Existing Student',
     reconnectAgain: false,
     feedback: 'Guided student through the Readiness Index and video masterclasses section. Issue resolved on the call.',
-    handledBy: 'CA Gurvinder Pal Singh (Lead Director)'
+    handledBy: 'Neha Srivastava'
   },
   {
     id: 'crm-3',
@@ -146,7 +146,16 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
   const [crmCallLogs, setCrmCallLogs] = useState<CrmCallLog[]>(() => {
     try {
       const saved = localStorage.getItem('bnc_crm_call_logs');
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          return parsed.map((log: CrmCallLog) =>
+            log.handledBy && log.handledBy.toLowerCase().includes('gurvinder')
+              ? { ...log, handledBy: 'Neha Srivastava' }
+              : log
+          );
+        }
+      }
     } catch {}
     return INITIAL_CRM_CALL_LOGS;
   });
@@ -200,7 +209,7 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
           id: `lead-h-${i}`,
           name: h.enquiryName || 'Enquired Candidate',
           email: h.enquiryEmail || 'candidate@example.com',
-          phone: h.enquiryPhone || '+91 63960 18626',
+          phone: h.enquiryPhone || '+91 98213 75702',
           qualification: h.enquiryQualification || "Bachelor's Degree",
           program: h.enquiryProgram || 'All Packages',
           source: 'Hero Enquiry & Download Brochure',
@@ -215,7 +224,7 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
           id: `lead-b-${i}`,
           name: b.name || 'Brochure Candidate',
           email: b.email || 'candidate@example.com',
-          phone: b.phone || '+91 63960 18626',
+          phone: b.phone || '+91 98213 75702',
           qualification: "Bachelor's Degree",
           program: b.packageInterest || 'Complete Syllabus',
           source: 'Brochure Modal Download',
@@ -230,7 +239,7 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
           id: `lead-c-${i}`,
           name: c.name || 'Counseling Candidate',
           email: c.email || 'candidate@example.com',
-          phone: c.phone || '+91 63960 18626',
+          phone: c.phone || '+91 98213 75702',
           qualification: c.qualification || "Bachelor's Degree",
           program: c.packageInterest || 'Consultation Request',
           source: 'Faculty Consultation Desk',
@@ -246,7 +255,7 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
           id: 'lead-sample-1',
           name: 'Shubham Saxena',
           email: 'shubhamsaxena787787@gmail.com',
-          phone: '+91 63960 18626',
+          phone: '+91 98213 75702',
           qualification: 'Chartered Accountant (CA)',
           program: 'Premium Live Interactive',
           source: 'Hero Enquiry & Download Brochure',
@@ -689,8 +698,9 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
           </div>
 
           <div className="flex items-center gap-2.5 shrink-0">
-            <span className={`hidden md:inline text-xs font-medium mr-1 ${theme === 'light' ? 'text-slate-600' : 'text-slate-400'}`}>
-              Signed in as <strong className={theme === 'light' ? 'text-slate-900 font-semibold' : 'text-white font-semibold'}>{adminUser.name}</strong>
+            <span className={`hidden md:inline-flex items-center gap-1.5 text-xs font-medium mr-1 ${theme === 'light' ? 'text-slate-600' : 'text-slate-400'}`}>
+              <span>Signed in as</span>
+              <strong className={theme === 'light' ? 'text-slate-900 font-semibold' : 'text-white font-semibold'}>{adminUser.name}</strong>
             </span>
 
             {/* Theme Toggle Button */}
@@ -1573,7 +1583,7 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
                               </a>
                               <a
                                 href={`mailto:${enquiry.email}?subject=${encodeURIComponent(`[BNC ELEVATE] CIA Coaching Guidance for ${enquiry.name}`)}&body=${encodeURIComponent(
-                                  `Dear ${enquiry.name},\n\nThank you for reaching out to BNC ELEVATE.\n\nWe have received your enquiry regarding ${enquiry.program || 'our CIA Coaching Program'}.\n\nPlease let us know your preferred time for a 1-on-1 counseling call with CA Gurvinder Pal Singh.\n\nWarm regards,\nCA Gurvinder Pal Singh\nDirector & Senior Faculty, BNC Global\ninfo@bncglobal.in | +91 63960 18626`
+                                  `Dear ${enquiry.name},\n\nThank you for reaching out to BNC ELEVATE.\n\nWe have received your enquiry regarding ${enquiry.program || 'our CIA Coaching Program'}.\n\nPlease let us know your preferred time for a 1-on-1 counseling call with CA Gurvinder Pal Singh.\n\nWarm regards,\nCA Gurvinder Pal Singh\nDirector & Senior Faculty, BNC Global\ninfo@bncglobal.in | +91 98213 75702`
                                 )}`}
                                 className={`inline-flex p-1.5 rounded-lg border transition-colors ${
                                   theme === 'light'
@@ -1927,7 +1937,7 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
                               </a>
                               <a
                                 href={`mailto:${lead.email}?subject=${encodeURIComponent(`[BNC ELEVATE] CIA Coaching Guidance for ${lead.name}`)}&body=${encodeURIComponent(
-                                  `Dear ${lead.name},\n\nThank you for reaching out to BNC ELEVATE.\n\nWe have received your enquiry regarding ${lead.program || 'our CIA Coaching Program'}.\n\nPlease let us know your preferred time for a 1-on-1 counseling call with CA Gurvinder Pal Singh.\n\nWarm regards,\nCA Gurvinder Pal Singh\nDirector & Senior Faculty, BNC Global\ninfo@bncglobal.in | +91 63960 18626`
+                                  `Dear ${lead.name},\n\nThank you for reaching out to BNC ELEVATE.\n\nWe have received your enquiry regarding ${lead.program || 'our CIA Coaching Program'}.\n\nPlease let us know your preferred time for a 1-on-1 counseling call with CA Gurvinder Pal Singh.\n\nWarm regards,\nCA Gurvinder Pal Singh\nDirector & Senior Faculty, BNC Global\ninfo@bncglobal.in | +91 98213 75702`
                                 )}`}
                                 className={`inline-flex p-1.5 rounded-lg border transition-colors ${
                                   theme === 'light'

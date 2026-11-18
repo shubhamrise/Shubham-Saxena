@@ -96,7 +96,7 @@ export const AiAdvisorChatbot: React.FC<AiAdvisorChatbotProps> = ({
         action = { label: "Read Syllabus Breakdown", targetId: "exam" };
       } else if (lower.includes('tutor') || lower.includes('faculty') || lower.includes('instructor') || lower.includes('teacher') || lower.includes('gurvinder') || lower.includes('who teaches')) {
         aiReply = "Your master tutor and lead instructor is CA Gurvinder Pal Singh, Co-Founder & Managing Director of BNC Global.\n\n• 21+ years of experience in Big 4 (KPMG), Aon, and global risk consulting\n• Special Invitee to the ICAI Sustainability Reporting Standards Board (SRSB)\n• Chartered Accountant (ICAI) & B.Com (Hons.) from Delhi University\n• Personally conducts the 100+ hours of live weekend coaching and doubt clearing!";
-        action = { label: "Meet Tutor: CA Gurvinder Pal Singh", targetId: "tutor" };
+        action = { label: "Meet Faculty & Co-Founders", targetId: "founders" };
       } else if (lower.includes('reimburse') || lower.includes('employer') || lower.includes('company')) {
         aiReply = "Yes! Major accounting firms (Deloitte, PwC, EY, KPMG, BDO, Grant Thornton) and multinational banks actively reimburse CIA training and exam registration fees upon passing. BNC Global provides tax invoices with GST for your employer claims.";
       } else {

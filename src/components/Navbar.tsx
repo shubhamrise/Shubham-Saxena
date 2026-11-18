@@ -110,9 +110,9 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span className="font-semibold tracking-wide">info@bncglobal.in</span>
             </a>
             <span className="text-slate-600">|</span>
-            <a href="tel:+916396018626" className="flex items-center gap-1.5 hover:text-[#f3bc53] transition-colors">
+            <a href="tel:+919821375702" className="flex items-center gap-1.5 hover:text-[#f3bc53] transition-colors">
               <Phone className="w-3.5 h-3.5 text-[#f3bc53]" />
-              <span className="font-semibold tracking-wide">+91 63960 18626</span>
+              <span className="font-semibold tracking-wide">+91 98213 75702</span>
             </a>
           </div>
         </div>
@@ -247,9 +247,9 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <Mail className="w-3.5 h-3.5 text-[#b58b42]" />
                   <span className="font-semibold">info@bncglobal.in</span>
                 </a>
-                <a href="tel:+916396018626" className="flex items-center gap-2 py-1 text-slate-700 hover:text-[#b58b42]">
+                <a href="tel:+919821375702" className="flex items-center gap-2 py-1 text-slate-700 hover:text-[#b58b42]">
                   <Phone className="w-3.5 h-3.5 text-[#b58b42]" />
-                  <span className="font-semibold">+91 63960 18626</span>
+                  <span className="font-semibold">+91 98213 75702</span>
                 </a>
               </div>
             </div>

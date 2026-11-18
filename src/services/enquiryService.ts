@@ -279,7 +279,7 @@ export const sendTestEnquiryToAdmin = async (): Promise<boolean> => {
   const testPayload: EnquiryPayload = {
     name: 'BNC Verification Lead (System Test)',
     email: 'info@bncglobal.in',
-    phone: '+91 63960 18626',
+    phone: '+91 98213 75702',
     qualification: 'Chartered Accountant (CA)',
     program: 'All Packages (Verification Test)',
     source: 'Admin Console Verification Test',
@@ -320,9 +320,9 @@ ${data.name}`;
 };
 
 /**
- * Generates direct WhatsApp chat URL to +91 63960 18626
+ * Generates direct WhatsApp chat URL to +91 98213 75702
  */
 export const getDirectWhatsAppUrl = (data: EnquiryPayload): string => {
   const text = `Hi BNC ELEVATE, I have submitted an enquiry and downloaded the CIA brochure. My name is ${data.name} (${data.phone}). Please share the program details and cohort schedule!`;
-  return `https://wa.me/916396018626?text=${encodeURIComponent(text)}`;
+  return `https://wa.me/919821375702?text=${encodeURIComponent(text)}`;
 };

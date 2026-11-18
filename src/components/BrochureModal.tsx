@@ -172,8 +172,8 @@ export const BrochureModal: React.FC<BrochureModalProps> = ({
                 </div>
                 <div className="flex items-center justify-between text-slate-400">
                   <span>Phone / WhatsApp:</span>
-                  <a href="tel:+916396018626" className="text-[#f1bd5b] hover:underline font-bold">
-                    +91 63960 18626
+                  <a href="tel:+919821375702" className="text-[#f1bd5b] hover:underline font-bold">
+                    +91 98213 75702
                   </a>
                 </div>
                 <div className="flex items-center justify-between text-slate-400 pt-1 border-t border-slate-800">
