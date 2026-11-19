@@ -21,10 +21,13 @@ export const IiaFeeCalculator: React.FC = () => {
     part3 = 345;
   }
 
+  const USD_TO_INR = 86.5;
+  const formatINR = (usd: number) => `₹${Math.round(usd * USD_TO_INR).toLocaleString('en-IN')}`;
+
   const subtotalUSD = appFee + part1 + part2 + part3;
   const gstUSD = Math.round(subtotalUSD * 0.18 * 100) / 100;
   const totalUSD = Math.round((subtotalUSD + gstUSD) * 100) / 100;
-  const approxINR = Math.round(totalUSD * 86.5);
+  const approxINR = Math.round(totalUSD * USD_TO_INR);
 
   return (
     <section id="fees" className="relative overflow-hidden py-24 border-b border-sky-950">
@@ -104,25 +107,40 @@ export const IiaFeeCalculator: React.FC = () => {
           <div className="py-6 grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
             {/* Left Fee Component Breakdown */}
             <div className="space-y-3 text-xs text-slate-700">
-              <div className="flex justify-between p-2.5 rounded-xl bg-sky-50/40 border border-sky-100">
+              <div className="flex items-center justify-between gap-3 p-2.5 rounded-xl bg-sky-50/40 border border-sky-100">
                 <span>{candidateType === 'student' ? 'IAP / CIA Application Fee' : 'CIA Application Fee'}:</span>
-                <span className="font-semibold text-slate-900">US$ {appFee.toFixed(2)}</span>
+                <span className="text-right font-semibold text-slate-900 tabular-nums whitespace-nowrap">
+                  US$ {appFee.toFixed(2)}{' '}
+                  <span className="text-sky-700 font-bold">(≈ {formatINR(appFee)})</span>
+                </span>
               </div>
-              <div className="flex justify-between p-2.5 rounded-xl bg-sky-50/40 border border-sky-100">
+              <div className="flex items-center justify-between gap-3 p-2.5 rounded-xl bg-sky-50/40 border border-sky-100">
                 <span>Part 1 Exam Registration (125 MCQs):</span>
-                <span className="font-semibold text-slate-900">US$ {part1.toFixed(2)}</span>
+                <span className="text-right font-semibold text-slate-900 tabular-nums whitespace-nowrap">
+                  US$ {part1.toFixed(2)}{' '}
+                  <span className="text-sky-700 font-bold">(≈ {formatINR(part1)})</span>
+                </span>
               </div>
-              <div className="flex justify-between p-2.5 rounded-xl bg-sky-50/40 border border-sky-100">
+              <div className="flex items-center justify-between gap-3 p-2.5 rounded-xl bg-sky-50/40 border border-sky-100">
                 <span>Part 2 Exam Registration (100 MCQs):</span>
-                <span className="font-semibold text-slate-900">US$ {part2.toFixed(2)}</span>
+                <span className="text-right font-semibold text-slate-900 tabular-nums whitespace-nowrap">
+                  US$ {part2.toFixed(2)}{' '}
+                  <span className="text-sky-700 font-bold">(≈ {formatINR(part2)})</span>
+                </span>
               </div>
-              <div className="flex justify-between p-2.5 rounded-xl bg-sky-50/40 border border-sky-100">
+              <div className="flex items-center justify-between gap-3 p-2.5 rounded-xl bg-sky-50/40 border border-sky-100">
                 <span>Part 3 Exam Registration (100 MCQs):</span>
-                <span className="font-semibold text-slate-900">US$ {part3.toFixed(2)}</span>
+                <span className="text-right font-semibold text-slate-900 tabular-nums whitespace-nowrap">
+                  US$ {part3.toFixed(2)}{' '}
+                  <span className="text-sky-700 font-bold">(≈ {formatINR(part3)})</span>
+                </span>
               </div>
-              <div className="flex justify-between p-2.5 rounded-xl bg-amber-50/40 border border-amber-100 text-slate-600">
-                <span>Goods & Services Tax (GST 18%):</span>
-                <span className="font-semibold text-[#b58b42]">US$ {gstUSD.toFixed(2)}</span>
+              <div className="flex items-center justify-between gap-3 p-2.5 rounded-xl bg-amber-50/40 border border-amber-100 text-slate-600">
+                <span>Goods &amp; Services Tax (GST 18%):</span>
+                <span className="text-right font-semibold text-[#b58b42] tabular-nums whitespace-nowrap">
+                  US$ {gstUSD.toFixed(2)}{' '}
+                  <span className="text-amber-700 font-bold">(≈ {formatINR(gstUSD)})</span>
+                </span>
               </div>
             </div>
 
@@ -168,41 +186,88 @@ export const IiaFeeCalculator: React.FC = () => {
                     <th className="p-4 font-bold">Validity / Specification</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 text-slate-600">
+                <tbody className="divide-y divide-slate-100 text-slate-600 tabular-nums">
                   <tr>
                     <td className="p-4 font-semibold text-slate-900">CIA Application Fee</td>
-                    <td className="p-4">US$ 90.00</td>
-                    <td className="p-4 font-bold text-blue-900">US$ 72.00</td>
-                    <td className="p-4 font-bold text-emerald-700">US$ 84.96</td>
+                    <td className="p-4">
+                      <div>US$ 90.00</div>
+                      <div className="text-[11px] text-slate-400">≈ {formatINR(90)}</div>
+                    </td>
+                    <td className="p-4 font-bold text-blue-900">
+                      <div>US$ 72.00</div>
+                      <div className="text-[11px] font-semibold text-sky-700">≈ {formatINR(72)}</div>
+                    </td>
+                    <td className="p-4 font-bold text-emerald-700">
+                      <div>US$ 84.96</div>
+                      <div className="text-[11px] font-semibold text-emerald-600">≈ {formatINR(84.96)}</div>
+                    </td>
                     <td className="p-4 text-slate-500">Valid for 3 years</td>
                   </tr>
                   <tr>
                     <td className="p-4 font-semibold text-slate-900">Part 1: Fundamentals Exam</td>
-                    <td className="p-4">US$ 232.50</td>
-                    <td className="p-4 font-bold text-blue-900">US$ 186.00</td>
-                    <td className="p-4 font-bold text-emerald-700">US$ 219.48</td>
+                    <td className="p-4">
+                      <div>US$ 232.50</div>
+                      <div className="text-[11px] text-slate-400">≈ {formatINR(232.5)}</div>
+                    </td>
+                    <td className="p-4 font-bold text-blue-900">
+                      <div>US$ 186.00</div>
+                      <div className="text-[11px] font-semibold text-sky-700">≈ {formatINR(186)}</div>
+                    </td>
+                    <td className="p-4 font-bold text-emerald-700">
+                      <div>US$ 219.48</div>
+                      <div className="text-[11px] font-semibold text-emerald-600">≈ {formatINR(219.48)}</div>
+                    </td>
                     <td className="p-4 text-slate-500">125 questions, 150 min</td>
                   </tr>
                   <tr>
                     <td className="p-4 font-semibold text-slate-900">Part 2: Engagement Exam</td>
-                    <td className="p-4">US$ 210.00</td>
-                    <td className="p-4 font-bold text-blue-900">US$ 168.00</td>
-                    <td className="p-4 font-bold text-emerald-700">US$ 198.24</td>
+                    <td className="p-4">
+                      <div>US$ 210.00</div>
+                      <div className="text-[11px] text-slate-400">≈ {formatINR(210)}</div>
+                    </td>
+                    <td className="p-4 font-bold text-blue-900">
+                      <div>US$ 168.00</div>
+                      <div className="text-[11px] font-semibold text-sky-700">≈ {formatINR(168)}</div>
+                    </td>
+                    <td className="p-4 font-bold text-emerald-700">
+                      <div>US$ 198.24</div>
+                      <div className="text-[11px] font-semibold text-emerald-600">≈ {formatINR(198.24)}</div>
+                    </td>
                     <td className="p-4 text-slate-500">100 questions, 120 min</td>
                   </tr>
                   <tr>
                     <td className="p-4 font-semibold text-slate-900">Part 3: Function Exam</td>
-                    <td className="p-4">US$ 210.00</td>
-                    <td className="p-4 font-bold text-blue-900">US$ 168.00</td>
-                    <td className="p-4 font-bold text-emerald-700">US$ 198.24</td>
+                    <td className="p-4">
+                      <div>US$ 210.00</div>
+                      <div className="text-[11px] text-slate-400">≈ {formatINR(210)}</div>
+                    </td>
+                    <td className="p-4 font-bold text-blue-900">
+                      <div>US$ 168.00</div>
+                      <div className="text-[11px] font-semibold text-sky-700">≈ {formatINR(168)}</div>
+                    </td>
+                    <td className="p-4 font-bold text-emerald-700">
+                      <div>US$ 198.24</div>
+                      <div className="text-[11px] font-semibold text-emerald-600">≈ {formatINR(198.24)}</div>
+                    </td>
                     <td className="p-4 text-slate-500">100 questions, 120 min</td>
                   </tr>
                   <tr className="bg-blue-50/40">
                     <td className="p-4 font-black text-slate-900">Full CIA Program (App + 3 Parts)</td>
-                    <td className="p-4 font-bold">US$ 742.50</td>
-                    <td className="p-4 font-black text-blue-900">US$ 594.00</td>
-                    <td className="p-4 font-black text-emerald-700">US$ 700.92</td>
-                    <td className="p-4 font-semibold text-slate-700">Save US$ 148.50 with offer</td>
+                    <td className="p-4 font-bold">
+                      <div>US$ 742.50</div>
+                      <div className="text-[11px] font-semibold text-slate-500">≈ {formatINR(742.5)}</div>
+                    </td>
+                    <td className="p-4 font-black text-blue-900">
+                      <div>US$ 594.00</div>
+                      <div className="text-[11px] font-bold text-sky-700">≈ {formatINR(594)}</div>
+                    </td>
+                    <td className="p-4 font-black text-emerald-700">
+                      <div>US$ 700.92</div>
+                      <div className="text-[11px] font-bold text-emerald-600">≈ {formatINR(700.92)}</div>
+                    </td>
+                    <td className="p-4 font-semibold text-slate-700">
+                      Save US$ 148.50 (≈ {formatINR(148.5)}) with offer
+                    </td>
                   </tr>
                 </tbody>
               </table>

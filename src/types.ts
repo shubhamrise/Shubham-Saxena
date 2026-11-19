@@ -187,3 +187,11 @@ export interface CampaignSpreadsheetBatch {
   rows: CampaignFormRow[];
 }
 
+export interface EmailTemplate {
+  id: string;
+  name: string;
+  category: string;
+  subject: string;
+  body: string;
+  updatedAt: string;
+}

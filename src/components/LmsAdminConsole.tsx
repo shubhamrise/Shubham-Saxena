@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ManagedLearner, LmsAdminUser, EnquiryLead, CrmCallLog, CampaignSpreadsheetBatch } from '../types';
+import { ManagedLearner, LmsAdminUser, EnquiryLead, CrmCallLog, CampaignSpreadsheetBatch, EmailTemplate } from '../types';
 import {
   ShieldCheck,
   UserCheck,
@@ -24,12 +24,15 @@ import {
   Sun,
   Moon,
   Video,
-  Users
+  Users,
+  Send,
+  FileText
 } from 'lucide-react';
 import { LmsModule } from '../data/lmsData';
 import { CrmCallLogEditor } from './admin/CrmCallLogEditor';
 import { CurriculumEditor } from './admin/CurriculumEditor';
 import { CampaignFormsEditor } from './admin/CampaignFormsEditor';
+import { LeadEmailModal, DEFAULT_LEAD_EMAIL_TEMPLATES } from './admin/LeadEmailModal';
 
 const INITIAL_CRM_CALL_LOGS: CrmCallLog[] = [
   {
@@ -141,6 +144,31 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
   const [confirmDeleteEnquiryId, setConfirmDeleteEnquiryId] = useState<string | null>(null);
   const [confirmDeleteLeadId, setConfirmDeleteLeadId] = useState<string | null>(null);
   const [addFormError, setAddFormError] = useState<string | null>(null);
+
+  // Lead Email Composer & Reusable Templates state
+  const [emailTemplates, setEmailTemplates] = useState<EmailTemplate[]>(() => {
+    try {
+      const saved = localStorage.getItem('bnc_lead_email_templates');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {}
+    return DEFAULT_LEAD_EMAIL_TEMPLATES;
+  });
+  const [selectedLeadIds, setSelectedLeadIds] = useState<string[]>([]);
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
+  const [emailModalRecipients, setEmailModalRecipients] = useState<EnquiryLead[]>([]);
+  const [emailModalInitialMode, setEmailModalInitialMode] = useState<'compose' | 'new-template'>('compose');
+
+  const handleUpdateEmailTemplates = (updated: EmailTemplate[]) => {
+    setEmailTemplates(updated);
+    try {
+      localStorage.setItem('bnc_lead_email_templates', JSON.stringify(updated));
+    } catch (e) {
+      console.warn(e);
+    }
+  };
 
   // CRM Phone Call Logs state
   const [crmCallLogs, setCrmCallLogs] = useState<CrmCallLog[]>(() => {
@@ -314,12 +342,52 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
   const handleDeleteLead = (id: string) => {
     const updated = leads.filter((l) => l.id !== id);
     setLeads(updated);
+    setSelectedLeadIds((prev) => prev.filter((itemId) => itemId !== id));
     try {
       localStorage.setItem('bnc_leads_directory', JSON.stringify(updated));
     } catch (e) {
       console.warn(e);
     }
     onShowToast('Lead removed from leads directory');
+  };
+
+  const handleMarkLeadsContacted = (leadIds: string[]) => {
+    if (leadIds.length === 0) return;
+    const idSet = new Set(leadIds);
+    const updated: EnquiryLead[] = leads.map((l) =>
+      idSet.has(l.id) && l.status === 'New' ? { ...l, status: 'Contacted' } : l
+    );
+    setLeads(updated);
+    try {
+      localStorage.setItem('bnc_leads_directory', JSON.stringify(updated));
+    } catch (e) {
+      console.warn(e);
+    }
+  };
+
+  const handleOpenEmailForLead = (lead: EnquiryLead) => {
+    setEmailModalRecipients([lead]);
+    setEmailModalInitialMode('compose');
+    setIsEmailModalOpen(true);
+  };
+
+  const handleOpenEmailForSelected = (pool: EnquiryLead[]) => {
+    const chosen = pool.filter((l) => selectedLeadIds.includes(l.id));
+    setEmailModalRecipients(chosen.length > 0 ? chosen : pool.slice(0, 1));
+    setEmailModalInitialMode('compose');
+    setIsEmailModalOpen(true);
+  };
+
+  const handleOpenEmailTemplatesManager = () => {
+    setEmailModalRecipients([]);
+    setEmailModalInitialMode('new-template');
+    setIsEmailModalOpen(true);
+  };
+
+  const handleToggleLeadSelection = (id: string) => {
+    setSelectedLeadIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
   };
 
   const handleAddEnquiryToLeads = (enquiry: EnquiryLead) => {
@@ -1737,50 +1805,80 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
               </div>
             </div>
 
-            <button
-              type="button"
-              onClick={() => {
-                try {
-                  const headers = ['Name', 'Email', 'Phone', 'Qualification', 'Program', 'Source', 'Submitted At', 'Notes'];
-                  const rows = activeLeadsPool.map((l) => [
-                    `"${l.name}"`,
-                    `"${l.email}"`,
-                    `"${l.phone}"`,
-                    `"${l.qualification || ''}"`,
-                    `"${l.program || ''}"`,
-                    `"${l.source}"`,
-                    `"${l.submittedAt}"`,
-                    `"${(l.notes || '').replace(/"/g, '""')}"`
-                  ]);
-                  const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
-                  const encodedUri = encodeURI(csvContent);
-                  const link = document.createElement('a');
-                  link.setAttribute('href', encodedUri);
-                  link.setAttribute(
-                    'download',
-                    `BNC_Leads_${leadSourceOption === 'website' ? 'Website_Enquiries' : 'Email_Campaigns'}_${new Date().toISOString().slice(0, 10)}.csv`
-                  );
-                  document.body.appendChild(link);
-                  link.click();
-                  document.body.removeChild(link);
-                  onShowToast(`Exported ${activeLeadsPool.length} lead(s) to CSV!`);
-                } catch (e) {
-                  console.warn('CSV export error', e);
-                }
-              }}
-              className="px-4 py-2 rounded-lg bg-[#102a4e] hover:bg-[#163a6b] text-white text-xs font-semibold flex items-center gap-2 transition-colors cursor-pointer shrink-0 whitespace-nowrap"
-            >
-              <Download className="w-4 h-4 text-[#f1bd5b]" />
-              <span>Export CSV ({activeLeadsPool.length})</span>
-            </button>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={handleOpenEmailTemplatesManager}
+                className={`px-3.5 py-2 rounded-lg border text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer shrink-0 whitespace-nowrap ${
+                  theme === 'light'
+                    ? 'bg-white hover:bg-slate-50 border-slate-300 text-slate-700'
+                    : 'bg-slate-900 hover:bg-slate-800 border-slate-700 text-slate-200'
+                }`}
+                title="Create and manage reusable candidate email templates"
+              >
+                <FileText className="w-3.5 h-3.5 text-[#b58b42]" />
+                <span>Templates ({emailTemplates.length})</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleOpenEmailForSelected(filteredLeads)}
+                className="px-3.5 py-2 rounded-lg bg-[#b58b42] hover:bg-[#9e7735] text-white text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer shrink-0 whitespace-nowrap"
+                title="Compose and send email to selected candidates"
+              >
+                <Send className="w-3.5 h-3.5" />
+                <span>
+                  {filteredLeads.filter((l) => selectedLeadIds.includes(l.id)).length > 0
+                    ? `Email Selected (${filteredLeads.filter((l) => selectedLeadIds.includes(l.id)).length})`
+                    : 'Send Email'}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  try {
+                    const headers = ['Name', 'Email', 'Phone', 'Qualification', 'Program', 'Source', 'Submitted At', 'Notes'];
+                    const rows = activeLeadsPool.map((l) => [
+                      `"${l.name}"`,
+                      `"${l.email}"`,
+                      `"${l.phone}"`,
+                      `"${l.qualification || ''}"`,
+                      `"${l.program || ''}"`,
+                      `"${l.source}"`,
+                      `"${l.submittedAt}"`,
+                      `"${(l.notes || '').replace(/"/g, '""')}"`
+                    ]);
+                    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+                    const encodedUri = encodeURI(csvContent);
+                    const link = document.createElement('a');
+                    link.setAttribute('href', encodedUri);
+                    link.setAttribute(
+                      'download',
+                      `BNC_Leads_${leadSourceOption === 'website' ? 'Website_Enquiries' : 'Email_Campaigns'}_${new Date().toISOString().slice(0, 10)}.csv`
+                    );
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    onShowToast(`Exported ${activeLeadsPool.length} lead(s) to CSV!`);
+                  } catch (e) {
+                    console.warn('CSV export error', e);
+                  }
+                }}
+                className="px-4 py-2 rounded-lg bg-[#102a4e] hover:bg-[#163a6b] text-white text-xs font-semibold flex items-center gap-2 transition-colors cursor-pointer shrink-0 whitespace-nowrap"
+              >
+                <Download className="w-4 h-4 text-[#f1bd5b]" />
+                <span>Export CSV ({activeLeadsPool.length})</span>
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Search Input for Leads */}
-        <div className={`px-6 lg:px-8 py-3.5 border-b ${
+        {/* Search Input + Bulk Selection Bar for Leads */}
+        <div className={`px-6 lg:px-8 py-3.5 border-b flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 ${
           theme === 'light' ? 'border-slate-200' : 'border-slate-800/90'
         }`}>
-          <div className="relative max-w-md">
+          <div className="relative max-w-md w-full">
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
             <input
               type="text"
@@ -1798,6 +1896,33 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
               }`}
             />
           </div>
+
+          {filteredLeads.filter((l) => selectedLeadIds.includes(l.id)).length > 0 && (
+            <div className="flex items-center gap-2 text-xs">
+              <span className={`font-semibold tabular-nums ${theme === 'light' ? 'text-slate-700' : 'text-slate-300'}`}>
+                {filteredLeads.filter((l) => selectedLeadIds.includes(l.id)).length} candidate(s) selected
+              </span>
+              <button
+                type="button"
+                onClick={() => handleOpenEmailForSelected(filteredLeads)}
+                className="px-3 py-1.5 rounded-md bg-[#102a4e] hover:bg-[#163a6b] text-white text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-colors whitespace-nowrap"
+              >
+                <Mail className="w-3.5 h-3.5 text-[#f1bd5b]" />
+                <span>Send Email</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedLeadIds([])}
+                className={`px-2.5 py-1.5 rounded-md text-xs font-medium cursor-pointer transition-colors ${
+                  theme === 'light'
+                    ? 'text-slate-600 hover:bg-slate-100'
+                    : 'text-slate-400 hover:bg-slate-800'
+                }`}
+              >
+                Clear
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Full-Width Leads Table */}
@@ -1809,7 +1934,28 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
                   ? 'border-slate-200 bg-slate-50/70 text-slate-500'
                   : 'border-slate-800/90 bg-[#081526] text-slate-400'
               }`}>
-                <th className="py-3 pl-6 lg:pl-8 pr-3">Candidate</th>
+                <th className="py-3 pl-6 lg:pl-8 pr-2 w-10">
+                  <input
+                    type="checkbox"
+                    aria-label="Select all visible leads"
+                    checked={
+                      filteredLeads.length > 0 &&
+                      filteredLeads.every((l) => selectedLeadIds.includes(l.id))
+                    }
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedLeadIds(
+                          Array.from(new Set([...selectedLeadIds, ...filteredLeads.map((l) => l.id)]))
+                        );
+                      } else {
+                        const visibleSet = new Set(filteredLeads.map((l) => l.id));
+                        setSelectedLeadIds((prev) => prev.filter((id) => !visibleSet.has(id)));
+                      }
+                    }}
+                    className="w-3.5 h-3.5 rounded border-slate-300 text-[#102a4e] focus:ring-0 cursor-pointer"
+                  />
+                </th>
+                <th className="py-3 px-3">Candidate</th>
                 <th className="py-3 px-3">Contact Channels</th>
                 <th className="py-3 px-3">Qualification &amp; Program</th>
                 <th className="py-3 px-3">Source / Brochure</th>
@@ -1822,7 +1968,7 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
               }`}>
                 {filteredLeads.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className={`py-12 text-center ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>
+                    <td colSpan={7} className={`py-12 text-center ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>
                       {leadSourceOption === 'campaigns'
                         ? 'No Email Campaign leads synced yet. Upload a Google Forms Excel sheet in the Campaigns tab and add respondents to Leads.'
                         : leadSearchTerm.trim()
@@ -1833,10 +1979,27 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
                 ) : (
                   filteredLeads.map((lead) => (
                     <tr key={lead.id} className={`transition-colors group ${
-                      theme === 'light' ? 'hover:bg-slate-50' : 'hover:bg-slate-900/50'
+                      selectedLeadIds.includes(lead.id)
+                        ? theme === 'light'
+                          ? 'bg-sky-50/60'
+                          : 'bg-slate-900/80'
+                        : theme === 'light'
+                        ? 'hover:bg-slate-50'
+                        : 'hover:bg-slate-900/50'
                     }`}>
+                      {/* Checkbox */}
+                      <td className="py-3.5 pl-6 lg:pl-8 pr-2">
+                        <input
+                          type="checkbox"
+                          aria-label={`Select ${lead.name}`}
+                          checked={selectedLeadIds.includes(lead.id)}
+                          onChange={() => handleToggleLeadSelection(lead.id)}
+                          className="w-3.5 h-3.5 rounded border-slate-300 text-[#102a4e] focus:ring-0 cursor-pointer"
+                        />
+                      </td>
+
                       {/* Name */}
-                      <td className="py-3.5 pl-5 pr-3">
+                      <td className="py-3.5 px-3">
                         <div className={`font-bold transition-colors ${
                           theme === 'light'
                             ? 'text-slate-900 group-hover:text-sky-800'
@@ -1845,7 +2008,11 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
                           {lead.name}
                         </div>
                         <span className={`inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-semibold border ${
-                          theme === 'light'
+                          lead.status === 'Contacted'
+                            ? theme === 'light'
+                              ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                              : 'bg-emerald-950 text-emerald-300 border-emerald-800/40'
+                            : theme === 'light'
                             ? 'bg-sky-50 text-sky-800 border-sky-200'
                             : 'bg-sky-950 text-sky-300 border-sky-800/40'
                         }`}>
@@ -1857,9 +2024,14 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
                       <td className="py-3.5 px-3 space-y-1">
                         <div className={`flex items-center gap-1.5 font-mono break-all max-w-[200px] ${theme === 'light' ? 'text-slate-700' : 'text-slate-300'}`}>
                           <Mail className="w-3.5 h-3.5 text-sky-600 shrink-0" />
-                          <a href={`mailto:${lead.email}`} className="hover:text-[#b58b42] transition-colors">
+                          <button
+                            type="button"
+                            onClick={() => handleOpenEmailForLead(lead)}
+                            className="text-left hover:text-[#b58b42] transition-colors cursor-pointer"
+                            title="Open email composer with templates"
+                          >
                             {lead.email}
-                          </a>
+                          </button>
                         </div>
                         <div className={`flex items-center gap-1.5 ${theme === 'light' ? 'text-slate-700' : 'text-slate-300'}`}>
                           <Phone className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
@@ -1935,19 +2107,19 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
                               >
                                 <MessageSquare className="w-4 h-4" />
                               </a>
-                              <a
-                                href={`mailto:${lead.email}?subject=${encodeURIComponent(`[BNC ELEVATE] CIA Coaching Guidance for ${lead.name}`)}&body=${encodeURIComponent(
-                                  `Dear ${lead.name},\n\nThank you for reaching out to BNC ELEVATE.\n\nWe have received your enquiry regarding ${lead.program || 'our CIA Coaching Program'}.\n\nPlease let us know your preferred time for a 1-on-1 counseling call with CA Gurvinder Pal Singh.\n\nWarm regards,\nCA Gurvinder Pal Singh\nDirector & Senior Faculty, BNC Global\ninfo@bncglobal.in | +91 98213 75702`
-                                )}`}
-                                className={`inline-flex p-1.5 rounded-lg border transition-colors ${
+                              <button
+                                type="button"
+                                onClick={() => handleOpenEmailForLead(lead)}
+                                className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap ${
                                   theme === 'light'
                                     ? 'bg-sky-50 hover:bg-sky-100 text-sky-700 border-sky-200'
                                     : 'bg-sky-950 hover:bg-sky-900 text-sky-300 border-sky-700/50'
                                 }`}
-                                title="Email Candidate"
+                                title="Send Email with Templates"
                               >
-                                <Mail className="w-4 h-4" />
-                              </a>
+                                <Mail className="w-3.5 h-3.5" />
+                                <span className="hidden lg:inline">Send Email</span>
+                              </button>
                               <button
                                 type="button"
                                 onClick={() => handleConvertLeadToLearner(lead)}
@@ -2440,6 +2612,21 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
           </div>
         </div>
       )}
+
+      {/* MODAL: Candidate Email Composer & Reusable Templates */}
+      <LeadEmailModal
+        isOpen={isEmailModalOpen}
+        onClose={() => setIsEmailModalOpen(false)}
+        initialRecipients={emailModalRecipients}
+        allLeads={leads}
+        templates={emailTemplates}
+        onUpdateTemplates={handleUpdateEmailTemplates}
+        adminName={adminUser.name}
+        initialViewMode={emailModalInitialMode}
+        onMarkLeadsContacted={handleMarkLeadsContacted}
+        onShowToast={onShowToast}
+        theme={theme}
+      />
     </div>
   );
 };
