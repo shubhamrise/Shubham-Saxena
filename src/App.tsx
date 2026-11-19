@@ -157,9 +157,6 @@ export default function App() {
         {/* 2. Meet Our Faculty & Academic Leadership (From Brochure Page 3) */}
         <FacultySection onOpenInquiry={handleOpenInquiry} />
 
-        {/* Executive Co-Founders & Enterprise Track Record */}
-        <FoundersSection />
-
         {/* 3. The 3-Part Exam Structure & Syllabus Blueprint */}
         <ExamBlueprintSection
           onOpenQuiz={handleOpenQuiz}
@@ -179,13 +176,16 @@ export default function App() {
           onOpenBrochure={handleOpenBrochure}
         />
 
-        {/* 7. What Program Covers (The 8 Pillars) */}
-        <DeliverablesSection onOpenLms={() => setLmsOpen(true)} />
-
-        {/* 8. Official IIA India Fees & Transparent Calculator */}
+        {/* 7. Official IIA India Fees & Transparent Calculator */}
         <IiaFeeCalculator />
 
-        {/* 9. Frequently Asked Questions */}
+        {/* 8. What The Program Includes (The 8 Pillars) */}
+        <DeliverablesSection onOpenLms={() => setLmsOpen(true)} />
+
+        {/* 9. The BNC Advantage (Executive Co-Founders & Enterprise Track Record) */}
+        <FoundersSection />
+
+        {/* 10. Frequently Asked Questions */}
         <FaqSection onOpenInquiry={handleOpenInquiry} />
 
         {/* Final Conversion Banner with Atmospheric Architectural Backdrop */}
