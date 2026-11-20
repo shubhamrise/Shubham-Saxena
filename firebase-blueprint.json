@@ -1,0 +1,811 @@
+{
+  "entities": {
+    "AdminUser": {
+      "title": "AdminUser",
+      "description": "Authorized Academic Administrator allowed to manage leads, enquiries, learners, CRM call logs, campaigns, templates, and curriculum.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "minLength": 5,
+          "maxLength": 160
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "role": {
+          "type": "string",
+          "enum": ["Academic Administrator", "Admissions Counselor"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["uid", "email", "name", "role", "createdAt"]
+    },
+    "WebsiteEnquiry": {
+      "title": "WebsiteEnquiry",
+      "description": "Public candidate enquiry or brochure request submitted from the live website.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "minLength": 3,
+          "maxLength": 160
+        },
+        "phone": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 40
+        },
+        "qualification": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "program": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "source": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "status": {
+          "type": "string",
+          "enum": ["New", "Contacted", "Enrolled", "Archived"]
+        },
+        "submittedAt": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "brochureDownloaded": {
+          "type": "boolean"
+        },
+        "notes": {
+          "type": "string",
+          "maxLength": 1000
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "email",
+        "phone",
+        "source",
+        "status",
+        "submittedAt",
+        "brochureDownloaded",
+        "createdAt"
+      ]
+    },
+    "DirectoryLead": {
+      "title": "DirectoryLead",
+      "description": "Qualified candidate lead in the Admin Leads Directory (promoted website enquiries or imported campaign leads).",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "email": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "phone": {
+          "type": "string",
+          "maxLength": 40
+        },
+        "qualification": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "program": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "source": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "status": {
+          "type": "string",
+          "enum": ["New", "Contacted", "Enrolled", "Archived"]
+        },
+        "submittedAt": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "brochureDownloaded": {
+          "type": "boolean"
+        },
+        "notes": {
+          "type": "string",
+          "maxLength": 2000
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "email",
+        "phone",
+        "source",
+        "status",
+        "submittedAt",
+        "brochureDownloaded",
+        "createdAt"
+      ]
+    },
+    "CrmCallLog": {
+      "title": "CrmCallLog",
+      "description": "Counselor phone interaction record with follow-up schedule and interest classification.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "studentName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "phone": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 40
+        },
+        "email": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "direction": {
+          "type": "string",
+          "enum": ["outbound", "inbound"]
+        },
+        "callStatus": {
+          "type": "string",
+          "enum": ["Connected", "No Answer", "Callback Requested", "Busy", "Voicemail"]
+        },
+        "callDateTime": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "durationSeconds": {
+          "type": "number"
+        },
+        "responseSummary": {
+          "type": "string",
+          "maxLength": 2000
+        },
+        "interestLevel": {
+          "type": "string",
+          "enum": [
+            "Hot / Ready to Enroll",
+            "Warm / Follow-up",
+            "Support / Existing Student",
+            "Cold / Not Interested"
+          ]
+        },
+        "reconnectAgain": {
+          "type": "boolean"
+        },
+        "nextFollowUpDate": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "feedback": {
+          "type": "string",
+          "maxLength": 2000
+        },
+        "handledBy": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "studentName",
+        "phone",
+        "direction",
+        "callStatus",
+        "callDateTime",
+        "durationSeconds",
+        "responseSummary",
+        "interestLevel",
+        "reconnectAgain",
+        "handledBy",
+        "createdAt"
+      ]
+    },
+    "ManagedLearner": {
+      "title": "ManagedLearner",
+      "description": "Authorized student LMS account managed by Academic Administration.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "minLength": 5,
+          "maxLength": 160
+        },
+        "password": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "orderId": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "packageName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "feeStatus": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 240
+        },
+        "status": {
+          "type": "string",
+          "enum": ["active", "revoked", "pending"]
+        },
+        "enrollmentDate": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "accessDuration": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "notes": {
+          "type": "string",
+          "maxLength": 1000
+        },
+        "phone": {
+          "type": "string",
+          "maxLength": 40
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "email",
+        "packageName",
+        "feeStatus",
+        "status",
+        "enrollmentDate",
+        "accessDuration",
+        "createdAt"
+      ]
+    },
+    "EnrollmentOrder": {
+      "title": "EnrollmentOrder",
+      "description": "Course enrollment and payment submission captured from the website Checkout Modal.",
+      "type": "object",
+      "properties": {
+        "orderId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "packageId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "packageName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "studentName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "studentEmail": {
+          "type": "string",
+          "format": "email",
+          "minLength": 5,
+          "maxLength": 160
+        },
+        "studentPhone": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 40
+        },
+        "qualification": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "city": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "paymentMethod": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "paymentStatus": {
+          "type": "string",
+          "enum": ["Paid", "Installment Paid", "Pending Verification", "Enrollment Confirmed"]
+        },
+        "transactionId": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "upiTransactionCode": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "gatewayPaymentId": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "payerVpa": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "invoiceNumber": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "paidAt": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "createdAtLabel": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "orderId",
+        "packageId",
+        "packageName",
+        "studentName",
+        "studentEmail",
+        "studentPhone",
+        "paymentStatus",
+        "createdAt"
+      ]
+    },
+    "EmailTemplate": {
+      "title": "EmailTemplate",
+      "description": "Reusable candidate outreach email template shared across admins.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "category": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "subject": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "body": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 8000
+        },
+        "updatedAtLabel": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["id", "name", "category", "subject", "body", "createdAt"]
+    },
+    "CampaignBatch": {
+      "title": "CampaignBatch",
+      "description": "Uploaded Excel/CSV campaign spreadsheet metadata batch.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "campaignName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "fileName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "sheetName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "uploadedAt": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "savedAt": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "headers": {
+          "type": "array"
+        },
+        "rowCount": {
+          "type": "number"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "campaignName",
+        "fileName",
+        "sheetName",
+        "uploadedAt",
+        "headers",
+        "rowCount",
+        "createdAt"
+      ]
+    },
+    "CampaignRow": {
+      "title": "CampaignRow",
+      "description": "Individual candidate row inside a CampaignBatch subcollection.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "batchId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "campaignName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "submittedAt": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "email": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "phone": {
+          "type": "string",
+          "maxLength": 40
+        },
+        "qualification": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "program": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "notes": {
+          "type": "string",
+          "maxLength": 1000
+        },
+        "rawFields": {
+          "type": "object"
+        },
+        "importedToLeads": {
+          "type": "boolean"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "batchId",
+        "campaignName",
+        "name",
+        "email",
+        "phone",
+        "importedToLeads",
+        "createdAt"
+      ]
+    },
+    "LmsModuleDoc": {
+      "title": "LmsModuleDoc",
+      "description": "Published course curriculum module with lessons metadata and hosted video URLs.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "partId": {
+          "type": "string",
+          "enum": ["part-1", "part-2", "part-3", "ai-lab"]
+        },
+        "moduleNumber": {
+          "type": "number"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 1000
+        },
+        "orderIndex": {
+          "type": "number"
+        },
+        "isPublished": {
+          "type": "boolean"
+        },
+        "lessons": {
+          "type": "array"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["id", "partId", "moduleNumber", "title", "description", "orderIndex", "isPublished", "lessons", "createdAt"]
+    },
+    "StudentProgress": {
+      "title": "StudentProgress",
+      "description": "Per-student LMS lesson completion tracker keyed by Firebase Auth UID.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "minLength": 5,
+          "maxLength": 160
+        },
+        "completedLessons": {
+          "type": "array"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["userId", "email", "completedLessons", "createdAt", "updatedAt"]
+    },
+    "StudentLessonNote": {
+      "title": "StudentLessonNote",
+      "description": "Per-lesson study note inside a student's progress subcollection.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "lessonId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "content": {
+          "type": "string",
+          "maxLength": 10000
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["userId", "lessonId", "content", "createdAt", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/admins/{adminUid}": {
+      "schema": { "$ref": "#/entities/AdminUser" },
+      "description": "Trusted Academic Administrators allowed full console management."
+    },
+    "/enquiries/{enquiryId}": {
+      "schema": { "$ref": "#/entities/WebsiteEnquiry" },
+      "description": "Write-only public drop box for website enquiries and brochure downloads; admin-only reads and management."
+    },
+    "/leads/{leadId}": {
+      "schema": { "$ref": "#/entities/DirectoryLead" },
+      "description": "Admin-managed Leads Directory (promoted website enquiries and campaign leads)."
+    },
+    "/crm_call_logs/{logId}": {
+      "schema": { "$ref": "#/entities/CrmCallLog" },
+      "description": "Admin-managed CRM phone call logs and follow-up records."
+    },
+    "/learners/{learnerId}": {
+      "schema": { "$ref": "#/entities/ManagedLearner" },
+      "description": "Admin-managed student LMS roster; each verified student can read only their own matching email record."
+    },
+    "/enrollments/{orderId}": {
+      "schema": { "$ref": "#/entities/EnrollmentOrder" },
+      "description": "Write-only public drop box for checkout enrollment submissions; admin-only reads and status updates."
+    },
+    "/email_templates/{templateId}": {
+      "schema": { "$ref": "#/entities/EmailTemplate" },
+      "description": "Admin-managed reusable candidate outreach email templates."
+    },
+    "/campaign_batches/{batchId}": {
+      "schema": { "$ref": "#/entities/CampaignBatch" },
+      "description": "Admin-managed Google Forms / Excel campaign upload batch metadata."
+    },
+    "/campaign_batches/{batchId}/rows/{rowId}": {
+      "schema": { "$ref": "#/entities/CampaignRow" },
+      "description": "Individual candidate rows inside a campaign batch subcollection."
+    },
+    "/lms_modules/{moduleId}": {
+      "schema": { "$ref": "#/entities/LmsModuleDoc" },
+      "description": "Course curriculum modules synced between Admin Console and verified Student LMS users."
+    },
+    "/student_progress/{userId}": {
+      "schema": { "$ref": "#/entities/StudentProgress" },
+      "description": "Per-student completed lesson list, accessible only to the owning authenticated student or admin."
+    },
+    "/student_progress/{userId}/notes/{lessonId}": {
+      "schema": { "$ref": "#/entities/StudentLessonNote" },
+      "description": "Per-lesson student notes subcollection, accessible only to the owning authenticated student or admin."
+    }
+  }
+}

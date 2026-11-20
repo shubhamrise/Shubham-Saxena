@@ -44,6 +44,19 @@ import {
 import { LmsAdminConsole } from './LmsAdminConsole';
 import { ManagedLearner, LmsAdminUser } from '../types';
 import { getLessonVideo, resolveVideoPlaybackSource } from '../utils/videoStorage';
+import { useFirebase } from '../context/FirebaseContext';
+import { isBootstrappedAdminEmail } from '../firebase';
+import {
+  subscribeLearners,
+  saveLearnerInFirestore,
+  deleteLearnerInFirestore,
+  findLearnerByStudentEmail,
+  subscribeLmsModules,
+  syncLmsModulesToFirestore,
+  subscribeStudentProgress,
+  saveStudentCompletedLessonsInFirestore,
+  saveStudentNoteInFirestore,
+} from '../services/firestoreSync';
 
 export interface AuthenticatedStudent {
   name: string;
@@ -104,6 +117,18 @@ export const StudentLmsPortal: React.FC<StudentLmsPortalProps> = ({
     }
   });
 
+  const {
+    firebaseUser,
+    authReady,
+    isCloudAdmin,
+    signInWithGoogle,
+    signOutFirebase,
+  } = useFirebase();
+  const [isGoogleAuthBusy, setIsGoogleAuthBusy] = useState(false);
+  const cloudModuleIdsRef = useRef<Set<string>>(new Set());
+  const studentProgressExistsRef = useRef<boolean>(false);
+  const studentNoteIdsRef = useRef<Set<string>>(new Set());
+
   const [managedLearners, setManagedLearners] = useState<ManagedLearner[]>(() => {
     try {
       const saved = localStorage.getItem('bnc_lms_managed_students');
@@ -121,11 +146,32 @@ export const StudentLmsPortal: React.FC<StudentLmsPortalProps> = ({
   });
 
   const handleUpdateLearners = (updated: ManagedLearner[]) => {
+    const prev = managedLearners;
     setManagedLearners(updated);
     try {
       localStorage.setItem('bnc_lms_managed_students', JSON.stringify(updated));
     } catch (e) {
       console.warn(e);
+    }
+
+    if (isCloudAdmin) {
+      const prevMap = new Map(prev.map((l) => [l.id, l]));
+      const nextIds = new Set(updated.map((l) => l.id));
+
+      updated.forEach((learner) => {
+        const existing = prevMap.get(learner.id);
+        if (!existing) {
+          void saveLearnerInFirestore(learner, false).catch(console.warn);
+        } else if (JSON.stringify(existing) !== JSON.stringify(learner)) {
+          void saveLearnerInFirestore(learner, true).catch(console.warn);
+        }
+      });
+
+      prev.forEach((oldLearner) => {
+        if (!nextIds.has(oldLearner.id)) {
+          void deleteLearnerInFirestore(oldLearner.id).catch(console.warn);
+        }
+      });
     }
   };
 
@@ -188,7 +234,96 @@ export const StudentLmsPortal: React.FC<StudentLmsPortalProps> = ({
     } catch (e) {
       console.warn(e);
     }
+    if (isCloudAdmin) {
+      void syncLmsModulesToFirestore(updated, cloudModuleIdsRef.current).catch(console.warn);
+    }
   };
+
+  // Sync Admin learners & curriculum modules live from Firestore
+  useEffect(() => {
+    if (!authReady || !isCloudAdmin) return;
+
+    const unsubLearners = subscribeLearners((items) => {
+      setManagedLearners(items);
+      try {
+        localStorage.setItem('bnc_lms_managed_students', JSON.stringify(items));
+      } catch {}
+    });
+
+    const unsubModules = subscribeLmsModules(true, (cloudModules) => {
+      cloudModuleIdsRef.current = new Set(cloudModules.map((m) => m.id));
+      if (cloudModules.length > 0) {
+        setLmsModules(cloudModules);
+        try {
+          localStorage.setItem('bnc_lms_modules', JSON.stringify(cloudModules));
+        } catch {}
+      }
+    });
+
+    return () => {
+      unsubLearners();
+      unsubModules();
+    };
+  }, [authReady, isCloudAdmin]);
+
+  // Auto-open Admin Console when signed in with an authorized Google admin account on the admin tab
+  useEffect(() => {
+    if (!authReady || !isCloudAdmin || !firebaseUser) return;
+    if (!adminUser && portalMode === 'admin') {
+      const emailLower = (firebaseUser.email || '').toLowerCase();
+      const cloudAdmin: LmsAdminUser = {
+        email: emailLower || 'neha@bncglobal.in',
+        name:
+          emailLower === 'neha@bncglobal.in'
+            ? 'Neha Srivastava'
+            : firebaseUser.displayName || 'Academic Administrator',
+        role: 'Academic Administrator',
+        authenticatedAt: new Date().toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+        }),
+      };
+      setAdminUser(cloudAdmin);
+      try {
+        localStorage.setItem('bnc_lms_auth_admin', JSON.stringify(cloudAdmin));
+      } catch {}
+    }
+  }, [authReady, isCloudAdmin, firebaseUser, adminUser, portalMode]);
+
+  // Sync published LMS modules & student progress/notes when signed in as verified Firebase user
+  useEffect(() => {
+    if (!authReady || !firebaseUser?.emailVerified || !currentUser || isCloudAdmin) return;
+
+    const unsubModules = subscribeLmsModules(false, (cloudModules) => {
+      if (cloudModules.length > 0) {
+        setLmsModules(cloudModules);
+      }
+    });
+
+    const unsubProgress = subscribeStudentProgress(
+      firebaseUser.uid,
+      (completed, exists) => {
+        studentProgressExistsRef.current = exists;
+        setCompletedLessons(completed);
+        try {
+          localStorage.setItem('bnc_lms_completed_lessons', JSON.stringify(completed));
+        } catch {}
+      },
+      (notesMap, noteIds) => {
+        studentNoteIdsRef.current = noteIds;
+        setSavedNotes(notesMap);
+        try {
+          localStorage.setItem('bnc_lms_notes', JSON.stringify(notesMap));
+        } catch {}
+      }
+    );
+
+    return () => {
+      unsubModules();
+      unsubProgress();
+    };
+  }, [authReady, firebaseUser, currentUser, isCloudAdmin]);
   
   // Video Player state
   const [activeLesson, setActiveLesson] = useState<LmsLesson>(lmsModules[0]?.lessons[0] || LMS_MODULES[0].lessons[0]);
@@ -397,9 +532,116 @@ export const StudentLmsPortal: React.FC<StudentLmsPortalProps> = ({
     }, 600);
   };
 
+  const handleAdminGoogleLogin = async () => {
+    setAdminError(null);
+    setIsGoogleAuthBusy(true);
+    try {
+      const user = await signInWithGoogle();
+      const emailLower = (user.email || '').trim().toLowerCase();
+      if (!user.emailVerified) {
+        setAdminError('Your Google account email must be verified to access the Admin Console.');
+        await signOutFirebase();
+        return;
+      }
+
+      if (!isBootstrappedAdminEmail(emailLower)) {
+        // Check if registered in /admins/{uid} via context check
+        const { doc, getDoc } = await import('firebase/firestore');
+        const { db } = await import('../firebase');
+        const adminSnap = await getDoc(doc(db, 'admins', user.uid));
+        if (!adminSnap.exists()) {
+          setAdminError(
+            `The Google account "${emailLower}" is not authorized as an Academic Administrator. Please sign in with an authorized admin account.`
+          );
+          await signOutFirebase();
+          return;
+        }
+      }
+
+      const newAdmin: LmsAdminUser = {
+        email: emailLower,
+        name:
+          emailLower === 'neha@bncglobal.in'
+            ? 'Neha Srivastava'
+            : user.displayName || 'Academic Administrator',
+        role: 'Academic Administrator',
+        authenticatedAt: new Date().toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+        }),
+      };
+      setAdminUser(newAdmin);
+      try {
+        localStorage.setItem('bnc_lms_auth_admin', JSON.stringify(newAdmin));
+      } catch {}
+      showToast(`Signed in with live cloud sync as ${newAdmin.name}`);
+    } catch (err) {
+      console.warn('Admin Google sign-in error:', err);
+      setAdminError('Google sign-in was cancelled or could not complete. Please try again.');
+    } finally {
+      setIsGoogleAuthBusy(false);
+    }
+  };
+
+  const handleStudentGoogleLogin = async () => {
+    setAuthError(null);
+    setIsGoogleAuthBusy(true);
+    try {
+      const user = await signInWithGoogle();
+      const emailLower = (user.email || '').trim().toLowerCase();
+      if (!user.emailVerified || !emailLower) {
+        setAuthError('Your Google account email must be verified to access the Student LMS Portal.');
+        await signOutFirebase();
+        return;
+      }
+
+      const matchedLearner = await findLearnerByStudentEmail(emailLower);
+      if (!matchedLearner) {
+        setAuthError(
+          `Access Restricted: No authorized learner record found for "${emailLower}". Please ask Academic Administration to authorize this email in the Admin Console.`
+        );
+        await signOutFirebase();
+        return;
+      }
+
+      if (matchedLearner.status === 'revoked') {
+        setAuthError(
+          `Access Suspended: Portal access for ${matchedLearner.name} has been suspended or revoked by Academic Administration. Status: ${matchedLearner.feeStatus}. Please contact Admissions at info@bncglobal.in or call +91 98213 75702.`
+        );
+        await signOutFirebase();
+        return;
+      }
+
+      if (matchedLearner.status === 'pending') {
+        setAuthError(
+          `Tuition Verification Pending: Enrollment records for ${matchedLearner.name} are awaiting final academic fee clearance. Access will unlock automatically upon approval.`
+        );
+        await signOutFirebase();
+        return;
+      }
+
+      authenticateStudent({
+        name: matchedLearner.name,
+        email: matchedLearner.email,
+        orderId: matchedLearner.orderId || '2026000',
+        packageName: matchedLearner.packageName,
+        feeStatus: matchedLearner.feeStatus,
+        enrollmentDate: matchedLearner.enrollmentDate,
+        accessDuration: matchedLearner.accessDuration,
+      });
+    } catch (err) {
+      console.warn('Student Google sign-in error:', err);
+      setAuthError('Google sign-in was cancelled or could not verify your learner record.');
+    } finally {
+      setIsGoogleAuthBusy(false);
+    }
+  };
+
   const handleLogoutAdmin = () => {
     setAdminUser(null);
     localStorage.removeItem('bnc_lms_auth_admin');
+    void signOutFirebase().catch(() => {});
     showToast('Signed out of Academic Admin Console');
   };
 
@@ -407,6 +649,9 @@ export const StudentLmsPortal: React.FC<StudentLmsPortalProps> = ({
     localStorage.removeItem('bnc_lms_auth_user');
     setCurrentUser(null);
     setShowProfileModal(false);
+    if (!adminUser) {
+      void signOutFirebase().catch(() => {});
+    }
     showToast('Signed out of student dossier');
   };
 
@@ -426,6 +671,14 @@ export const StudentLmsPortal: React.FC<StudentLmsPortalProps> = ({
     } catch (e) {
       console.warn(e);
     }
+    if (firebaseUser?.emailVerified && firebaseUser.email) {
+      void saveStudentCompletedLessonsInFirestore(
+        firebaseUser.uid,
+        firebaseUser.email,
+        updated,
+        studentProgressExistsRef.current
+      ).catch(console.warn);
+    }
   };
 
   // Save student notes
@@ -437,6 +690,17 @@ export const StudentLmsPortal: React.FC<StudentLmsPortalProps> = ({
       localStorage.setItem('bnc_lms_notes', JSON.stringify(updated));
     } catch (e) {
       console.warn(e);
+    }
+    if (firebaseUser?.emailVerified && firebaseUser.email) {
+      void saveStudentNoteInFirestore(
+        firebaseUser.uid,
+        firebaseUser.email,
+        activeLesson.id,
+        studentNote,
+        completedLessons,
+        studentProgressExistsRef.current,
+        studentNoteIdsRef.current.has(activeLesson.id)
+      ).catch(console.warn);
     }
     setNoteSavedFeedback(true);
     setTimeout(() => setNoteSavedFeedback(false), 2000);
@@ -825,6 +1089,35 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
                   </div>
                 )}
 
+                {/* Google Cloud Sign-In for Enrolled Students */}
+                <div className="mb-5">
+                  <button
+                    type="button"
+                    disabled={isGoogleAuthBusy}
+                    onClick={handleStudentGoogleLogin}
+                    className={`w-full py-3 px-5 rounded-xl border font-bold text-sm transition-all cursor-pointer flex items-center justify-center gap-2.5 disabled:opacity-60 ${
+                      theme === 'light'
+                        ? 'bg-white hover:bg-slate-50 border-slate-300 text-slate-900 shadow-xs'
+                        : 'bg-slate-900 hover:bg-slate-800 border-slate-700 text-white'
+                    }`}
+                  >
+                    <ShieldCheck className="w-4 h-4 text-[#b58b42]" />
+                    <span>
+                      {isGoogleAuthBusy
+                        ? 'Verifying Google Account...'
+                        : 'Continue with Google (Sync Across Devices)'}
+                    </span>
+                  </button>
+
+                  <div className="relative flex items-center justify-center my-4">
+                    <div className={`w-full border-t ${theme === 'light' ? 'border-slate-200' : 'border-slate-800'}`} />
+                    <span className={`px-3 text-[11px] font-semibold whitespace-nowrap ${theme === 'light' ? 'bg-white text-slate-400' : 'bg-[#0a1829] text-slate-500'}`}>
+                      or sign in with registered email & password
+                    </span>
+                    <div className={`w-full border-t ${theme === 'light' ? 'border-slate-200' : 'border-slate-800'}`} />
+                  </div>
+                </div>
+
                 {/* Learner Form: Email & Admin-Assigned Password */}
                 <form onSubmit={handleVerifyCredentials} className="space-y-4">
                   <div>
@@ -971,6 +1264,31 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
                     </div>
                   </div>
                 )}
+
+                {/* Primary Google Cloud Admin Sign-In */}
+                <div className="mb-5">
+                  <button
+                    type="button"
+                    disabled={isGoogleAuthBusy}
+                    onClick={handleAdminGoogleLogin}
+                    className="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-[#102a4e] via-[#163a6b] to-[#b58b42] hover:opacity-95 text-white font-bold text-sm tracking-wide shadow-md transition-all cursor-pointer flex items-center justify-center gap-2.5 disabled:opacity-60"
+                  >
+                    <ShieldCheck className="w-4 h-4 text-[#f1bd5b]" />
+                    <span>
+                      {isGoogleAuthBusy
+                        ? 'Connecting Admin Cloud Session...'
+                        : 'Sign In with Google (Live Cloud Sync Admin)'}
+                    </span>
+                  </button>
+
+                  <div className="relative flex items-center justify-center my-4">
+                    <div className={`w-full border-t ${theme === 'light' ? 'border-slate-200' : 'border-slate-800'}`} />
+                    <span className={`px-3 text-[11px] font-semibold whitespace-nowrap ${theme === 'light' ? 'bg-white text-slate-400' : 'bg-[#0a1829] text-slate-500'}`}>
+                      or sign in with admin credentials
+                    </span>
+                    <div className={`w-full border-t ${theme === 'light' ? 'border-slate-200' : 'border-slate-800'}`} />
+                  </div>
+                </div>
 
                 {/* Admin Login Form */}
                 <form onSubmit={handleAdminLogin} className="space-y-4">

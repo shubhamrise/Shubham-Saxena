@@ -4,6 +4,9 @@
  * into the Academic Admin Leads console while automatically triggering brochure PDF download.
  */
 
+import { createPublicEnquiryInFirestore } from './firestoreSync';
+import { EnquiryLead } from '../types';
+
 export interface EnquiryPayload {
   name: string;
   email: string;
@@ -35,13 +38,13 @@ export const triggerBrochureDownload = (): boolean => {
 };
 
 /**
- * Persists lead to local storage for instant availability in the LMS Admin Console
+ * Persists lead to shared Firebase Firestore (visible across all devices & admins)
+ * and local cache for instant fallback availability.
  */
 export const saveLeadToAdminConsole = (data: EnquiryPayload) => {
   try {
-    const existingLeads = JSON.parse(localStorage.getItem('bnc_all_leads') || '[]');
-    const newLead = {
-      id: `lead-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+    const newLead: EnquiryLead = {
+      id: `lead-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
       name: data.name,
       email: data.email,
       phone: data.phone,
@@ -49,13 +52,24 @@ export const saveLeadToAdminConsole = (data: EnquiryPayload) => {
       program: data.program || 'All Packages',
       source: data.source,
       status: 'New',
-      submittedAt: new Date().toLocaleString(),
+      submittedAt: new Date().toLocaleString('en-IN'),
       brochureDownloaded: true,
       notes: data.notes || `Dispatched to info@bncglobal.in via ${data.source}`
     };
 
-    existingLeads.unshift(newLead);
-    localStorage.setItem('bnc_all_leads', JSON.stringify(existingLeads));
+    try {
+      const existingLeads = JSON.parse(localStorage.getItem('bnc_all_leads') || '[]');
+      existingLeads.unshift(newLead);
+      localStorage.setItem('bnc_all_leads', JSON.stringify(existingLeads));
+    } catch {
+      // ignore local storage quota issues
+    }
+
+    // Persist to shared cloud Firestore so every admin on every device receives it live
+    void createPublicEnquiryInFirestore(newLead).catch((err) => {
+      console.warn('Cloud enquiry sync warning:', err);
+    });
+
     return newLead;
   } catch (err) {
     console.warn('Lead persistence error:', err);

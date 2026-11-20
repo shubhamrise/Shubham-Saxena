@@ -1,0 +1,638 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // =========================================================================
+    // GLOBAL SAFETY NET (Default-Deny)
+    // =========================================================================
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // =========================================================================
+    // PHASE 3: HARDENED GLOBAL PRIMITIVES
+    // =========================================================================
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isOwner(userId) {
+      return isVerifiedUser() && request.auth.uid == userId;
+    }
+
+    function isBootstrappedAdmin() {
+      return isVerifiedUser() && (
+        request.auth.token.email == 'shubhamsaxena787787@gmail.com' ||
+        request.auth.token.email == 'neha@bncglobal.in'
+      );
+    }
+
+    function isAdmin() {
+      return isBootstrappedAdmin() || (
+        isVerifiedUser() && exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    function isRequiredString(data, key, minLen, maxLen) {
+      return key in data && data[key] is string && data[key].size() >= minLen && data[key].size() <= maxLen;
+    }
+
+    function isOptionalString(data, key, maxLen) {
+      return !(key in data) || (data[key] is string && data[key].size() <= maxLen);
+    }
+
+    function isValidEmailFormat(val) {
+      return val is string && val.size() >= 3 && val.size() <= 160 && val.matches('^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$');
+    }
+
+    // =========================================================================
+    // VALIDATION BLUEPRINTS (Anti-Update-Gap Helpers)
+    // =========================================================================
+
+    function isValidAdminUser(data, docId) {
+      return data.keys().hasAll(['uid', 'email', 'name', 'role', 'createdAt']) &&
+        data.keys().hasOnly(['uid', 'email', 'name', 'role', 'createdAt']) &&
+        isValidId(data.uid) &&
+        data.uid == docId &&
+        isValidEmailFormat(data.email) &&
+        isRequiredString(data, 'name', 1, 120) &&
+        data.role in ['Academic Administrator', 'Admissions Counselor'] &&
+        data.createdAt is timestamp;
+    }
+
+    function isValidEnquiry(data, docId) {
+      return data.keys().hasAll([
+          'id', 'name', 'email', 'phone', 'source', 'status',
+          'submittedAt', 'brochureDownloaded', 'createdAt'
+        ]) &&
+        data.keys().hasOnly([
+          'id', 'name', 'email', 'phone', 'qualification', 'program',
+          'source', 'status', 'submittedAt', 'brochureDownloaded',
+          'notes', 'createdAt', 'updatedAt'
+        ]) &&
+        isValidId(data.id) &&
+        data.id == docId &&
+        isRequiredString(data, 'name', 1, 120) &&
+        isValidEmailFormat(data.email) &&
+        isRequiredString(data, 'phone', 5, 40) &&
+        isOptionalString(data, 'qualification', 160) &&
+        isOptionalString(data, 'program', 160) &&
+        isRequiredString(data, 'source', 1, 160) &&
+        data.status in ['New', 'Contacted', 'Enrolled', 'Archived'] &&
+        isRequiredString(data, 'submittedAt', 1, 80) &&
+        data.brochureDownloaded is bool &&
+        isOptionalString(data, 'notes', 1000) &&
+        data.createdAt is timestamp &&
+        (!('updatedAt' in data) || data.updatedAt is timestamp);
+    }
+
+    function isValidLead(data, docId) {
+      return data.keys().hasAll([
+          'id', 'name', 'email', 'phone', 'source', 'status',
+          'submittedAt', 'brochureDownloaded', 'createdAt'
+        ]) &&
+        data.keys().hasOnly([
+          'id', 'name', 'email', 'phone', 'qualification', 'program',
+          'source', 'status', 'submittedAt', 'brochureDownloaded',
+          'notes', 'createdAt', 'updatedAt'
+        ]) &&
+        isValidId(data.id) &&
+        data.id == docId &&
+        isRequiredString(data, 'name', 1, 120) &&
+        isRequiredString(data, 'email', 1, 160) &&
+        data.phone is string && data.phone.size() <= 40 &&
+        isOptionalString(data, 'qualification', 160) &&
+        isOptionalString(data, 'program', 160) &&
+        isRequiredString(data, 'source', 1, 200) &&
+        data.status in ['New', 'Contacted', 'Enrolled', 'Archived'] &&
+        isRequiredString(data, 'submittedAt', 1, 80) &&
+        data.brochureDownloaded is bool &&
+        isOptionalString(data, 'notes', 2000) &&
+        data.createdAt is timestamp &&
+        (!('updatedAt' in data) || data.updatedAt is timestamp);
+    }
+
+    function isValidCrmCallLog(data, docId) {
+      return data.keys().hasAll([
+          'id', 'studentName', 'phone', 'direction', 'callStatus',
+          'callDateTime', 'durationSeconds', 'responseSummary',
+          'interestLevel', 'reconnectAgain', 'handledBy', 'createdAt'
+        ]) &&
+        data.keys().hasOnly([
+          'id', 'studentName', 'phone', 'email', 'direction', 'callStatus',
+          'callDateTime', 'durationSeconds', 'responseSummary',
+          'interestLevel', 'reconnectAgain', 'nextFollowUpDate',
+          'feedback', 'handledBy', 'createdAt', 'updatedAt'
+        ]) &&
+        isValidId(data.id) &&
+        data.id == docId &&
+        isRequiredString(data, 'studentName', 1, 120) &&
+        isRequiredString(data, 'phone', 3, 40) &&
+        isOptionalString(data, 'email', 160) &&
+        data.direction in ['outbound', 'inbound'] &&
+        data.callStatus in ['Connected', 'No Answer', 'Callback Requested', 'Busy', 'Voicemail'] &&
+        isRequiredString(data, 'callDateTime', 1, 80) &&
+        data.durationSeconds is number && data.durationSeconds >= 0 && data.durationSeconds <= 86400 &&
+        data.responseSummary is string && data.responseSummary.size() <= 2000 &&
+        data.interestLevel in [
+          'Hot / Ready to Enroll',
+          'Warm / Follow-up',
+          'Support / Existing Student',
+          'Cold / Not Interested'
+        ] &&
+        data.reconnectAgain is bool &&
+        isOptionalString(data, 'nextFollowUpDate', 80) &&
+        isOptionalString(data, 'feedback', 2000) &&
+        isRequiredString(data, 'handledBy', 1, 120) &&
+        data.createdAt is timestamp &&
+        (!('updatedAt' in data) || data.updatedAt is timestamp);
+    }
+
+    function isValidLearner(data, docId) {
+      return data.keys().hasAll([
+          'id', 'name', 'email', 'packageName', 'feeStatus',
+          'status', 'enrollmentDate', 'accessDuration', 'createdAt'
+        ]) &&
+        data.keys().hasOnly([
+          'id', 'name', 'email', 'password', 'orderId', 'packageName',
+          'feeStatus', 'status', 'enrollmentDate', 'accessDuration',
+          'notes', 'phone', 'createdAt', 'updatedAt'
+        ]) &&
+        isValidId(data.id) &&
+        data.id == docId &&
+        isRequiredString(data, 'name', 1, 120) &&
+        isValidEmailFormat(data.email) &&
+        isOptionalString(data, 'password', 100) &&
+        isOptionalString(data, 'orderId', 64) &&
+        isRequiredString(data, 'packageName', 1, 160) &&
+        isRequiredString(data, 'feeStatus', 1, 240) &&
+        data.status in ['active', 'revoked', 'pending'] &&
+        isRequiredString(data, 'enrollmentDate', 1, 80) &&
+        isRequiredString(data, 'accessDuration', 1, 120) &&
+        isOptionalString(data, 'notes', 1000) &&
+        isOptionalString(data, 'phone', 40) &&
+        data.createdAt is timestamp &&
+        (!('updatedAt' in data) || data.updatedAt is timestamp);
+    }
+
+    function isValidEnrollment(data, docId) {
+      return data.keys().hasAll([
+          'orderId', 'packageId', 'packageName', 'studentName',
+          'studentEmail', 'studentPhone', 'paymentStatus', 'createdAt'
+        ]) &&
+        data.keys().hasOnly([
+          'orderId', 'packageId', 'packageName', 'studentName',
+          'studentEmail', 'studentPhone', 'qualification', 'city',
+          'paymentMethod', 'paymentStatus', 'transactionId',
+          'upiTransactionCode', 'gatewayPaymentId', 'payerVpa',
+          'invoiceNumber', 'paidAt', 'createdAtLabel', 'createdAt', 'updatedAt'
+        ]) &&
+        isValidId(data.orderId) &&
+        data.orderId == docId &&
+        data.orderId.size() <= 64 &&
+        isRequiredString(data, 'packageId', 1, 64) &&
+        isRequiredString(data, 'packageName', 1, 160) &&
+        isRequiredString(data, 'studentName', 1, 120) &&
+        isValidEmailFormat(data.studentEmail) &&
+        isRequiredString(data, 'studentPhone', 5, 40) &&
+        isOptionalString(data, 'qualification', 160) &&
+        isOptionalString(data, 'city', 120) &&
+        isOptionalString(data, 'paymentMethod', 120) &&
+        data.paymentStatus in ['Paid', 'Installment Paid', 'Pending Verification', 'Enrollment Confirmed'] &&
+        isOptionalString(data, 'transactionId', 120) &&
+        isOptionalString(data, 'upiTransactionCode', 120) &&
+        isOptionalString(data, 'gatewayPaymentId', 120) &&
+        isOptionalString(data, 'payerVpa', 120) &&
+        isOptionalString(data, 'invoiceNumber', 80) &&
+        isOptionalString(data, 'paidAt', 80) &&
+        isOptionalString(data, 'createdAtLabel', 80) &&
+        data.createdAt is timestamp &&
+        (!('updatedAt' in data) || data.updatedAt is timestamp);
+    }
+
+    function isValidEmailTemplate(data, docId) {
+      return data.keys().hasAll(['id', 'name', 'category', 'subject', 'body', 'createdAt']) &&
+        data.keys().hasOnly(['id', 'name', 'category', 'subject', 'body', 'updatedAtLabel', 'createdAt', 'updatedAt']) &&
+        isValidId(data.id) &&
+        data.id == docId &&
+        isRequiredString(data, 'name', 1, 160) &&
+        isRequiredString(data, 'category', 1, 80) &&
+        isRequiredString(data, 'subject', 1, 300) &&
+        isRequiredString(data, 'body', 1, 8000) &&
+        isOptionalString(data, 'updatedAtLabel', 80) &&
+        data.createdAt is timestamp &&
+        (!('updatedAt' in data) || data.updatedAt is timestamp);
+    }
+
+    function isValidCampaignBatch(data, docId) {
+      return data.keys().hasAll([
+          'id', 'campaignName', 'fileName', 'sheetName',
+          'uploadedAt', 'headers', 'rowCount', 'createdAt'
+        ]) &&
+        data.keys().hasOnly([
+          'id', 'campaignName', 'fileName', 'sheetName',
+          'uploadedAt', 'savedAt', 'headers', 'rowCount', 'createdAt', 'updatedAt'
+        ]) &&
+        isValidId(data.id) &&
+        data.id == docId &&
+        isRequiredString(data, 'campaignName', 1, 200) &&
+        isRequiredString(data, 'fileName', 1, 200) &&
+        isRequiredString(data, 'sheetName', 1, 120) &&
+        isRequiredString(data, 'uploadedAt', 1, 80) &&
+        isOptionalString(data, 'savedAt', 80) &&
+        data.headers is list && data.headers.size() <= 60 &&
+        (data.headers.size() == 0 || (data.headers[0] is string && data.headers[0].size() <= 160)) &&
+        data.rowCount is number && data.rowCount >= 0 && data.rowCount <= 50000 &&
+        data.createdAt is timestamp &&
+        (!('updatedAt' in data) || data.updatedAt is timestamp);
+    }
+
+    function isValidCampaignRow(data, batchId, rowId) {
+      return data.keys().hasAll([
+          'id', 'batchId', 'campaignName', 'name', 'email',
+          'phone', 'importedToLeads', 'createdAt'
+        ]) &&
+        data.keys().hasOnly([
+          'id', 'batchId', 'campaignName', 'submittedAt', 'name', 'email',
+          'phone', 'qualification', 'program', 'notes', 'rawFields',
+          'importedToLeads', 'createdAt', 'updatedAt'
+        ]) &&
+        isValidId(data.id) &&
+        data.id == rowId &&
+        isValidId(data.batchId) &&
+        data.batchId == batchId &&
+        isRequiredString(data, 'campaignName', 1, 200) &&
+        isOptionalString(data, 'submittedAt', 80) &&
+        isRequiredString(data, 'name', 1, 120) &&
+        data.email is string && data.email.size() <= 160 &&
+        data.phone is string && data.phone.size() <= 40 &&
+        isOptionalString(data, 'qualification', 160) &&
+        isOptionalString(data, 'program', 160) &&
+        isOptionalString(data, 'notes', 1000) &&
+        (!('rawFields' in data) || (data.rawFields is map && data.rawFields.keys().size() <= 60)) &&
+        data.importedToLeads is bool &&
+        data.createdAt is timestamp &&
+        (!('updatedAt' in data) || data.updatedAt is timestamp);
+    }
+
+    function isValidLmsModule(data, docId) {
+      return data.keys().hasAll([
+          'id', 'partId', 'moduleNumber', 'title', 'description',
+          'orderIndex', 'isPublished', 'lessons', 'createdAt'
+        ]) &&
+        data.keys().hasOnly([
+          'id', 'partId', 'moduleNumber', 'title', 'description',
+          'orderIndex', 'isPublished', 'lessons', 'createdAt', 'updatedAt'
+        ]) &&
+        isValidId(data.id) &&
+        data.id == docId &&
+        data.partId in ['part-1', 'part-2', 'part-3', 'ai-lab'] &&
+        data.moduleNumber is number && data.moduleNumber >= 0 && data.moduleNumber <= 500 &&
+        isRequiredString(data, 'title', 1, 200) &&
+        data.description is string && data.description.size() <= 1000 &&
+        data.orderIndex is number && data.orderIndex >= 0 && data.orderIndex <= 500 &&
+        data.isPublished is bool &&
+        data.lessons is list && data.lessons.size() <= 50 &&
+        (data.lessons.size() == 0 || data.lessons[0] is map) &&
+        data.createdAt is timestamp &&
+        (!('updatedAt' in data) || data.updatedAt is timestamp);
+    }
+
+    function isValidStudentProgress(data, userId) {
+      return data.keys().hasAll(['userId', 'email', 'completedLessons', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly(['userId', 'email', 'completedLessons', 'createdAt', 'updatedAt']) &&
+        isValidId(data.userId) &&
+        data.userId == userId &&
+        isValidEmailFormat(data.email) &&
+        data.completedLessons is list && data.completedLessons.size() <= 500 &&
+        (data.completedLessons.size() == 0 || (data.completedLessons[0] is string && data.completedLessons[0].size() <= 128)) &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidStudentNote(data, userId, lessonId) {
+      return data.keys().hasAll(['userId', 'lessonId', 'content', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly(['userId', 'lessonId', 'content', 'createdAt', 'updatedAt']) &&
+        isValidId(data.userId) &&
+        data.userId == userId &&
+        isValidId(data.lessonId) &&
+        data.lessonId == lessonId &&
+        data.content is string && data.content.size() <= 10000 &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    // =========================================================================
+    // 1. ADMINS (/admins/{adminUid})
+    // =========================================================================
+    match /admins/{adminUid} {
+      allow get: if isVerifiedUser() && isValidId(adminUid) && (isOwner(adminUid) || isAdmin());
+      allow list: if isBootstrappedAdmin();
+      allow create: if isVerifiedUser() &&
+        isValidId(adminUid) &&
+        isValidAdminUser(incoming(), adminUid) &&
+        incoming().createdAt == request.time &&
+        isAdmin();
+      allow update: if isVerifiedUser() &&
+        isValidId(adminUid) &&
+        isValidAdminUser(incoming(), adminUid) &&
+        incoming().uid == existing().uid &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['name', 'role', 'email']) &&
+        isAdmin();
+      allow delete: if isVerifiedUser() && isValidId(adminUid) && adminUid != request.auth.uid && isAdmin();
+    }
+
+    // =========================================================================
+    // 2. WEBSITE ENQUIRIES (/enquiries/{enquiryId}) - Public Write-Only Drop Box
+    // =========================================================================
+    match /enquiries/{enquiryId} {
+      allow get: if isVerifiedUser() && isValidId(enquiryId) && isAdmin();
+      allow list: if isBootstrappedAdmin();
+      allow create: if isValidId(enquiryId) &&
+        isValidEnquiry(incoming(), enquiryId) &&
+        incoming().status == 'New' &&
+        incoming().createdAt == request.time &&
+        !('updatedAt' in incoming());
+      allow update: if isVerifiedUser() &&
+        isValidId(enquiryId) &&
+        isValidEnquiry(incoming(), enquiryId) &&
+        incoming().id == existing().id &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        (existing().status != 'Archived' || isAdmin()) &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['status', 'notes', 'program', 'qualification', 'updatedAt']) &&
+        isAdmin();
+      allow delete: if isVerifiedUser() && isValidId(enquiryId) && isAdmin();
+    }
+
+    // =========================================================================
+    // 3. LEADS DIRECTORY (/leads/{leadId}) - Admin Only
+    // =========================================================================
+    match /leads/{leadId} {
+      allow get: if isVerifiedUser() && isValidId(leadId) && isAdmin();
+      allow list: if isBootstrappedAdmin();
+      allow create: if isVerifiedUser() &&
+        isValidId(leadId) &&
+        isValidLead(incoming(), leadId) &&
+        incoming().createdAt == request.time &&
+        isAdmin();
+      allow update: if isVerifiedUser() &&
+        isValidId(leadId) &&
+        isValidLead(incoming(), leadId) &&
+        incoming().id == existing().id &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        (existing().status != 'Archived' || isAdmin()) &&
+        (
+          (incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt'])) ||
+          (incoming().diff(existing()).affectedKeys().hasOnly(['name', 'email', 'phone', 'qualification', 'program', 'source', 'status', 'notes', 'brochureDownloaded', 'updatedAt']))
+        ) &&
+        isAdmin();
+      allow delete: if isVerifiedUser() && isValidId(leadId) && isAdmin();
+    }
+
+    // =========================================================================
+    // 4. CRM CALL LOGS (/crm_call_logs/{logId}) - Admin Only
+    // =========================================================================
+    match /crm_call_logs/{logId} {
+      allow get: if isVerifiedUser() && isValidId(logId) && isAdmin();
+      allow list: if isBootstrappedAdmin();
+      allow create: if isVerifiedUser() &&
+        isValidId(logId) &&
+        isValidCrmCallLog(incoming(), logId) &&
+        incoming().createdAt == request.time &&
+        isAdmin();
+      allow update: if isVerifiedUser() &&
+        isValidId(logId) &&
+        isValidCrmCallLog(incoming(), logId) &&
+        incoming().id == existing().id &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'studentName', 'phone', 'email', 'direction', 'callStatus',
+          'callDateTime', 'durationSeconds', 'responseSummary',
+          'interestLevel', 'reconnectAgain', 'nextFollowUpDate',
+          'feedback', 'handledBy', 'updatedAt'
+        ]) &&
+        isAdmin();
+      allow delete: if isVerifiedUser() && isValidId(logId) && isAdmin();
+    }
+
+    // =========================================================================
+    // 5. MANAGED LEARNERS (/learners/{learnerId}) - Admin + Self-Read by Email
+    // =========================================================================
+    match /learners/{learnerId} {
+      allow get: if isVerifiedUser() && isValidId(learnerId) && (
+        existing().email == request.auth.token.email ||
+        isAdmin()
+      );
+      allow list: if isBootstrappedAdmin() ||
+        (isVerifiedUser() && existing().email == request.auth.token.email);
+      allow create: if isVerifiedUser() &&
+        isValidId(learnerId) &&
+        isValidLearner(incoming(), learnerId) &&
+        incoming().createdAt == request.time &&
+        isAdmin();
+      allow update: if isVerifiedUser() &&
+        isValidId(learnerId) &&
+        isValidLearner(incoming(), learnerId) &&
+        incoming().id == existing().id &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        (
+          (incoming().diff(existing()).affectedKeys().hasOnly(['status', 'feeStatus', 'updatedAt'])) ||
+          (incoming().diff(existing()).affectedKeys().hasOnly([
+            'name', 'email', 'password', 'orderId', 'packageName',
+            'feeStatus', 'status', 'enrollmentDate', 'accessDuration',
+            'notes', 'phone', 'updatedAt'
+          ]))
+        ) &&
+        isAdmin();
+      allow delete: if isVerifiedUser() && isValidId(learnerId) && isAdmin();
+    }
+
+    // =========================================================================
+    // 6. ENROLLMENTS (/enrollments/{orderId}) - Public Write-Only Drop Box
+    // =========================================================================
+    match /enrollments/{orderId} {
+      allow get: if isVerifiedUser() && isValidId(orderId) && isAdmin();
+      allow list: if isBootstrappedAdmin();
+      allow create: if isValidId(orderId) &&
+        isValidEnrollment(incoming(), orderId) &&
+        incoming().createdAt == request.time &&
+        !('updatedAt' in incoming());
+      allow update: if isVerifiedUser() &&
+        isValidId(orderId) &&
+        isValidEnrollment(incoming(), orderId) &&
+        incoming().orderId == existing().orderId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        (existing().paymentStatus != 'Paid' || isAdmin()) &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['paymentStatus', 'transactionId', 'upiTransactionCode', 'paidAt', 'updatedAt']) &&
+        isAdmin();
+      allow delete: if isVerifiedUser() && isValidId(orderId) && isAdmin();
+    }
+
+    // =========================================================================
+    // 7. EMAIL TEMPLATES (/email_templates/{templateId}) - Admin Only
+    // =========================================================================
+    match /email_templates/{templateId} {
+      allow get: if isVerifiedUser() && isValidId(templateId) && isAdmin();
+      allow list: if isBootstrappedAdmin();
+      allow create: if isVerifiedUser() &&
+        isValidId(templateId) &&
+        isValidEmailTemplate(incoming(), templateId) &&
+        incoming().createdAt == request.time &&
+        isAdmin();
+      allow update: if isVerifiedUser() &&
+        isValidId(templateId) &&
+        isValidEmailTemplate(incoming(), templateId) &&
+        incoming().id == existing().id &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['name', 'category', 'subject', 'body', 'updatedAtLabel', 'updatedAt']) &&
+        isAdmin();
+      allow delete: if isVerifiedUser() && isValidId(templateId) && isAdmin();
+    }
+
+    // =========================================================================
+    // 8. CAMPAIGN BATCHES & ROWS SUBCOLLECTION (Master Gate + Atomicity)
+    // =========================================================================
+    match /campaign_batches/{batchId} {
+      allow get: if isVerifiedUser() && isValidId(batchId) && isAdmin();
+      allow list: if isBootstrappedAdmin();
+      allow create: if isVerifiedUser() &&
+        isValidId(batchId) &&
+        isValidCampaignBatch(incoming(), batchId) &&
+        incoming().createdAt == request.time &&
+        isAdmin();
+      allow update: if isVerifiedUser() &&
+        isValidId(batchId) &&
+        isValidCampaignBatch(incoming(), batchId) &&
+        incoming().id == existing().id &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['campaignName', 'savedAt', 'rowCount', 'headers', 'updatedAt']) &&
+        isAdmin();
+      allow delete: if isVerifiedUser() && isValidId(batchId) && isAdmin();
+
+      match /rows/{rowId} {
+        allow get: if isVerifiedUser() && isValidId(batchId) && isValidId(rowId) && isAdmin();
+        allow list: if isBootstrappedAdmin() && existing().batchId == batchId;
+        allow create: if isVerifiedUser() &&
+          isValidId(batchId) &&
+          isValidId(rowId) &&
+          isValidCampaignRow(incoming(), batchId, rowId) &&
+          incoming().createdAt == request.time &&
+          isAdmin() &&
+          existsAfter(/databases/$(database)/documents/campaign_batches/$(batchId));
+        allow update: if isVerifiedUser() &&
+          isValidId(batchId) &&
+          isValidId(rowId) &&
+          isValidCampaignRow(incoming(), batchId, rowId) &&
+          incoming().id == existing().id &&
+          incoming().batchId == existing().batchId &&
+          incoming().createdAt == existing().createdAt &&
+          incoming().updatedAt == request.time &&
+          incoming().diff(existing()).affectedKeys().hasOnly(['campaignName', 'importedToLeads', 'notes', 'updatedAt']) &&
+          isAdmin() &&
+          exists(/databases/$(database)/documents/campaign_batches/$(batchId));
+        allow delete: if isVerifiedUser() && isValidId(batchId) && isValidId(rowId) && isAdmin();
+      }
+    }
+
+    // =========================================================================
+    // 9. LMS MODULES (/lms_modules/{moduleId}) - Admin Write, Verified Read
+    // =========================================================================
+    match /lms_modules/{moduleId} {
+      allow get: if isVerifiedUser() && isValidId(moduleId) && (
+        existing().isPublished == true ||
+        isAdmin()
+      );
+      allow list: if isBootstrappedAdmin() ||
+        (isVerifiedUser() && existing().isPublished == true);
+      allow create: if isVerifiedUser() &&
+        isValidId(moduleId) &&
+        isValidLmsModule(incoming(), moduleId) &&
+        incoming().createdAt == request.time &&
+        isAdmin();
+      allow update: if isVerifiedUser() &&
+        isValidId(moduleId) &&
+        isValidLmsModule(incoming(), moduleId) &&
+        incoming().id == existing().id &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['partId', 'moduleNumber', 'title', 'description', 'orderIndex', 'isPublished', 'lessons', 'updatedAt']) &&
+        isAdmin();
+      allow delete: if isVerifiedUser() && isValidId(moduleId) && isAdmin();
+    }
+
+    // =========================================================================
+    // 10. STUDENT PROGRESS & NOTES SUBCOLLECTION (Owner + Admin)
+    // =========================================================================
+    match /student_progress/{userId} {
+      allow get: if isVerifiedUser() && isValidId(userId) && (isOwner(userId) || isAdmin());
+      allow list: if isBootstrappedAdmin() || (isVerifiedUser() && existing().userId == request.auth.uid);
+      allow create: if isVerifiedUser() &&
+        isValidId(userId) &&
+        isValidStudentProgress(incoming(), userId) &&
+        incoming().email == request.auth.token.email &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time &&
+        (isOwner(userId) || isAdmin());
+      allow update: if isVerifiedUser() &&
+        isValidId(userId) &&
+        isValidStudentProgress(incoming(), userId) &&
+        incoming().userId == existing().userId &&
+        incoming().email == existing().email &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['completedLessons', 'updatedAt']) &&
+        (isOwner(userId) || isAdmin());
+      allow delete: if isVerifiedUser() && isValidId(userId) && isAdmin();
+
+      match /notes/{lessonId} {
+        allow get: if isVerifiedUser() && isValidId(userId) && isValidId(lessonId) && (isOwner(userId) || isAdmin());
+        allow list: if isBootstrappedAdmin() || (isVerifiedUser() && existing().userId == request.auth.uid);
+        allow create: if isVerifiedUser() &&
+          isValidId(userId) &&
+          isValidId(lessonId) &&
+          isValidStudentNote(incoming(), userId, lessonId) &&
+          incoming().createdAt == request.time &&
+          incoming().updatedAt == request.time &&
+          (isOwner(userId) || isAdmin()) &&
+          existsAfter(/databases/$(database)/documents/student_progress/$(userId));
+        allow update: if isVerifiedUser() &&
+          isValidId(userId) &&
+          isValidId(lessonId) &&
+          isValidStudentNote(incoming(), userId, lessonId) &&
+          incoming().userId == existing().userId &&
+          incoming().lessonId == existing().lessonId &&
+          incoming().createdAt == existing().createdAt &&
+          incoming().updatedAt == request.time &&
+          incoming().diff(existing()).affectedKeys().hasOnly(['content', 'updatedAt']) &&
+          (isOwner(userId) || isAdmin()) &&
+          exists(/databases/$(database)/documents/student_progress/$(userId));
+        allow delete: if isVerifiedUser() && isValidId(userId) && isValidId(lessonId) && (isOwner(userId) || isAdmin());
+      }
+    }
+  }
+}

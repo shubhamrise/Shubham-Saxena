@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import QRCode from 'qrcode';
 import { EnrollmentOrder, ManagedLearner } from '../types';
 import { PACKAGES } from '../data/ciaData';
+import { createPublicEnrollmentInFirestore } from '../services/firestoreSync';
 import {
   X,
   Check,
@@ -293,6 +294,12 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       }
     } catch (e) {
       console.warn('Enrollment storage error:', e);
+    }
+
+    try {
+      await createPublicEnrollmentInFirestore(order);
+    } catch (e) {
+      console.warn('Cloud enrollment sync warning:', e);
     }
 
     try {

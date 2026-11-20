@@ -1,5 +1,28 @@
-import React, { useState } from 'react';
-import { ManagedLearner, LmsAdminUser, EnquiryLead, CrmCallLog, CampaignSpreadsheetBatch, EmailTemplate } from '../types';
+import React, { useState, useEffect, useRef } from 'react';
+import { ManagedLearner, LmsAdminUser, EnquiryLead, CrmCallLog, CampaignSpreadsheetBatch, EmailTemplate, EnrollmentOrder } from '../types';
+import { useFirebase } from '../context/FirebaseContext';
+import {
+  subscribeEnquiries,
+  deleteEnquiryInFirestore,
+  subscribeLeads,
+  createLeadInFirestore,
+  createLeadsBatchInFirestore,
+  updateLeadStatusInFirestore,
+  deleteLeadInFirestore,
+  subscribeCrmCallLogs,
+  saveCrmCallLogInFirestore,
+  deleteCrmCallLogInFirestore,
+  subscribeEnrollments,
+  subscribeEmailTemplates,
+  saveEmailTemplateInFirestore,
+  deleteEmailTemplateInFirestore,
+  subscribeCampaignBatches,
+  saveCampaignBatchInFirestore,
+  renameCampaignBatchInFirestore,
+  deleteCampaignBatchInFirestore,
+  deleteCampaignRowInFirestore,
+  markCampaignRowsImportedInFirestore,
+} from '../services/firestoreSync';
 import {
   ShieldCheck,
   UserCheck,
@@ -97,6 +120,24 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
   const [confirmDeleteLeadId, setConfirmDeleteLeadId] = useState<string | null>(null);
   const [addFormError, setAddFormError] = useState<string | null>(null);
 
+  const { authReady, isCloudAdmin, signInWithGoogle } = useFirebase();
+  const [cloudEnrollments, setCloudEnrollments] = useState<EnrollmentOrder[]>([]);
+  const [isConnectingCloud, setIsConnectingCloud] = useState(false);
+  const cloudTemplateIdsRef = useRef<Set<string>>(new Set());
+
+  const handleConnectGoogleCloud = async () => {
+    setIsConnectingCloud(true);
+    try {
+      const user = await signInWithGoogle();
+      onShowToast(`Connected ${user.email || 'Google account'} — syncing live cloud records.`);
+    } catch (err) {
+      console.warn('Google cloud sync sign-in cancelled or failed:', err);
+      onShowToast('Google sign-in was cancelled. Sign in with an authorized admin email for live sync.');
+    } finally {
+      setIsConnectingCloud(false);
+    }
+  };
+
   // Lead Email Composer & Reusable Templates state
   const [emailTemplates, setEmailTemplates] = useState<EmailTemplate[]>(() => {
     try {
@@ -114,11 +155,39 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
   const [emailModalInitialMode, setEmailModalInitialMode] = useState<'compose' | 'new-template'>('compose');
 
   const handleUpdateEmailTemplates = (updated: EmailTemplate[]) => {
+    const prev = emailTemplates;
     setEmailTemplates(updated);
     try {
       localStorage.setItem('bnc_lead_email_templates', JSON.stringify(updated));
     } catch (e) {
       console.warn(e);
+    }
+
+    if (isCloudAdmin) {
+      const nextIds = new Set(updated.map((t) => t.id));
+      const prevMap = new Map(prev.map((t) => [t.id, t]));
+
+      updated.forEach((tpl) => {
+        const existedInCloud = cloudTemplateIdsRef.current.has(tpl.id);
+        const prevItem = prevMap.get(tpl.id);
+        const changed =
+          !prevItem ||
+          prevItem.name !== tpl.name ||
+          prevItem.category !== tpl.category ||
+          prevItem.subject !== tpl.subject ||
+          prevItem.body !== tpl.body;
+        if (!existedInCloud) {
+          void saveEmailTemplateInFirestore(tpl, false).catch(console.warn);
+        } else if (changed) {
+          void saveEmailTemplateInFirestore(tpl, true).catch(console.warn);
+        }
+      });
+
+      prev.forEach((oldTpl) => {
+        if (!nextIds.has(oldTpl.id) && cloudTemplateIdsRef.current.has(oldTpl.id)) {
+          void deleteEmailTemplateInFirestore(oldTpl.id).catch(console.warn);
+        }
+      });
     }
   };
 
@@ -141,11 +210,32 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
   });
 
   const handleUpdateCallLogs = (updated: CrmCallLog[]) => {
+    const prev = crmCallLogs;
     setCrmCallLogs(updated);
     try {
       localStorage.setItem('bnc_crm_call_logs', JSON.stringify(updated));
     } catch (e) {
       console.warn(e);
+    }
+
+    if (isCloudAdmin) {
+      const prevMap = new Map(prev.map((l) => [l.id, l]));
+      const nextIds = new Set(updated.map((l) => l.id));
+
+      updated.forEach((log) => {
+        const existing = prevMap.get(log.id);
+        if (!existing) {
+          void saveCrmCallLogInFirestore(log, false).catch(console.warn);
+        } else if (JSON.stringify(existing) !== JSON.stringify(log)) {
+          void saveCrmCallLogInFirestore(log, true).catch(console.warn);
+        }
+      });
+
+      prev.forEach((oldLog) => {
+        if (!nextIds.has(oldLog.id)) {
+          void deleteCrmCallLogInFirestore(oldLog.id).catch(console.warn);
+        }
+      });
     }
   };
 
@@ -159,11 +249,61 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
   });
 
   const handleUpdateCampaignBatches = (updated: CampaignSpreadsheetBatch[]) => {
+    const prev = campaignBatches;
     setCampaignBatches(updated);
     try {
       localStorage.setItem('bnc_campaign_form_uploads', JSON.stringify(updated));
     } catch (e) {
       console.warn(e);
+    }
+
+    if (isCloudAdmin) {
+      const prevMap = new Map(prev.map((b) => [b.id, b]));
+      const nextIds = new Set(updated.map((b) => b.id));
+
+      updated.forEach((batch) => {
+        const oldBatch = prevMap.get(batch.id);
+        if (!oldBatch) {
+          void saveCampaignBatchInFirestore(batch).catch(console.warn);
+          return;
+        }
+        if (oldBatch.campaignName !== batch.campaignName || oldBatch.savedAt !== batch.savedAt) {
+          void renameCampaignBatchInFirestore(
+            batch.id,
+            batch.campaignName,
+            batch.savedAt || ''
+          ).catch(console.warn);
+        }
+
+        const oldRowMap = new Map(oldBatch.rows.map((r) => [r.id, r]));
+        const nextRowIds = new Set(batch.rows.map((r) => r.id));
+
+        const newlyImportedIds: string[] = [];
+        batch.rows.forEach((row) => {
+          const prevRow = oldRowMap.get(row.id);
+          if (prevRow && !prevRow.importedToLeads && row.importedToLeads) {
+            newlyImportedIds.push(row.id);
+          }
+        });
+        if (newlyImportedIds.length > 0) {
+          void markCampaignRowsImportedInFirestore(batch.id, newlyImportedIds).catch(console.warn);
+        }
+
+        oldBatch.rows.forEach((oldRow) => {
+          if (!nextRowIds.has(oldRow.id)) {
+            void deleteCampaignRowInFirestore(batch.id, oldRow.id, batch.rows.length).catch(console.warn);
+          }
+        });
+      });
+
+      prev.forEach((oldBatch) => {
+        if (!nextIds.has(oldBatch.id)) {
+          void deleteCampaignBatchInFirestore(
+            oldBatch.id,
+            oldBatch.rows.map((r) => r.id)
+          ).catch(console.warn);
+        }
+      });
     }
   };
 
@@ -252,6 +392,62 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
     }
   });
 
+  // Real-time Firestore cloud listeners when authenticated as Cloud Admin
+  useEffect(() => {
+    if (!authReady || !isCloudAdmin) return;
+
+    const unsubEnquiries = subscribeEnquiries((items) => {
+      setEnquiries(items);
+      try {
+        localStorage.setItem('bnc_all_leads', JSON.stringify(items));
+      } catch {}
+    });
+
+    const unsubLeads = subscribeLeads((items) => {
+      setLeads(items);
+      try {
+        localStorage.setItem('bnc_leads_directory', JSON.stringify(items));
+      } catch {}
+    });
+
+    const unsubCrm = subscribeCrmCallLogs((items) => {
+      setCrmCallLogs(items);
+      try {
+        localStorage.setItem('bnc_crm_call_logs', JSON.stringify(items));
+      } catch {}
+    });
+
+    const unsubEnrollments = subscribeEnrollments((items) => {
+      setCloudEnrollments(items);
+    });
+
+    const unsubTemplates = subscribeEmailTemplates((items) => {
+      cloudTemplateIdsRef.current = new Set(items.map((t) => t.id));
+      if (items.length > 0) {
+        setEmailTemplates(items);
+        try {
+          localStorage.setItem('bnc_lead_email_templates', JSON.stringify(items));
+        } catch {}
+      }
+    });
+
+    const unsubCampaigns = subscribeCampaignBatches((batches) => {
+      setCampaignBatches(batches);
+      try {
+        localStorage.setItem('bnc_campaign_form_uploads', JSON.stringify(batches));
+      } catch {}
+    });
+
+    return () => {
+      unsubEnquiries();
+      unsubLeads();
+      unsubCrm();
+      unsubEnrollments();
+      unsubTemplates();
+      unsubCampaigns();
+    };
+  }, [authReady, isCloudAdmin]);
+
   const handleDeleteEnquiry = (id: string) => {
     const updated = enquiries.filter((e) => e.id !== id);
     setEnquiries(updated);
@@ -259,6 +455,9 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
       localStorage.setItem('bnc_all_leads', JSON.stringify(updated));
     } catch (e) {
       console.warn(e);
+    }
+    if (isCloudAdmin) {
+      void deleteEnquiryInFirestore(id).catch(console.warn);
     }
     onShowToast('Website enquiry removed from log');
   };
@@ -272,20 +471,33 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
     } catch (e) {
       console.warn(e);
     }
+    if (isCloudAdmin) {
+      void deleteLeadInFirestore(id).catch(console.warn);
+    }
     onShowToast('Lead removed from leads directory');
   };
 
   const handleMarkLeadsContacted = (leadIds: string[]) => {
     if (leadIds.length === 0) return;
     const idSet = new Set(leadIds);
-    const updated: EnquiryLead[] = leads.map((l) =>
-      idSet.has(l.id) && l.status === 'New' ? { ...l, status: 'Contacted' } : l
-    );
+    const toUpdateIds: string[] = [];
+    const updated: EnquiryLead[] = leads.map((l) => {
+      if (idSet.has(l.id) && l.status === 'New') {
+        toUpdateIds.push(l.id);
+        return { ...l, status: 'Contacted' };
+      }
+      return l;
+    });
     setLeads(updated);
     try {
       localStorage.setItem('bnc_leads_directory', JSON.stringify(updated));
     } catch (e) {
       console.warn(e);
+    }
+    if (isCloudAdmin) {
+      toUpdateIds.forEach((lid) => {
+        void updateLeadStatusInFirestore(lid, 'Contacted').catch(console.warn);
+      });
     }
   };
 
@@ -342,6 +554,9 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
     } catch (e) {
       console.warn(e);
     }
+    if (isCloudAdmin) {
+      void createLeadInFirestore(promotedLead).catch(console.warn);
+    }
     onShowToast(`Added ${enquiry.name} to Website Leads`);
   };
 
@@ -377,6 +592,9 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
         localStorage.setItem('bnc_leads_directory', JSON.stringify(updated));
       } catch (e) {
         console.warn(e);
+      }
+      if (isCloudAdmin) {
+        void createLeadsBatchInFirestore(freshLeads).catch(console.warn);
       }
     }
     return freshLeads.length;
@@ -592,19 +810,23 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
     onShowToast(`Removed ${name} from learner roster.`);
   };
 
-  // Sync latest checkout orders from localStorage
+  // Sync latest checkout orders from shared Firestore enrollments + local storage
   const handleSyncFromCheckout = () => {
     try {
-      const stored = JSON.parse(localStorage.getItem('bnc_enrollment_requests') || '[]');
-      if (!Array.isArray(stored) || stored.length === 0) {
-        onShowToast('No external checkout enrollments found in session memory.');
+      const localStored = JSON.parse(localStorage.getItem('bnc_enrollment_requests') || '[]');
+      const combinedOrders = [
+        ...cloudEnrollments,
+        ...(Array.isArray(localStored) ? localStored : []),
+      ];
+      if (combinedOrders.length === 0) {
+        onShowToast('No external checkout enrollments found yet.');
         return;
       }
 
       let addedCount = 0;
       const updated = [...learners];
 
-      stored.forEach((ord: any) => {
+      combinedOrders.forEach((ord: any) => {
         const orderIdStr = String(ord.orderId || '').trim();
         const emailStr = String(ord.studentEmail || '').trim().toLowerCase();
 
@@ -621,6 +843,7 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
             id: `ord-${ord.orderId}-${Date.now()}`,
             name: ord.studentName || 'Candidate',
             email: emailStr,
+            password: 'bnc2026',
             phone: ord.studentPhone || '',
             orderId: orderIdStr,
             packageName: ord.packageName || 'Premium Live Interactive',
@@ -735,6 +958,33 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
           </div>
         </div>
       </header>
+
+      {/* Cloud Sync Action Bar when admin signed in via legacy local password without Google Cloud Auth */}
+      {authReady && !isCloudAdmin && (
+        <div
+          className={`px-4 sm:px-6 lg:px-8 py-2.5 border-b flex flex-wrap items-center justify-between gap-3 text-xs ${
+            theme === 'light'
+              ? 'bg-amber-50 border-amber-200 text-amber-950'
+              : 'bg-amber-950/40 border-amber-800/60 text-amber-200'
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 text-[#b58b42] shrink-0" />
+            <span>
+              Sign in with your authorized Google admin account to view and sync live leads, enquiries, enrollments, and LMS data across all devices.
+            </span>
+          </div>
+          <button
+            type="button"
+            disabled={isConnectingCloud}
+            onClick={handleConnectGoogleCloud}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#102a4e] hover:bg-[#163a6b] text-white font-semibold cursor-pointer transition-colors disabled:opacity-60 whitespace-nowrap"
+          >
+            <ShieldCheck className="w-3.5 h-3.5 text-[#f1bd5b]" />
+            <span>{isConnectingCloud ? 'Connecting...' : 'Sign In with Google for Live Sync'}</span>
+          </button>
+        </div>
+      )}
 
       {/* Main Full-Page Split Workspace */}
       <main className="flex-1 flex flex-col lg:flex-row w-full">
