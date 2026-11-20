@@ -55,65 +55,8 @@ export interface AuthenticatedStudent {
   accessDuration: string;
 }
 
-// Master initial learners roster managed by Academic Administration
-const INITIAL_MANAGED_LEARNERS: ManagedLearner[] = [
-  {
-    id: 'lrn-1',
-    name: 'Rohit Verma',
-    email: 'rohit.verma@example.com',
-    password: 'bnc2026',
-    phone: '+91 98234 11223',
-    orderId: '2026000',
-    packageName: 'Premium Plus with AI Audit',
-    feeStatus: 'Full Tuition Paid & Verified',
-    status: 'active',
-    enrollmentDate: 'Oct 24, 2026',
-    accessDuration: '24 Months Extended (Active till Oct 2028)',
-    notes: 'Admitted into Batch 2026-A. Full fee cleared.'
-  },
-  {
-    id: 'lrn-2',
-    name: 'Priya Sharma',
-    email: 'priya.sharma@example.com',
-    password: 'bnc2026',
-    phone: '+91 98765 43210',
-    orderId: '2026001',
-    packageName: 'Premium Live Interactive',
-    feeStatus: 'Tuition Installment Cleared (Verified)',
-    status: 'active',
-    enrollmentDate: 'Nov 01, 2026',
-    accessDuration: '18 Months Portal Access (Active till May 2028)',
-    notes: 'Live evening interactive cohort.'
-  },
-  {
-    id: 'lrn-3',
-    name: 'CA Aman Gupta',
-    email: 'aman.gupta@example.com',
-    password: 'bnc2026',
-    phone: '+91 99112 33445',
-    orderId: '2026002',
-    packageName: 'Premium Live Interactive',
-    feeStatus: 'Installment Overdue · Access Suspended',
-    status: 'revoked',
-    enrollmentDate: 'Oct 15, 2026',
-    accessDuration: 'Suspended by Admin',
-    notes: 'Fee installment overdue. Access revoked pending clearance.'
-  },
-  {
-    id: 'lrn-4',
-    name: 'Ananya Iyer',
-    email: 'ananya.iyer@example.com',
-    password: 'bnc2026',
-    phone: '+91 98450 67890',
-    orderId: '2026003',
-    packageName: 'Self-Paced Pro Masterclass',
-    feeStatus: 'Tuition Clearance Under Review',
-    status: 'pending',
-    enrollmentDate: 'Nov 04, 2026',
-    accessDuration: 'Pending Academic Approval',
-    notes: 'Bank transfer slip uploaded; awaiting accounting reconciliation.'
-  }
-];
+// Master initial learners roster managed by Academic Administration (empty by default for live production data)
+const INITIAL_MANAGED_LEARNERS: ManagedLearner[] = [];
 
 interface StudentLmsPortalProps {
   onBackToWebsite: () => void;
@@ -257,9 +200,9 @@ export const StudentLmsPortal: React.FC<StudentLmsPortalProps> = ({
   const [completedLessons, setCompletedLessons] = useState<string[]>(() => {
     try {
       const stored = localStorage.getItem('bnc_lms_completed_lessons');
-      return stored ? JSON.parse(stored) : ['p1-l1'];
+      return stored ? JSON.parse(stored) : [];
     } catch {
-      return ['p1-l1'];
+      return [];
     }
   });
 
@@ -268,9 +211,7 @@ export const StudentLmsPortal: React.FC<StudentLmsPortalProps> = ({
   const [savedNotes, setSavedNotes] = useState<{ [lessonId: string]: string }>(() => {
     try {
       const stored = localStorage.getItem('bnc_lms_notes');
-      return stored ? JSON.parse(stored) : {
-        'p1-l1': 'Crucial note: Board approves charter and audit budget, NOT executive management!'
-      };
+      return stored ? JSON.parse(stored) : {};
     } catch {
       return {};
     }

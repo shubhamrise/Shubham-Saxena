@@ -1,16 +1,13 @@
 import React, { useState } from 'react';
 import {
   ArrowRight,
-  Sparkles,
   Award,
   Globe,
-  Building2,
   TrendingUp,
   ShieldCheck,
   CheckCircle2,
   Compass,
   Briefcase,
-  Layers,
   BookOpen,
   Check,
   Mail,
@@ -438,198 +435,174 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         </div>
 
         {/* =============================================================== */}
-        {/* THE 2 PILLARS MASTER ARCHITECTURE                               */}
+        {/* THE 2 PILLARS — BOX-FREE EDITORIAL ARCHITECTURE                 */}
         {/* Pillar 01: Why CIA | Pillar 02: Why BNC Global                  */}
         {/* =============================================================== */}
-        <div className="mt-8 pt-8 border-t border-sky-950">
-          <div className="text-center max-w-2xl mx-auto mb-8">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#b58b42]/20 text-[#f1bd5b] border border-[#b58b42]/40 text-[10px] font-bold uppercase tracking-wider mb-2">
-              <Sparkles className="w-3.5 h-3.5 text-[#f1bd5b]" />
-              <span>THE 2 PILLARS OF YOUR CERTIFICATION JOURNEY</span>
+        <div className="mt-12 pt-10 border-t border-white/15">
+          <div className="text-center max-w-2xl mx-auto mb-10">
+            <div className="text-xs font-semibold tracking-wider text-[#f1bd5b] uppercase mb-2">
+              The 2 Pillars of Your Certification Journey
             </div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight text-balance">
               Why CIA® · Why BNC Global
             </h2>
-            <p className="text-xs sm:text-sm text-slate-300 mt-1.5 leading-relaxed">
+            <p className="text-xs sm:text-sm text-slate-300 mt-2 leading-relaxed">
               Everything you need to qualify, practice, and lead enterprise internal audit globally—all in one unified program.
             </p>
           </div>
 
-          {/* 2-Column Split-Grid Architecture */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
-            
+          {/* Box-Free 2-Column Editorial Split */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 lg:divide-x lg:divide-white/15 border-t border-white/15">
             {/* ----------------------------------------------------------- */}
-            {/* PILLAR 01 OF 03: WHY THE CIA® (THE CREDENTIAL)              */}
+            {/* PILLAR 01 OF 02: WHY THE CIA® (THE CREDENTIAL)              */}
             {/* ----------------------------------------------------------- */}
             <div
               id="why-cia"
-              className="card-reflection group relative flex flex-col justify-between rounded-3xl bg-white border-2 border-sky-100 hover:border-sky-400 p-6 sm:p-7 shadow-[0_15px_45px_-12px_rgba(2,132,199,0.12)] hover:shadow-[0_25px_60px_-12px_rgba(2,132,199,0.22)] transition-all duration-300 overflow-hidden"
+              className="flex flex-col justify-between pt-8 pb-4 lg:pr-12"
             >
-              {/* Top Gradient Banner Stripe */}
-              <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-sky-600 via-sky-800 to-[#b58b42]"></div>
-
               <div>
-                {/* Pillar 01 Kicker */}
-                <div className="flex items-center justify-between gap-2 pb-4 mb-4 border-b border-sky-100">
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-sky-100/80 text-sky-950 border border-sky-300">
-                    <span className="w-1.5 h-1.5 rounded-full bg-sky-600"></span>
-                    PILLAR 01 OF 02 · THE CREDENTIAL
+                {/* Clean Metadata Kicker */}
+                <div className="flex items-center justify-between gap-4 pb-4 mb-6 border-b border-white/10 text-xs">
+                  <span className="font-semibold text-sky-300 tracking-wide">
+                    01 · The Credential
                   </span>
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold text-[#b58b42] bg-amber-50 border border-amber-200">
-                    <Sparkles className="w-3 h-3 text-[#b58b42]" />
+                  <span className="font-medium text-[#f1bd5b]">
                     Global Gold Standard
                   </span>
                 </div>
 
-                <h3 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight mb-2">
+                <h3 className="text-2xl sm:text-[1.65rem] font-extrabold text-white tracking-tight mb-3 text-balance">
                   Why the CIA® is the Global Gold Standard
                 </h3>
-                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed mb-5">
+                <p className="text-sm text-slate-300 leading-relaxed mb-7">
                   The Certified Internal Auditor (CIA®) is the only globally recognized certification specifically tailored for internal audit, enterprise risk governance, and regulatory compliance.
                 </p>
 
-                {/* 3 Value Pillars inside Pillar 01 */}
-                <div className="space-y-3 mb-5">
+                {/* 3 Value Points separated by 1px Hairline Dividers */}
+                <div className="divide-y divide-white/10 border-t border-b border-white/10 mb-6">
                   {/* Global Portability */}
-                  <div className="p-4 rounded-2xl bg-gradient-to-br from-sky-50/80 to-white border border-sky-200/80 hover:border-sky-400 hover:shadow-xs transition-all">
-                    <div className="flex items-center gap-3 mb-1.5">
-                      <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-sky-600 to-sky-800 text-white flex items-center justify-center shrink-0 shadow-xs">
-                        <Globe className="w-4 h-4" />
+                  <div className="py-5 flex items-start gap-4">
+                    <Globe className="w-5 h-5 text-sky-400 shrink-0 mt-0.5" />
+                    <div className="space-y-1.5">
+                      <h4 className="text-sm font-bold text-white">
+                        Global Portability (170+ Countries)
+                      </h4>
+                      <p className="text-xs sm:text-[13px] text-slate-300 leading-relaxed">
+                        Recognized in over 170+ countries by multinational corporations, central banks, and regulatory bodies. Travel seamlessly across US, UK, Middle East, Singapore, and Europe.
+                      </p>
+                      <div className="text-xs font-semibold text-sky-300">
+                        Accepted across 170+ countries
                       </div>
-                      <div className="text-xs font-black text-slate-900">Global Portability (170+ Countries)</div>
-                    </div>
-                    <p className="text-xs text-slate-600 leading-relaxed pl-11 mb-2">
-                      Recognized in over 170+ countries by multinational corporations, central banks, and regulatory bodies. Travel seamlessly across US, UK, Middle East, Singapore, and Europe.
-                    </p>
-                    <div className="pl-11 text-[11px] font-bold text-sky-900 flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-sky-600"></span>
-                      <span>Accepted across 170+ countries</span>
                     </div>
                   </div>
 
                   {/* 94% Audit Leader Preference */}
-                  <div className="p-4 rounded-2xl bg-gradient-to-br from-amber-50/80 to-white border border-amber-200/80 hover:border-[#b58b42] hover:shadow-xs transition-all">
-                    <div className="flex items-center gap-3 mb-1.5">
-                      <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-500 to-[#b58b42] text-white flex items-center justify-center shrink-0 shadow-xs">
-                        <Award className="w-4 h-4" />
+                  <div className="py-5 flex items-start gap-4">
+                    <Award className="w-5 h-5 text-[#f1bd5b] shrink-0 mt-0.5" />
+                    <div className="space-y-1.5">
+                      <h4 className="text-sm font-bold text-white">
+                        94% Audit Leader Preference
+                      </h4>
+                      <p className="text-xs sm:text-[13px] text-slate-300 leading-relaxed">
+                        According to the IIA North American Pulse of Internal Audit survey, 94% of audit leaders value CIA over CA/CPA, and 70% of CAEs explicitly prefer hiring CIAs.
+                      </p>
+                      <div className="text-xs font-semibold text-[#f1bd5b]">
+                        Source: IIA Pulse Survey
                       </div>
-                      <div className="text-xs font-black text-slate-900">94% Audit Leader Preference</div>
-                    </div>
-                    <p className="text-xs text-slate-600 leading-relaxed pl-11 mb-2">
-                      According to the IIA North American Pulse of Internal Audit survey, 94% of audit leaders value CIA over CA/CPA, and 70% of CAEs explicitly prefer hiring CIAs.
-                    </p>
-                    <div className="pl-11 text-[11px] font-bold text-[#b58b42] flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#b58b42]"></span>
-                      <span>Source: IIA Pulse Survey</span>
                     </div>
                   </div>
 
                   {/* 40%+ Compensation Premium */}
-                  <div className="p-4 rounded-2xl bg-gradient-to-br from-sky-50/80 to-white border border-sky-200/80 hover:border-sky-400 hover:shadow-xs transition-all">
-                    <div className="flex items-center gap-3 mb-1.5">
-                      <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-sky-700 to-sky-900 text-white flex items-center justify-center shrink-0 shadow-xs">
-                        <TrendingUp className="w-4 h-4" />
+                  <div className="py-5 flex items-start gap-4">
+                    <TrendingUp className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
+                    <div className="space-y-1.5">
+                      <h4 className="text-sm font-bold text-white">
+                        40%+ Compensation Premium
+                      </h4>
+                      <p className="text-xs sm:text-[13px] text-slate-300 leading-relaxed">
+                        Certified Internal Auditors command up to 40% higher median earnings, accelerating promotion to Senior Auditor, Audit Manager, and Chief Audit Executive.
+                      </p>
+                      <div className="text-xs font-semibold text-emerald-300 tabular-nums">
+                        Average industry compensation: 12L – 28L+ p.a.
                       </div>
-                      <div className="text-xs font-black text-slate-900">40%+ Compensation Premium</div>
-                    </div>
-                    <p className="text-xs text-slate-600 leading-relaxed pl-11 mb-2">
-                      Certified Internal Auditors command up to 40% higher median earnings, accelerating promotion to Senior Auditor, Audit Manager, and Chief Audit Executive.
-                    </p>
-                    <div className="pl-11 text-[11px] font-bold text-sky-900 flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
-                      <span>Average industry compensation: 12L - 28L+ p.a.</span>
                     </div>
                   </div>
                 </div>
 
-                {/* Alumni Strip */}
-                <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 mb-4">
-                  <div className="text-[10px] font-extrabold text-slate-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                    <Building2 className="w-3.5 h-3.5 text-sky-800 shrink-0" />
-                    <span>Where BNC alumni lead internal audit:</span>
+                {/* Alumni Strip (Unboxed Editorial Typography) */}
+                <div className="mb-8">
+                  <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-2">
+                    Where BNC alumni lead internal audit
                   </div>
-                  <div className="flex flex-wrap items-center gap-1.5 text-[10px] font-black text-slate-800">
-                    {['DELOITTE', 'EY', 'PwC', 'KPMG', 'BARCLAYS', 'GRANT THORNTON', 'GENPACT GCC'].map((firm, fIdx) => (
-                      <span key={fIdx} className="px-2 py-1 rounded-lg bg-white border border-slate-200 shadow-2xs font-bold text-slate-700 hover:border-sky-400 transition-colors">
-                        {firm}
-                      </span>
+                  <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-xs font-bold tracking-wide text-slate-200">
+                    {['DELOITTE', 'EY', 'PwC', 'KPMG', 'BARCLAYS', 'GRANT THORNTON', 'GENPACT GCC'].map((firm, fIdx, arr) => (
+                      <React.Fragment key={fIdx}>
+                        <span className="hover:text-[#f1bd5b] transition-colors">{firm}</span>
+                        {fIdx < arr.length - 1 && (
+                          <span aria-hidden="true" className="text-slate-600">·</span>
+                        )}
+                      </React.Fragment>
                     ))}
                   </div>
                 </div>
               </div>
 
-              {/* Bottom Card Action */}
-              <div className="pt-3 border-t border-sky-100">
+              {/* Bottom Action */}
+              <div className="pt-4 border-t border-white/10">
                 <button
                   onClick={() => scrollTo('exam')}
-                  className="btn-reflection w-full py-3 px-4 rounded-xl bg-gradient-to-r from-sky-700 to-sky-900 hover:from-sky-800 hover:to-sky-950 text-white font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-2 shadow-md shadow-sky-800/20"
+                  className="btn-reflection w-full sm:w-auto py-3 px-6 rounded-xl bg-gradient-to-r from-sky-700 to-sky-900 hover:from-sky-600 hover:to-sky-800 text-white font-bold text-xs transition-all cursor-pointer inline-flex items-center justify-center gap-2 whitespace-nowrap"
                 >
                   <span>Explore 3-Part Exam Structure</span>
-                  <ArrowRight className="w-4 h-4 text-amber-300" />
+                  <ArrowRight className="w-4 h-4 text-[#f1bd5b]" />
                 </button>
               </div>
             </div>
 
             {/* ----------------------------------------------------------- */}
-            {/* PILLAR 02 OF 03: WHY BNC GLOBAL (THE CONSULTING PRACTICE)   */}
+            {/* PILLAR 02 OF 02: WHY BNC GLOBAL (THE CONSULTING PRACTICE)   */}
             {/* ----------------------------------------------------------- */}
             <div
               id="why-bnc"
-              className="card-reflection group relative flex flex-col justify-between rounded-3xl bg-white border-2 border-amber-200 hover:border-[#b58b42] p-6 sm:p-7 shadow-[0_15px_45px_-12px_rgba(181,139,66,0.12)] hover:shadow-[0_25px_60px_-12px_rgba(181,139,66,0.25)] transition-all duration-300 overflow-hidden"
+              className="flex flex-col justify-between pt-10 lg:pt-8 pb-4 lg:pl-12 border-t lg:border-t-0 border-white/15 mt-6 lg:mt-0"
             >
-              {/* Top Gradient Banner Stripe */}
-              <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#b58b42] via-amber-500 to-sky-700"></div>
-
               <div>
-                {/* Pillar 02 Kicker */}
-                <div className="flex items-center justify-between gap-2 pb-4 mb-4 border-b border-amber-100">
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-50 text-[#b58b42] border border-amber-200">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#b58b42]"></span>
-                    PILLAR 02 OF 02 · THE CONSULTING PRACTICE
+                {/* Clean Metadata Kicker */}
+                <div className="flex items-center justify-between gap-4 pb-4 mb-6 border-b border-white/10 text-xs">
+                  <span className="font-semibold text-[#f1bd5b] tracking-wide">
+                    02 · The Consulting Practice
                   </span>
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold text-slate-700 bg-slate-100 border border-slate-200">
+                  <span className="font-medium text-slate-400">
                     Established 2014
                   </span>
                 </div>
 
-                <div className="flex items-start justify-between gap-3 mb-3">
-                  <div>
-                    <h3 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-                      WHY BNC Global?
-                    </h3>
-                    <div className="text-xs font-bold text-[#b58b42] mt-0.5">
-                      Multidisciplinary Consulting Firm & Risk Advisory
-                    </div>
-                  </div>
-                  <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#b58b42] to-amber-600 text-white flex items-center justify-center shrink-0 shadow-md">
-                    <Building2 className="w-5 h-5 text-white" />
-                  </div>
+                <h3 className="text-2xl sm:text-[1.65rem] font-extrabold text-white tracking-tight mb-1 text-balance">
+                  Why BNC Global?
+                </h3>
+                <div className="text-xs font-semibold text-[#f1bd5b] mb-4">
+                  Multidisciplinary Consulting Firm &amp; Risk Advisory
                 </div>
 
-                {/* Core Advisory Background */}
-                <div className="p-4 rounded-2xl bg-gradient-to-br from-amber-50/50 via-white to-sky-50/40 border-l-4 border-l-[#b58b42] border border-amber-100 text-xs text-slate-700 leading-relaxed mb-4 shadow-2xs">
-                  <p>
-                    <strong className="text-slate-950 font-bold">BNC Global Consultech established in 2014</strong> is a multidisciplinary consulting firm specializing in risk advisory, internal audit, compliance, financial consulting, cybersecurity, ESG, and GCC advisory. We help businesses strengthen governance, navigate complex regulations, and achieve sustainable growth across India and international markets.
-                  </p>
-                </div>
+                {/* Core Advisory Background (Unboxed Prose) */}
+                <p className="text-sm text-slate-200 leading-relaxed mb-4">
+                  <strong className="text-white font-bold">BNC Global Consultech established in 2014</strong> is a multidisciplinary consulting firm specializing in risk advisory, internal audit, compliance, financial consulting, cybersecurity, ESG, and GCC advisory. We help businesses strengthen governance, navigate complex regulations, and achieve sustainable growth across India and international markets.
+                </p>
 
-                {/* Placement & Recruitment Support Highlight Box */}
-                <div className="p-3.5 rounded-2xl bg-gradient-to-r from-amber-500/10 via-sky-500/10 to-amber-500/10 border border-amber-300 text-xs text-slate-900 font-semibold flex items-start gap-3 mb-4 shadow-2xs">
-                  <div className="p-1.5 rounded-lg bg-gradient-to-br from-sky-700 to-[#b58b42] text-white shrink-0 mt-0.5 shadow-xs">
-                    <Briefcase className="w-4 h-4 text-white" />
-                  </div>
-                  <span className="leading-relaxed">
+                {/* Placement & Recruitment Support (Unboxed with Icon) */}
+                <div className="flex items-start gap-3 py-4 border-t border-white/10 text-xs sm:text-[13px] text-slate-200 leading-relaxed">
+                  <Briefcase className="w-4 h-4 text-[#f1bd5b] shrink-0 mt-0.5" />
+                  <span>
                     Apart from an educational company, BNC is an active risk consulting and accounting company providing recruitment and placement support for our candidates across corporate and GCC internal audit teams.
                   </span>
                 </div>
 
-                {/* Core Advisory Verticals */}
-                <div className="mb-4">
-                  <div className="text-[10px] font-black uppercase tracking-wider text-slate-600 mb-2 flex items-center gap-1.5">
-                    <Layers className="w-3.5 h-3.5 text-sky-800" />
-                    <span>Core Advisory Verticals:</span>
+                {/* Core Advisory Verticals (Clean Unboxed List) */}
+                <div className="py-4 border-t border-white/10">
+                  <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-2">
+                    Core Advisory Verticals
                   </div>
-                  <div className="flex flex-wrap gap-1.5">
+                  <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-xs font-medium text-slate-200">
                     {[
                       'Risk Advisory',
                       'Internal Audit',
@@ -638,67 +611,74 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                       'Cybersecurity',
                       'ESG Frameworks',
                       'GCC Advisory'
-                    ].map((service, sIdx) => (
-                      <span
-                        key={sIdx}
-                        className="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-white border border-amber-200/80 text-slate-800 shadow-2xs hover:border-[#b58b42] hover:bg-amber-50/50 transition-colors"
-                      >
-                        {service}
-                      </span>
+                    ].map((service, sIdx, arr) => (
+                      <React.Fragment key={sIdx}>
+                        <span>{service}</span>
+                        {sIdx < arr.length - 1 && (
+                          <span aria-hidden="true" className="text-slate-600">·</span>
+                        )}
+                      </React.Fragment>
                     ))}
                   </div>
                 </div>
 
-                {/* 3 Career Support Phases */}
-                <div className="space-y-2.5 pt-3.5 border-t border-amber-100 mb-4">
-                  <div className="text-[10px] font-black uppercase tracking-wider text-slate-900 mb-1">
-                    Three-Phase Career Support Initiative:
+                {/* 3 Career Support Phases (Clean Numbered Hairline List) */}
+                <div className="pt-4 border-t border-white/10 mb-8">
+                  <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-2">
+                    Three-Phase Career Support Initiative
                   </div>
 
-                  <div className="p-3 rounded-xl bg-gradient-to-r from-sky-50/70 to-white border border-sky-200/80 hover:border-sky-400 transition-all">
-                    <div className="font-extrabold text-slate-900 text-xs flex items-center gap-2 mb-1">
-                      <span className="w-5 h-5 rounded-full bg-sky-700 text-white text-[10px] font-black flex items-center justify-center shrink-0">1</span>
-                      <span>Phase 1: Internal Audit Career Navigators</span>
+                  <div className="divide-y divide-white/10">
+                    <div className="py-3.5 flex items-start gap-3.5">
+                      <span className="text-xs font-bold text-sky-400 tabular-nums pt-0.5">01</span>
+                      <div>
+                        <div className="font-bold text-white text-xs sm:text-[13px] mb-1">
+                          Phase 1: Internal Audit Career Navigators
+                        </div>
+                        <p className="text-xs text-slate-300 leading-relaxed">
+                          Guidance on GCCs, banking, and Big 4 roles during your study. Help identifying suitable audit internships and qualifying work experience.
+                        </p>
+                      </div>
                     </div>
-                    <p className="text-[11px] text-slate-600 leading-relaxed pl-7">
-                      Guidance on GCCs, banking, and Big 4 roles during your study. Help identifying suitable audit internships and qualifying work experience.
-                    </p>
-                  </div>
 
-                  <div className="p-3 rounded-xl bg-gradient-to-r from-amber-50/70 to-white border border-amber-200/80 hover:border-[#b58b42] transition-all">
-                    <div className="font-extrabold text-slate-900 text-xs flex items-center gap-2 mb-1">
-                      <span className="w-5 h-5 rounded-full bg-[#b58b42] text-white text-[10px] font-black flex items-center justify-center shrink-0">2</span>
-                      <span>Phase 2: Placement Assistance Network</span>
+                    <div className="py-3.5 flex items-start gap-3.5">
+                      <span className="text-xs font-bold text-[#f1bd5b] tabular-nums pt-0.5">02</span>
+                      <div>
+                        <div className="font-bold text-white text-xs sm:text-[13px] mb-1">
+                          Phase 2: Placement Assistance Network
+                        </div>
+                        <p className="text-xs text-slate-300 leading-relaxed">
+                          Resume optimization for internal audit keywords, mock interview preparation, and direct vacancy referrals across BNC Global&apos;s client network.
+                        </p>
+                      </div>
                     </div>
-                    <p className="text-[11px] text-slate-600 leading-relaxed pl-7">
-                      Resume optimization for internal audit keywords, mock interview preparation, and direct vacancy referrals across BNC Global's client network.
-                    </p>
-                  </div>
 
-                  <div className="p-3 rounded-xl bg-gradient-to-r from-sky-50/70 to-white border border-sky-200/80 hover:border-sky-400 transition-all">
-                    <div className="font-extrabold text-slate-900 text-xs flex items-center gap-2 mb-1">
-                      <span className="w-5 h-5 rounded-full bg-sky-700 text-white text-[10px] font-black flex items-center justify-center shrink-0">3</span>
-                      <span>Phase 3: Honest Mentorship & CPE Compliance</span>
+                    <div className="py-3.5 flex items-start gap-3.5">
+                      <span className="text-xs font-bold text-sky-400 tabular-nums pt-0.5">03</span>
+                      <div>
+                        <div className="font-bold text-white text-xs sm:text-[13px] mb-1">
+                          Phase 3: Honest Mentorship &amp; CPE Compliance
+                        </div>
+                        <p className="text-xs text-slate-300 leading-relaxed">
+                          Clear upfront costs, zero hidden institutional fees, and ongoing annual CPE reporting support after you earn your designation.
+                        </p>
+                      </div>
                     </div>
-                    <p className="text-[11px] text-slate-600 leading-relaxed pl-7">
-                      Clear upfront costs, zero hidden institutional fees, and ongoing annual CPE reporting support after you earn your designation.
-                    </p>
                   </div>
                 </div>
               </div>
 
-              {/* Bottom Card Action */}
-              <div className="pt-3 border-t border-amber-100">
+              {/* Bottom Action */}
+              <div className="pt-4 border-t border-white/10">
                 <button
                   onClick={() => scrollTo('packages')}
-                  className="btn-reflection w-full py-3 px-4 rounded-xl bg-gradient-to-r from-[#b58b42] via-amber-600 to-[#9e7735] hover:from-[#9e7735] hover:to-[#846328] text-white font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-2 shadow-md shadow-[#b58b42]/20"
+                  className="btn-reflection w-full sm:w-auto py-3 px-6 rounded-xl bg-gradient-to-r from-[#b58b42] via-amber-600 to-[#9e7735] hover:from-[#9e7735] hover:to-[#846328] text-white font-bold text-xs transition-all cursor-pointer inline-flex items-center justify-center gap-2 whitespace-nowrap"
                 >
                   <span>View BNC Training Packages</span>
                   <ArrowRight className="w-4 h-4 text-white" />
                 </button>
               </div>
             </div>
-
           </div>
         </div>
 

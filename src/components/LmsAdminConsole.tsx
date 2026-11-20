@@ -34,55 +34,7 @@ import { CurriculumEditor } from './admin/CurriculumEditor';
 import { CampaignFormsEditor } from './admin/CampaignFormsEditor';
 import { LeadEmailModal, DEFAULT_LEAD_EMAIL_TEMPLATES } from './admin/LeadEmailModal';
 
-const INITIAL_CRM_CALL_LOGS: CrmCallLog[] = [
-  {
-    id: 'crm-1',
-    studentName: 'Shubham Saxena',
-    phone: '+91 98213 75702',
-    email: 'shubhamsaxena787787@gmail.com',
-    direction: 'outbound',
-    callStatus: 'Connected',
-    callDateTime: '2026-11-14T16:30',
-    durationSeconds: 512,
-    responseSummary: 'Interested in Nov 2026 Live Interactive cohort; requested GIAS 2025 syllabus overview and batch timings.',
-    interestLevel: 'Hot / Ready to Enroll',
-    reconnectAgain: true,
-    nextFollowUpDate: 'Nov 16, 4:00 PM IST',
-    feedback: 'Candidate is a qualified CA exploring CIA Challenge / 3-Part options. Positive conversation; asked for a follow-up call after reviewing weekend schedule.',
-    handledBy: 'Neha Srivastava'
-  },
-  {
-    id: 'crm-2',
-    studentName: 'Rohit Verma',
-    phone: '+91 98234 11223',
-    email: 'rohit.verma@example.com',
-    direction: 'inbound',
-    callStatus: 'Connected',
-    callDateTime: '2026-11-13T11:45',
-    durationSeconds: 325,
-    responseSummary: 'Confirmed LMS login credentials and inquired about Part 1 practice test bank target score.',
-    interestLevel: 'Support / Existing Student',
-    reconnectAgain: false,
-    feedback: 'Guided student through the Readiness Index and video masterclasses section. Issue resolved on the call.',
-    handledBy: 'Neha Srivastava'
-  },
-  {
-    id: 'crm-3',
-    studentName: 'Ananya Iyer',
-    phone: '+91 98450 67890',
-    email: 'ananya.iyer@example.com',
-    direction: 'outbound',
-    callStatus: 'Callback Requested',
-    callDateTime: '2026-11-12T18:10',
-    durationSeconds: 138,
-    responseSummary: 'Busy in office audit review; asked to reconnect tomorrow evening regarding enrollment confirmation.',
-    interestLevel: 'Warm / Follow-up',
-    reconnectAgain: true,
-    nextFollowUpDate: 'Nov 16, 6:30 PM IST',
-    feedback: 'Short call. Candidate requested an evening slot after 6:00 PM IST to finalize batch onboarding.',
-    handledBy: 'BNC Admissions Desk'
-  }
-];
+const INITIAL_CRM_CALL_LOGS: CrmCallLog[] = [];
 
 export type AdminConsoleTab =
   | 'learners'
@@ -277,35 +229,7 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
           notes: 'Requested senior faculty callback.'
         });
       });
-      if (merged.length > 0) return merged;
-      return [
-        {
-          id: 'lead-sample-1',
-          name: 'Shubham Saxena',
-          email: 'shubhamsaxena787787@gmail.com',
-          phone: '+91 98213 75702',
-          qualification: 'Chartered Accountant (CA)',
-          program: 'Premium Live Interactive',
-          source: 'Hero Enquiry & Download Brochure',
-          status: 'New',
-          submittedAt: 'Just now',
-          brochureDownloaded: true,
-          notes: 'Interested in Nov cohort and GIAS 2025 updates.'
-        },
-        {
-          id: 'lead-sample-2',
-          name: 'Rohit Verma',
-          email: 'rohit.verma@example.com',
-          phone: '+91 98234 11223',
-          qualification: 'CMA / Cost Accountant',
-          program: 'Premium Plus with AI Audit',
-          source: 'Hero Enquiry & Download Brochure',
-          status: 'Enrolled',
-          submittedAt: 'Oct 24, 2026',
-          brochureDownloaded: true,
-          notes: 'Enrolled in Batch 2026-A. Full fee cleared.'
-        }
-      ];
+      return merged;
     } catch {
       return [];
     }
