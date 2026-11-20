@@ -959,7 +959,7 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
         </div>
       </header>
 
-      {/* Cloud Sync Action Bar when admin signed in via legacy local password without Google Cloud Auth */}
+      {/* Cloud Sync Action Bar when admin session predates live cloud authentication */}
       {authReady && !isCloudAdmin && (
         <div
           className={`px-4 sm:px-6 lg:px-8 py-2.5 border-b flex flex-wrap items-center justify-between gap-3 text-xs ${
@@ -971,7 +971,7 @@ export const LmsAdminConsole: React.FC<LmsAdminConsoleProps> = ({
           <div className="flex items-center gap-2">
             <AlertTriangle className="w-4 h-4 text-[#b58b42] shrink-0" />
             <span>
-              Sign in with your authorized Google admin account to view and sync live leads, enquiries, enrollments, and LMS data across all devices.
+              Live cloud sync is not active for this session. Log out and sign back in with your authorized Email &amp; Password (or connect with Google) to view and sync live leads, enquiries, enrollments, and LMS data across all devices.
             </span>
           </div>
           <button

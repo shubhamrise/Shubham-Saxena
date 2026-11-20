@@ -99,7 +99,7 @@ export const StudentLmsPortal: React.FC<StudentLmsPortalProps> = ({
       if (!saved) return null;
       const parsed = JSON.parse(saved) as LmsAdminUser;
       const isLegacyAdmin =
-        parsed.email !== 'neha@bncglobal.in' ||
+        !isBootstrappedAdminEmail(parsed.email) ||
         (parsed.name && parsed.name.toLowerCase().includes('gurvinder'));
       if (isLegacyAdmin) {
         const migrated: LmsAdminUser = {
@@ -122,6 +122,11 @@ export const StudentLmsPortal: React.FC<StudentLmsPortalProps> = ({
     authReady,
     isCloudAdmin,
     signInWithGoogle,
+    signInWithEmailPassword,
+    createAdminEmailPasswordAccount,
+    sendAdminVerificationEmail,
+    refreshFirebaseAuthUser,
+    sendAdminPasswordReset,
     signOutFirebase,
   } = useFirebase();
   const [isGoogleAuthBusy, setIsGoogleAuthBusy] = useState(false);
@@ -212,7 +217,11 @@ export const StudentLmsPortal: React.FC<StudentLmsPortalProps> = ({
   const [adminPassword, setAdminPassword] = useState('');
   const [showAdminPassword, setShowAdminPassword] = useState(false);
   const [adminError, setAdminError] = useState<string | null>(null);
+  const [adminNotice, setAdminNotice] = useState<string | null>(null);
   const [isAdminSubmitting, setIsAdminSubmitting] = useState(false);
+  const [pendingVerificationEmail, setPendingVerificationEmail] = useState<string | null>(null);
+  const [isCheckingVerification, setIsCheckingVerification] = useState(false);
+  const [isSendingReset, setIsSendingReset] = useState(false);
 
   // Navigation tabs
   const [activeTab, setActiveTab] = useState<'curriculum' | 'ailab'>('curriculum');
@@ -276,6 +285,8 @@ export const StudentLmsPortal: React.FC<StudentLmsPortalProps> = ({
         name:
           emailLower === 'neha@bncglobal.in'
             ? 'Neha Srivastava'
+            : emailLower === 'shubhamsaxena787787@gmail.com'
+            ? firebaseUser.displayName || 'Shubham Saxena'
             : firebaseUser.displayName || 'Academic Administrator',
         role: 'Academic Administrator',
         authenticatedAt: new Date().toLocaleDateString('en-US', {
@@ -497,43 +508,218 @@ export const StudentLmsPortal: React.FC<StudentLmsPortalProps> = ({
     }, 500);
   };
 
-  // Administrator Login Handler
-  const handleAdminLogin = (e: React.FormEvent) => {
+  const completeAdminSession = (
+    emailLower: string,
+    displayName?: string | null,
+    cloudSynced = true
+  ) => {
+    const newAdmin: LmsAdminUser = {
+      email: emailLower,
+      name:
+        emailLower === 'neha@bncglobal.in'
+          ? 'Neha Srivastava'
+          : emailLower === 'shubhamsaxena787787@gmail.com'
+          ? displayName || 'Shubham Saxena'
+          : displayName || 'Academic Administrator',
+      role: 'Academic Administrator',
+      authenticatedAt: new Date().toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      }),
+    };
+    setAdminUser(newAdmin);
+    setPendingVerificationEmail(null);
+    setAdminNotice(null);
+    setAdminError(null);
+    try {
+      localStorage.setItem('bnc_lms_auth_admin', JSON.stringify(newAdmin));
+    } catch (err) {
+      console.warn(err);
+    }
+    showToast(
+      cloudSynced
+        ? `Signed in with live cloud sync as ${newAdmin.name}`
+        : `Administrator access granted: Welcome ${newAdmin.name}!`
+    );
+  };
+
+  // Administrator Email & Password Login Handler (Live Firebase Cloud Auth)
+  const handleAdminLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setAdminError(null);
+    setAdminNotice(null);
+
+    const email = adminEmail.trim().toLowerCase();
+    const password = adminPassword.trim();
+
+    if (!isBootstrappedAdminEmail(email)) {
+      setAdminError(
+        'Invalid administrative credentials. This email is not authorized for Academic Administration.'
+      );
+      return;
+    }
+
     setIsAdminSubmitting(true);
+    try {
+      let user;
+      try {
+        user = await signInWithEmailPassword(email, password);
+      } catch (signInErr) {
+        const code = (signInErr as { code?: string })?.code || '';
 
-    setTimeout(() => {
-      setIsAdminSubmitting(false);
-      const email = adminEmail.trim().toLowerCase();
-      const password = adminPassword.trim();
-
-      // Authorized credentials check (Configured for neha@bncglobal.in / BNC@2026)
-      const isValidAdmin =
-        email === 'neha@bncglobal.in' && password === 'BNC@2026';
-
-      if (isValidAdmin) {
-        const newAdmin: LmsAdminUser = {
-          email: 'neha@bncglobal.in',
-          name: 'Neha Srivastava',
-          role: 'Academic Administrator',
-          authenticatedAt: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-        };
-        setAdminUser(newAdmin);
-        try {
-          localStorage.setItem('bnc_lms_auth_admin', JSON.stringify(newAdmin));
-        } catch (err) {
-          console.warn(err);
+        // First-time Email/Password setup with initial admin password
+        if (
+          (code === 'auth/user-not-found' || code === 'auth/invalid-credential') &&
+          password === 'BNC@2026'
+        ) {
+          try {
+            user = await createAdminEmailPasswordAccount(email, password);
+          } catch (createErr) {
+            const createCode = (createErr as { code?: string })?.code || '';
+            if (createCode === 'auth/email-already-in-use') {
+              setAdminError(
+                'Incorrect password for this administrator account. Click "Forgot / Reset Password?" below to set a new password.'
+              );
+              return;
+            }
+            if (createCode === 'auth/operation-not-allowed') {
+              setAdminError(
+                'Email/Password sign-in is not enabled yet in Firebase Console. Enable Authentication → Sign-in method → Email/Password in Firebase Console, then try again (or use Sign In with Google below).'
+              );
+              return;
+            }
+            throw createErr;
+          }
+        } else if (code === 'auth/operation-not-allowed') {
+          setAdminError(
+            'Email/Password sign-in is not enabled yet in Firebase Console. Enable Authentication → Sign-in method → Email/Password in Firebase Console, then try again (or use Sign In with Google below).'
+          );
+          return;
+        } else if (
+          code === 'auth/wrong-password' ||
+          code === 'auth/invalid-credential' ||
+          code === 'auth/user-not-found'
+        ) {
+          setAdminError(
+            'Incorrect email or password. Use your initial admin password for first-time setup, or click "Forgot / Reset Password?" below.'
+          );
+          return;
+        } else if (code === 'auth/too-many-requests') {
+          setAdminError(
+            'Too many login attempts. Please wait a few minutes or reset your password below.'
+          );
+          return;
+        } else {
+          throw signInErr;
         }
-        showToast(`🛡️ Master Administrator access granted: Welcome ${newAdmin.name}!`);
-      } else {
-        setAdminError('Invalid administrative credentials. Please verify your email and password.');
       }
-    }, 600);
+
+      if (!user.emailVerified) {
+        try {
+          await sendAdminVerificationEmail(user);
+        } catch (verifyErr) {
+          console.warn('Verification email send notice:', verifyErr);
+        }
+        setPendingVerificationEmail(email);
+        setAdminNotice(
+          `One-time security verification required: we sent a verification link to ${email}. Click the link in your inbox (check Spam/Promotions if needed), then click "I've Verified My Email → Continue" below to activate live cloud sync.`
+        );
+        return;
+      }
+
+      completeAdminSession(email, user.displayName, true);
+    } catch (err) {
+      console.warn('Admin email/password sign-in error:', err);
+      setAdminError(
+        'Could not complete administrator sign-in. Please check your internet connection or try Google Sign-In below.'
+      );
+    } finally {
+      setIsAdminSubmitting(false);
+    }
+  };
+
+  const handleConfirmEmailVerified = async () => {
+    setAdminError(null);
+    setIsCheckingVerification(true);
+    try {
+      const { user, isAdmin } = await refreshFirebaseAuthUser();
+      if (user && user.emailVerified && isAdmin) {
+        const emailLower = (user.email || pendingVerificationEmail || '').trim().toLowerCase();
+        completeAdminSession(emailLower, user.displayName, true);
+      } else {
+        setAdminError(
+          'Your email is not verified yet. Please open the verification link sent to your inbox, then click "I\'ve Verified My Email → Continue" again.'
+        );
+      }
+    } catch (err) {
+      console.warn('Email verification refresh error:', err);
+      setAdminError('Could not verify your email status right now. Please try again.');
+    } finally {
+      setIsCheckingVerification(false);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    setAdminError(null);
+    setIsCheckingVerification(true);
+    try {
+      await sendAdminVerificationEmail();
+      setAdminNotice(
+        `Verification email resent to ${pendingVerificationEmail || adminEmail.trim().toLowerCase()}. Please check your inbox and spam folder.`
+      );
+    } catch (err) {
+      const code = (err as { code?: string })?.code || '';
+      if (code === 'auth/too-many-requests') {
+        setAdminError('A verification link was just sent. Please wait a minute before requesting another email.');
+      } else {
+        setAdminError('Unable to resend verification email right now. Please try signing in again.');
+      }
+    } finally {
+      setIsCheckingVerification(false);
+    }
+  };
+
+  const handleAdminPasswordReset = async () => {
+    setAdminError(null);
+    setAdminNotice(null);
+    const email = adminEmail.trim().toLowerCase();
+    if (!email) {
+      setAdminError('Enter your administrator email address above first, then click "Forgot / Reset Password?".');
+      return;
+    }
+    if (!isBootstrappedAdminEmail(email)) {
+      setAdminError('Password reset is only available for authorized Academic Administrator emails.');
+      return;
+    }
+    setIsSendingReset(true);
+    try {
+      await sendAdminPasswordReset(email);
+      setAdminNotice(
+        `Password reset link sent to ${email}. Open the link in your inbox to set a new password, then sign in here.`
+      );
+    } catch (err) {
+      const code = (err as { code?: string })?.code || '';
+      if (code === 'auth/operation-not-allowed') {
+        setAdminError(
+          'Email/Password sign-in is not enabled yet in Firebase Console. Enable Authentication → Sign-in method → Email/Password first.'
+        );
+      } else if (code === 'auth/user-not-found') {
+        setAdminError(
+          'No password account exists for this email yet. Sign in once with your initial admin password to create it automatically.'
+        );
+      } else {
+        setAdminError('Could not send password reset email right now. Please try again.');
+      }
+    } finally {
+      setIsSendingReset(false);
+    }
   };
 
   const handleAdminGoogleLogin = async () => {
     setAdminError(null);
+    setAdminNotice(null);
+    setPendingVerificationEmail(null);
     setIsGoogleAuthBusy(true);
     try {
       const user = await signInWithGoogle();
@@ -558,24 +744,7 @@ export const StudentLmsPortal: React.FC<StudentLmsPortalProps> = ({
         }
       }
 
-      const newAdmin: LmsAdminUser = {
-        email: emailLower,
-        name:
-          emailLower === 'neha@bncglobal.in'
-            ? 'Neha Srivastava'
-            : user.displayName || 'Academic Administrator',
-        role: 'Academic Administrator',
-        authenticatedAt: new Date().toLocaleDateString('en-US', {
-          month: 'short',
-          day: 'numeric',
-          year: 'numeric',
-        }),
-      };
-      setAdminUser(newAdmin);
-      try {
-        localStorage.setItem('bnc_lms_auth_admin', JSON.stringify(newAdmin));
-      } catch {}
-      showToast(`Signed in with live cloud sync as ${newAdmin.name}`);
+      completeAdminSession(emailLower, user.displayName, true);
     } catch (err) {
       console.warn('Admin Google sign-in error:', err);
       setAdminError('Google sign-in was cancelled or could not complete. Please try again.');
@@ -1265,103 +1434,181 @@ print(f"Sample generated: {len(high_risk_sample)} transactions flagged for subst
                   </div>
                 )}
 
-                {/* Primary Google Cloud Admin Sign-In */}
-                <div className="mb-5">
-                  <button
-                    type="button"
-                    disabled={isGoogleAuthBusy}
-                    onClick={handleAdminGoogleLogin}
-                    className="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-[#102a4e] via-[#163a6b] to-[#b58b42] hover:opacity-95 text-white font-bold text-sm tracking-wide shadow-md transition-all cursor-pointer flex items-center justify-center gap-2.5 disabled:opacity-60"
-                  >
-                    <ShieldCheck className="w-4 h-4 text-[#f1bd5b]" />
-                    <span>
-                      {isGoogleAuthBusy
-                        ? 'Connecting Admin Cloud Session...'
-                        : 'Sign In with Google (Live Cloud Sync Admin)'}
-                    </span>
-                  </button>
-
-                  <div className="relative flex items-center justify-center my-4">
-                    <div className={`w-full border-t ${theme === 'light' ? 'border-slate-200' : 'border-slate-800'}`} />
-                    <span className={`px-3 text-[11px] font-semibold whitespace-nowrap ${theme === 'light' ? 'bg-white text-slate-400' : 'bg-[#0a1829] text-slate-500'}`}>
-                      or sign in with admin credentials
-                    </span>
-                    <div className={`w-full border-t ${theme === 'light' ? 'border-slate-200' : 'border-slate-800'}`} />
+                {/* Admin Info / Verification Notice Banner */}
+                {adminNotice && (
+                  <div className={`mb-5 p-4 rounded-2xl ${theme === 'light' ? 'bg-emerald-50 border-emerald-200 text-emerald-950' : 'bg-emerald-950/60 border-emerald-500/40 text-emerald-200'} border text-left animate-in fade-in duration-200`}>
+                    <div className="flex items-start gap-3">
+                      <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+                      <div className="space-y-1">
+                        <div className={`text-xs font-bold uppercase tracking-wide ${theme === 'light' ? 'text-emerald-800' : 'text-emerald-300'}`}>
+                          {pendingVerificationEmail ? 'Verify Your Email Once' : 'Email Sent'}
+                        </div>
+                        <p className={`text-xs ${theme === 'light' ? 'text-emerald-900' : 'text-emerald-200'} leading-relaxed`}>
+                          {adminNotice}
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                </div>
+                )}
 
-                {/* Admin Login Form */}
-                <form onSubmit={handleAdminLogin} className="space-y-4">
-                  <div>
-                    <label className={`block text-xs font-semibold ${theme === 'light' ? 'text-slate-700' : 'text-slate-300'} mb-1.5 text-left`}>
-                      Administrator Email <span className="text-[#b58b42]">*</span>
-                    </label>
-                    <input
-                      type="email"
-                      value={adminEmail}
-                      onChange={(e) => setAdminEmail(e.target.value)}
-                      placeholder="admin@organization.com"
-                      required
-                      className={`w-full px-4 py-3 rounded-xl border text-sm transition-all focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 ${
-                        theme === 'light'
-                          ? 'bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-400 focus:bg-white'
-                          : 'bg-slate-900 border-slate-700/80 text-white placeholder-slate-500'
-                      }`}
-                    />
+                {/* One-Time Email Verification Action Card */}
+                {pendingVerificationEmail ? (
+                  <div className="space-y-3 mb-5">
+                    <button
+                      type="button"
+                      disabled={isCheckingVerification}
+                      onClick={handleConfirmEmailVerified}
+                      className="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-[#102a4e] via-[#163a6b] to-[#b58b42] hover:opacity-95 text-white font-bold text-sm tracking-wide shadow-md transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-60"
+                    >
+                      <ShieldCheck className="w-4 h-4 text-[#f1bd5b]" />
+                      <span>
+                        {isCheckingVerification
+                          ? 'Checking Verification Status...'
+                          : "I've Verified My Email → Continue to Admin Console"}
+                      </span>
+                    </button>
+
+                    <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+                      <button
+                        type="button"
+                        disabled={isCheckingVerification}
+                        onClick={handleResendVerification}
+                        className={`text-xs font-semibold underline cursor-pointer disabled:opacity-60 ${
+                          theme === 'light' ? 'text-sky-700 hover:text-sky-900' : 'text-sky-400 hover:text-sky-300'
+                        }`}
+                      >
+                        Resend Verification Email
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPendingVerificationEmail(null);
+                          setAdminNotice(null);
+                          setAdminError(null);
+                        }}
+                        className={`text-xs font-semibold cursor-pointer ${
+                          theme === 'light' ? 'text-slate-500 hover:text-slate-800' : 'text-slate-400 hover:text-slate-200'
+                        }`}
+                      >
+                        Back to Login Form
+                      </button>
+                    </div>
                   </div>
-
-                  <div>
-                    <label className={`block text-xs font-semibold ${theme === 'light' ? 'text-slate-700' : 'text-slate-300'} mb-1.5 text-left`}>
-                      Admin Master Key / Password <span className="text-[#b58b42]">*</span>
-                    </label>
-                    <div className="relative">
+                ) : (
+                  /* Primary Admin Email & Password Login Form (Live Cloud Sync) */
+                  <form onSubmit={handleAdminLogin} className="space-y-4">
+                    <div>
+                      <label className={`block text-xs font-semibold ${theme === 'light' ? 'text-slate-700' : 'text-slate-300'} mb-1.5 text-left`}>
+                        Administrator Email <span className="text-[#b58b42]">*</span>
+                      </label>
                       <input
-                        type={showAdminPassword ? 'text' : 'password'}
-                        value={adminPassword}
-                        onChange={(e) => setAdminPassword(e.target.value)}
-                        placeholder="••••••••••••"
+                        type="email"
+                        value={adminEmail}
+                        onChange={(e) => setAdminEmail(e.target.value)}
+                        placeholder="admin@organization.com"
                         required
-                        className={`w-full px-4 py-3 pr-11 rounded-xl border text-sm transition-all focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 ${
+                        className={`w-full px-4 py-3 rounded-xl border text-sm transition-all focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 ${
                           theme === 'light'
                             ? 'bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-400 focus:bg-white'
                             : 'bg-slate-900 border-slate-700/80 text-white placeholder-slate-500'
                         }`}
                       />
-                      <button
-                        type="button"
-                        onClick={() => setShowAdminPassword(!showAdminPassword)}
-                        className={`absolute right-3.5 top-1/2 -translate-y-1/2 p-1 cursor-pointer transition-colors ${
-                          theme === 'light' ? 'text-slate-400 hover:text-slate-700' : 'text-slate-400 hover:text-slate-200'
-                        }`}
-                        aria-label={showAdminPassword ? 'Hide password' : 'Show password'}
-                      >
-                        {showAdminPassword ? (
-                          <EyeOff className="w-4 h-4 text-[#b58b42]" />
-                        ) : (
-                          <Eye className="w-4 h-4" />
-                        )}
-                      </button>
                     </div>
+
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <label className={`block text-xs font-semibold ${theme === 'light' ? 'text-slate-700' : 'text-slate-300'} text-left`}>
+                          Admin Password <span className="text-[#b58b42]">*</span>
+                        </label>
+                        <button
+                          type="button"
+                          disabled={isSendingReset}
+                          onClick={handleAdminPasswordReset}
+                          className={`text-[11px] font-semibold cursor-pointer hover:underline disabled:opacity-50 ${
+                            theme === 'light' ? 'text-sky-700' : 'text-sky-400'
+                          }`}
+                        >
+                          {isSendingReset ? 'Sending reset link...' : 'Forgot / Reset Password?'}
+                        </button>
+                      </div>
+                      <div className="relative">
+                        <input
+                          type={showAdminPassword ? 'text' : 'password'}
+                          value={adminPassword}
+                          onChange={(e) => setAdminPassword(e.target.value)}
+                          placeholder="••••••••••••"
+                          required
+                          className={`w-full px-4 py-3 pr-11 rounded-xl border text-sm transition-all focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 ${
+                            theme === 'light'
+                              ? 'bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-400 focus:bg-white'
+                              : 'bg-slate-900 border-slate-700/80 text-white placeholder-slate-500'
+                          }`}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowAdminPassword(!showAdminPassword)}
+                          className={`absolute right-3.5 top-1/2 -translate-y-1/2 p-1 cursor-pointer transition-colors ${
+                            theme === 'light' ? 'text-slate-400 hover:text-slate-700' : 'text-slate-400 hover:text-slate-200'
+                          }`}
+                          aria-label={showAdminPassword ? 'Hide password' : 'Show password'}
+                        >
+                          {showAdminPassword ? (
+                            <EyeOff className="w-4 h-4 text-[#b58b42]" />
+                          ) : (
+                            <Eye className="w-4 h-4" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={isAdminSubmitting}
+                      className="w-full mt-2 py-3.5 px-6 rounded-xl bg-gradient-to-r from-[#102a4e] via-[#163a6b] to-[#b58b42] hover:opacity-95 text-white font-bold text-sm tracking-wide shadow-md transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-60"
+                    >
+                      {isAdminSubmitting ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          <span>Signing In with Live Cloud Sync...</span>
+                        </>
+                      ) : (
+                        <>
+                          <ShieldCheck className="w-4 h-4 text-[#f1bd5b]" />
+                          <span>Sign In with Email & Password (Live Cloud Sync)</span>
+                        </>
+                      )}
+                    </button>
+                  </form>
+                )}
+
+                {/* Secondary Google Admin Sign-In */}
+                <div className="mt-5">
+                  <div className="relative flex items-center justify-center my-4">
+                    <div className={`w-full border-t ${theme === 'light' ? 'border-slate-200' : 'border-slate-800'}`} />
+                    <span className={`px-3 text-[11px] font-semibold whitespace-nowrap ${theme === 'light' ? 'bg-white text-slate-400' : 'bg-[#0a1829] text-slate-500'}`}>
+                      or continue with Google
+                    </span>
+                    <div className={`w-full border-t ${theme === 'light' ? 'border-slate-200' : 'border-slate-800'}`} />
                   </div>
 
                   <button
-                    type="submit"
-                    disabled={isAdminSubmitting}
-                    className="w-full mt-2 py-3.5 px-6 rounded-xl bg-gradient-to-r from-sky-700 via-sky-800 to-[#b58b42] hover:opacity-95 text-white font-bold text-sm tracking-wide shadow-md transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-60"
+                    type="button"
+                    disabled={isGoogleAuthBusy}
+                    onClick={handleAdminGoogleLogin}
+                    className={`w-full py-3 px-5 rounded-xl border font-bold text-sm transition-all cursor-pointer flex items-center justify-center gap-2.5 disabled:opacity-60 ${
+                      theme === 'light'
+                        ? 'bg-white hover:bg-slate-50 border-slate-300 text-slate-900 shadow-xs'
+                        : 'bg-slate-900 hover:bg-slate-800 border-slate-700 text-white'
+                    }`}
                   >
-                    {isAdminSubmitting ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        <span>Authenticating Administrator...</span>
-                      </>
-                    ) : (
-                      <>
-                        <ShieldAlert className="w-4 h-4 text-sky-200" />
-                        <span>Sign In as Admin → Open Access Console</span>
-                      </>
-                    )}
+                    <ShieldCheck className="w-4 h-4 text-[#b58b42]" />
+                    <span>
+                      {isGoogleAuthBusy
+                        ? 'Connecting Admin Cloud Session...'
+                        : 'Sign In with Google (Live Cloud Sync)'}
+                    </span>
                   </button>
-                </form>
+                </div>
               </div>
             </>
           )}
